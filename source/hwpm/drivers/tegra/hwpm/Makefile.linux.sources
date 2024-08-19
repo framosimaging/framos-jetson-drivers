@@ -1,0 +1,22 @@
+#
+# Tegra SOC HWPM Linux Sources
+#
+
+# SPDX-License-Identifier: GPL-2.0
+
+nvhwpm-linux-objs += os/linux/aperture_utils.o
+nvhwpm-linux-objs += os/linux/clk_rst_utils.o
+nvhwpm-linux-objs += os/linux/driver.o
+nvhwpm-linux-objs += os/linux/io_utils.o
+nvhwpm-linux-objs += os/linux/ip_utils.o
+nvhwpm-linux-objs += os/linux/ioctl.o
+nvhwpm-linux-objs += os/linux/kmem.o
+nvhwpm-linux-objs += os/linux/log.o
+nvhwpm-linux-objs += os/linux/mem_mgmt_utils.o
+nvhwpm-linux-objs += os/linux/regops_utils.o
+nvhwpm-linux-objs += os/linux/timers.o
+nvhwpm-linux-objs += os/linux/soc_utils.o
+
+ifeq ($(CONFIG_DEBUG_FS),y)
+nvhwpm-linux-objs += os/linux/debugfs.o
+endif

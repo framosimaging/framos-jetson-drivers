@@ -1,0 +1,13 @@
+config TEGRA_SOC_HWPM
+	tristate "Tegra SOC HWPM driver"
+	default m
+	help
+	  The SOC HWPM driver enables performance monitoring for various Tegra
+	  IPs.
+
+config TEGRA_T234_HWPM
+	bool "Tegra T23x HWPM driver"
+	depends on TEGRA_SOC_HWPM && ARCH_TEGRA_23x_SOC
+	default y if (TEGRA_SOC_HWPM && ARCH_TEGRA_23x_SOC)
+	help
+	  T23x performance monitoring driver.

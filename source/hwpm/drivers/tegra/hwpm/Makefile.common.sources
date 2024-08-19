@@ -1,0 +1,11 @@
+#
+# Tegra SOC HWPM Common sources
+#
+
+# SPDX-License-Identifier: GPL-2.0
+
+nvhwpm-common-objs += common/allowlist.o
+nvhwpm-common-objs += common/aperture.o
+nvhwpm-common-objs += common/ip.o
+nvhwpm-common-objs += common/resource.o
+nvhwpm-common-objs += common/init.o

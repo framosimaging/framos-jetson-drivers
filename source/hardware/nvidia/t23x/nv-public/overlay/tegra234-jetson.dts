@@ -1,0 +1,355 @@
+// SPDX-License-Identifier: GPL-2.0-only
+// SPDX-FileCopyrightText: Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES.  All rights reserved.
+
+/dts-v1/;
+/plugin/;
+
+#include <dt-bindings/clock/tegra234-clock.h>
+#include <dt-bindings/gpio/tegra234-gpio.h>
+#include <dt-bindings/interrupt-controller/arm-gic.h>
+#include <dt-bindings/interrupt-controller/irq.h>
+#include <dt-bindings/memory/tegra234-mc.h>
+#include <dt-bindings/power/tegra234-powergate.h>
+#include <dt-bindings/reset/tegra234-reset.h>
+#include "nv-soc/tegra234-soc-display-overlay.dtsi"
+#include "nv-platform/tegra234-dcb-p3737-0000-p3701-0000.dtsi"
+
+/ {
+	overlay-name = "Tegra234 Jetson Overlay";
+	compatible = "nvidia,tegra234";
+
+	fragment@0 {
+		target-path = "/bus@0/host1x@13e00000";
+		__overlay__ {
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			interrupt-parent = <&gic>;
+
+			ranges = <0x14800000 0x14800000 0x02000000>,
+				 <0x24700000 0x24700000 0x00080000>;
+
+			nvjpg@15380000 {
+				compatible = "nvidia,tegra234-nvjpg";
+				reg = <0x15380000 0x00040000>;
+				clocks = <&bpmp TEGRA234_CLK_NVJPG>;
+				clock-names = "nvjpg";
+				resets = <&bpmp TEGRA234_RESET_NVJPG>;
+				reset-names = "nvjpg";
+
+				power-domains = <&bpmp TEGRA234_POWER_DOMAIN_NVJPGA>;
+				interconnects = <&mc TEGRA234_MEMORY_CLIENT_NVJPGSRD &emc>,
+						<&mc TEGRA234_MEMORY_CLIENT_NVJPGSWR &emc>;
+				interconnect-names = "dma-mem", "write";
+				iommus = <&smmu_niso1 TEGRA234_SID_NVJPG>;
+				dma-coherent;
+
+				nvidia,host1x-class = <0xc0>;
+			};
+
+			nvdec@15480000 {
+				compatible = "nvidia,tegra234-nvdec";
+				reg = <0x15480000 0x00040000>;
+				clocks = <&bpmp TEGRA234_CLK_NVDEC>,
+				         <&bpmp TEGRA234_CLK_FUSE>,
+				         <&bpmp TEGRA234_CLK_TSEC_PKA>;
+				clock-names = "nvdec", "fuse", "tsec_pka";
+				resets = <&bpmp TEGRA234_RESET_NVDEC>;
+				reset-names = "nvdec";
+				power-domains = <&bpmp TEGRA234_POWER_DOMAIN_NVDEC>;
+				interconnects = <&mc TEGRA234_MEMORY_CLIENT_NVDECSRD &emc>,
+				                <&mc TEGRA234_MEMORY_CLIENT_NVDECSWR &emc>;
+				interconnect-names = "dma-mem", "write";
+				iommus = <&smmu_niso1 TEGRA234_SID_NVDEC>;
+				dma-coherent;
+
+				nvidia,memory-controller = <&mc>;
+				status = "okay";
+			};
+
+			nvenc@154c0000 {
+				compatible = "nvidia,tegra234-nvenc";
+				reg = <0x154c0000 0x00040000>;
+				clocks = <&bpmp TEGRA234_CLK_NVENC>;
+				clock-names = "nvenc";
+				resets = <&bpmp TEGRA234_RESET_NVENC>;
+				reset-names = "nvenc";
+
+				power-domains = <&bpmp TEGRA234_POWER_DOMAIN_NVENC>;
+				interconnects = <&mc TEGRA234_MEMORY_CLIENT_NVENCSRD &emc>,
+						<&mc TEGRA234_MEMORY_CLIENT_NVENCSWR &emc>;
+				interconnect-names = "dma-mem", "write";
+				iommus = <&smmu_niso0 TEGRA234_SID_NVENC>;
+				dma-coherent;
+			};
+
+			nvjpg@15540000 {
+				compatible = "nvidia,tegra234-nvjpg";
+				reg = <0x15540000 0x00040000>;
+				clocks = <&bpmp TEGRA234_CLK_NVJPG1>;
+				clock-names = "nvjpg";
+				resets = <&bpmp TEGRA234_RESET_NVJPG1>;
+				reset-names = "nvjpg";
+
+				power-domains = <&bpmp TEGRA234_POWER_DOMAIN_NVJPGB>;
+				interconnects = <&mc TEGRA234_MEMORY_CLIENT_NVJPG1SRD &emc>,
+						<&mc TEGRA234_MEMORY_CLIENT_NVJPG1SWR &emc>;
+				interconnect-names = "dma-mem", "write";
+				iommus = <&smmu_niso0 TEGRA234_SID_NVJPG1>;
+				dma-coherent;
+
+				nvidia,host1x-class = <0x07>;
+			};
+
+			nvdla0: nvdla0@15880000 {
+				compatible = "nvidia,tegra234-nvdla";
+				power-domains = <&bpmp TEGRA234_POWER_DOMAIN_DLAA>;
+				reg = <0x15880000 0x00040000>;
+				interrupts = <GIC_SPI 236 IRQ_TYPE_LEVEL_HIGH>;
+
+				resets = <&bpmp TEGRA234_RESET_DLA0>;
+				clocks = <&bpmp TEGRA234_CLK_DLA0_CORE>,
+					 <&bpmp TEGRA234_CLK_DLA0_FALCON>;
+				clock-names = "nvdla0", "nvdla0_flcn";
+
+				interconnects = <&mc TEGRA234_MEMORY_CLIENT_DLA0RDA &emc>,
+						<&mc TEGRA234_MEMORY_CLIENT_DLA0FALRDB &emc>,
+						<&mc TEGRA234_MEMORY_CLIENT_DLA0WRA &emc>,
+						<&mc TEGRA234_MEMORY_CLIENT_DLA0FALWRB &emc>;
+				interconnect-names = "dma-mem", "read-1", "write", "write-1";
+				iommus = <&smmu_niso1 TEGRA234_SID_NVDLA0>;
+				dma-coherent;
+				status = "okay";
+			};
+
+			nvdla1: nvdla1@158c0000 {
+				compatible = "nvidia,tegra234-nvdla";
+				power-domains = <&bpmp TEGRA234_POWER_DOMAIN_DLAB>;
+				reg = <0x158c0000 0x00040000>;
+				interrupts = <GIC_SPI 237 IRQ_TYPE_LEVEL_HIGH>;
+
+				resets = <&bpmp TEGRA234_RESET_DLA1>;
+				clocks = <&bpmp TEGRA234_CLK_DLA1_CORE>,
+					 <&bpmp TEGRA234_CLK_DLA1_FALCON>;
+				clock-names = "nvdla1", "nvdla1_flcn";
+
+				interconnects = <&mc TEGRA234_MEMORY_CLIENT_DLA1RDA &emc>,
+						<&mc TEGRA234_MEMORY_CLIENT_DLA1FALRDB &emc>,
+						<&mc TEGRA234_MEMORY_CLIENT_DLA1WRA &emc>,
+						<&mc TEGRA234_MEMORY_CLIENT_DLA1FALWRB &emc>;
+				interconnect-names = "dma-mem", "read-1", "write", "write-1";
+				iommus = <&smmu_niso0 TEGRA234_SID_NVDLA1>;
+				dma-coherent;
+				status = "okay";
+			};
+
+			ofa@15a50000 {
+				compatible = "nvidia,tegra234-ofa";
+				reg = <0x15a50000 0x00040000>;
+				clocks = <&bpmp TEGRA234_CLK_OFA>;
+				clock-names = "ofa";
+				resets = <&bpmp TEGRA234_RESET_OFA>;
+				reset-names = "ofa";
+
+				power-domains = <&bpmp TEGRA234_POWER_DOMAIN_OFA>;
+				interconnects = <&mc TEGRA234_MEMORY_CLIENT_OFAR &emc>,
+						<&mc TEGRA234_MEMORY_CLIENT_OFAW &emc>;
+				interconnect-names = "dma-mem", "write";
+				iommus = <&smmu_niso0 TEGRA234_SID_OFA>;
+				dma-coherent;
+			};
+
+			pva0: pva0@16000000 {
+				compatible = "nvidia,tegra234-pva";
+				power-domains = <&bpmp TEGRA234_POWER_DOMAIN_PVA>;
+				reg = <0x16000000 0x800000>,
+				      <0x24700000 0x080000>;
+				interrupts = <0 234 0x04>,
+					<0 432 0x04>,
+					<0 433 0x04>,
+					<0 434 0x04>,
+					<0 435 0x04>,
+					<0 436 0x04>,
+					<0 437 0x04>,
+					<0 438 0x04>,
+					<0 439 0x04>;
+				resets = <&bpmp TEGRA234_RESET_PVA0_ALL>;
+				clocks = <&bpmp TEGRA234_CLK_PVA0_CPU_AXI>,
+					 <&bpmp TEGRA234_CLK_NAFLL_PVA0_VPS>,
+					 <&bpmp TEGRA234_CLK_PVA0_VPS>;
+				clock-names = "axi", "vps0", "vps1";
+
+				iommus = <&smmu_niso1 TEGRA234_SID_PVA0>;
+				dma-coherent;
+				status = "okay";
+
+				pva0_ctx0n1: pva0_niso1_ctx0 {
+					compatible = "nvidia,pva-tegra186-iommu-context";
+					iommus = <&smmu_niso1 TEGRA234_SID_PVA0_VM0>;
+					dma-coherent;
+					status = "okay";
+				};
+
+				pva0_ctx1n1: pva0_niso1_ctx1 {
+					compatible = "nvidia,pva-tegra186-iommu-context";
+					iommus = <&smmu_niso1 TEGRA234_SID_PVA0_VM1>;
+					dma-coherent;
+					status = "okay";
+				};
+
+				pva0_ctx2n1: pva0_niso1_ctx2 {
+					compatible = "nvidia,pva-tegra186-iommu-context";
+					iommus = <&smmu_niso1 TEGRA234_SID_PVA0_VM2>;
+					dma-coherent;
+					status = "okay";
+				};
+
+				pva0_ctx3n1: pva0_niso1_ctx3 {
+					compatible = "nvidia,pva-tegra186-iommu-context";
+					iommus = <&smmu_niso1 TEGRA234_SID_PVA0_VM3>;
+					dma-coherent;
+					status = "okay";
+				};
+
+				pva0_ctx4n1: pva0_niso1_ctx4 {
+					compatible = "nvidia,pva-tegra186-iommu-context";
+					iommus = <&smmu_niso1 TEGRA234_SID_PVA0_VM4>;
+					dma-coherent;
+					status = "okay";
+				};
+
+				pva0_ctx5n1: pva0_niso1_ctx5 {
+					compatible = "nvidia,pva-tegra186-iommu-context";
+					iommus = <&smmu_niso1 TEGRA234_SID_PVA0_VM5>;
+					dma-coherent;
+					status = "okay";
+				};
+
+				pva0_ctx6n1: pva0_niso1_ctx6 {
+					compatible = "nvidia,pva-tegra186-iommu-context";
+					iommus = <&smmu_niso1 TEGRA234_SID_PVA0_VM6>;
+					dma-coherent;
+					status = "okay";
+				};
+
+				pva0_ctx7n1: pva0_niso1_ctx7 {
+					compatible = "nvidia,pva-tegra186-iommu-context";
+					iommus = <&smmu_niso1 TEGRA234_SID_PVA0_VM7>;
+					dma-coherent;
+					status = "okay";
+				};
+			};
+		};
+	};
+
+	fragment@1 {
+		target-path = "/bus@0";
+		__overlay__ {
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			gpu@17000000 {
+				compatible = "nvidia,ga10b";
+				reg = <0x17000000 0x01000000>,
+				      <0x18000000 0x01000000>,
+				      <0x03b41000 0x00001000>;
+				interrupt-parent = <&gic>;
+				interrupts = <GIC_SPI 68 IRQ_TYPE_LEVEL_HIGH>,
+					     <GIC_SPI 70 IRQ_TYPE_LEVEL_HIGH>,
+					     <GIC_SPI 71 IRQ_TYPE_LEVEL_HIGH>,
+					     <GIC_SPI 67 IRQ_TYPE_LEVEL_HIGH>;
+				interrupt-names = "stall0", "stall1", "stall2", "nonstall";
+				power-domains = <&bpmp TEGRA234_POWER_DOMAIN_GPU>;
+				interconnects = <&mc TEGRA234_MEMORY_CLIENT_NVL1R &emc>,
+						<&mc TEGRA234_MEMORY_CLIENT_NVL1W &emc>;
+				interconnect-names = "dma-mem", "write";
+				clocks = <&bpmp TEGRA234_CLK_GPUSYS>,
+					 <&bpmp TEGRA234_CLK_GPC0CLK>,
+					 <&bpmp TEGRA234_CLK_GPC1CLK>;
+				clock-names = "sysclk", "gpc0clk", "gpc1clk";
+				resets = <&bpmp TEGRA234_RESET_GPU>;
+				dma-coherent;
+
+				nvidia,bpmp = <&bpmp>;
+
+				status = "okay";
+			};
+
+			tachometer@39c0000 {
+				compatible = "nvidia,pwm-tegra234-tachometer";
+				reg = <0x039c0000 0x10>;
+				interrupts = <GIC_SPI 192 IRQ_TYPE_LEVEL_HIGH>;
+				#pwm-cells = <2>;
+				clocks = <&bpmp TEGRA234_CLK_TACH0>;
+				clock-names = "tach";
+				resets = <&bpmp TEGRA234_RESET_TACH0>;
+				reset-names = "tach";
+				pulse-per-rev = <2>;
+				capture-window-length = <2>;
+				upper-threshold = <0xfffff>;
+				lower-threshold = <0x0>;
+			};
+		};
+	};
+
+	fragment@2 {
+		target-path = "/";
+		__overlay__ {
+			nvpmodel {
+				compatible = "nvidia,nvpmodel";
+				nvidia,bpmp = <&bpmp>;
+				clocks = <&bpmp TEGRA234_CLK_EMC>;
+				clock-names = "emc";
+				status = "okay";
+			};
+
+			reserved-memory {
+				#address-cells = <2>;
+				#size-cells = <2>;
+				ranges;
+
+				linux,cma { /* Needed for nvgpu comptags */
+					compatible = "shared-dma-pool";
+					reusable;
+					size = <0x0 0x10000000>; /* 256MB */
+					alignment = <0x0 0x10000>;
+					linux,cma-default;
+					status = "okay";
+				};
+			};
+
+			dce@d800000 {
+				status = "okay";
+			};
+
+			display@13800000 {
+				status = "okay";
+			};
+		};
+	};
+
+	fragment@3 {
+		target-path = "/bus@0";
+		board_config {
+			ids = "3737-0000-TS1","3737-0000-TS2","3737-0000-TS3","3737-0000-EB1","3737-0000-EB2","3737-0000-EB3","3737-0000-000","3737-0000-100","3737-0000-200";
+		};
+		__overlay__ {
+			i2c@c240000 {
+				ucsi_ccg@8 {
+					interrupt-parent = <&gpio_aon>;
+					interrupts = <TEGRA234_AON_GPIO(BB, 2) IRQ_TYPE_LEVEL_LOW>;
+				};
+			};
+		};
+	};
+
+	fragment@5 {
+		target-path = "/";
+		__overlay__ {
+			aliases {
+				nvdla0 = "/bus@0/host1x@13e00000/nvdla0@15880000";
+				nvdla1 = "/bus@0/host1x@13e00000/nvdla1@158c0000";
+			};
+		};
+	};
+};
