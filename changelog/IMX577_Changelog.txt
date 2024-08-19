@@ -1,0 +1,57 @@
+v3.7.0.0 (2024-08-16)
+=========================
+    - added - support for L4T-36.3
+    - changed - support only for AGX Orin & Orin Nano/NX platforms
+    - changed - support only for FPA-4.A/TXA, FPA-4.A/AGX & FPA-A/P22
+    - changed - all Framos files have "fr_" added in front of the name
+    - changed - reformatted the Framos source code according to the "Linux kernel coding style" recommendations
+
+v3.6.1.0 (2024-01-19)
+=========================
+    - added - support for new FPA-4.A/AGX for Xavier AGX & AGX Orin platforms
+    - removed - support for FPA-4.A/TXA for Xavier AGX & AGX Orin platforms
+
+v3.6.0.0 (2023-09-15)
+=========================
+    - added - support for L4T-35.4.1
+	- added - support for Jetson Orin NX and Orin Nano platform
+	- fixed - master/slave configuration
+
+v3.5.0.0 (2023-03-15)
+=========================
+    - added - support for L4T-35.2.1
+	- added - support for Jetson Xavier NX and Xavier AGX platforms
+    - added - support for framos-common-driver_2.15.xx.xx_arm64.deb
+	- added - GMSL3 support
+	- fixed - test pattern control
+
+v3.4.0.0 (2022-12-01)
+=========================
+    - added - support for L4T-35.1
+    - added - support for only AGX Orin platform
+    - added - support for framos-common-driver_2.14.xx.xx_arm64.deb
+
+v3.3.0.10 (2021-11-16)
+=========================
+    - added - support for L4T-32.6.1
+    - added - new gruop of registers
+    - added - Level 0(Basic) ISP override file
+	- fixed - black level control
+    - changed - device tree as device tree overlays
+
+v3.2.1.0 (2021-05-06)
+=========================
+    - fixed - adding custom controls
+    
+v3.2.0.0 (2021-04-16)
+=========================
+    - initial release as debian package
+    - support for L4T-32.5.1
+    - supported features:
+        - Gain
+        - Frame rate
+        - Exposure
+        - Black level
+        - Test Pattern
+        - Multisensor support
+        - Sensor specific controls(slave mode, I2C broadcast)

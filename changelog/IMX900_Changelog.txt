@@ -1,0 +1,20 @@
+v1.0.0.0 (2024-08-16)
+========================
+    - initial release as debian package
+    - support for L4T-36.3
+    - GMSL support
+    - AGX Orin, Orin Nano/NX platforms
+    - device tree as device tree overlays
+    - formatted the Framos source code according to the "Linux kernel coding style" recommendations
+    - supported features:
+        - Gain
+        - Frame rate
+        - Exposure
+        - Black level
+        - Test Pattern
+        - IS Mode
+        - Data rate
+        - Multisensor support
+        - Slave mode support
+        - Synchronizing Master mode
+        - detecting whether the connected sensor is monochrome or color

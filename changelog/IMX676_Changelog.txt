@@ -1,0 +1,37 @@
+v1.1.1.0 (2024-08-16)
+=========================
+    - changed - reformatted the Framos source code according to the "Linux kernel coding style" recommendations
+
+v1.1.0.0 (2024-05-29)
+=========================
+	- added - support for L4T-36.3
+	- added - jetson-config-camera scripts
+	- added - FSM_Jetson_Binary_UserGuide
+    - changed - support only for AGX Orin & Orin Nano/NX platforms
+    - changed - I2C bus addresses in kernel for I2C MUX buses on the FPA-4.A/AGX & FPA-4.A/TXA
+    - changed - all framos files have "fr_" added in front of the name
+    - removed - support for AGX Xavier & Xavier NX platforms
+
+v1.0.1.0 (2024-01-19)
+=========================
+	- added - support for new FPA-4.A/AGX for Xavier AGX & AGX Orin platforms
+    - added - controlling XMASTER gpio pin for master/slave configuration
+    - changed - GPIO Expander I2C-address from 0x21 to 0x20 on FPA-A/P22
+    - fixed - black level control
+    - removed - support for FPA-4.A/TXA for Xavier AGX & AGX Orin platforms
+
+v1.0.0.0 (2023-09-15)
+=========================
+    - support for L4T-35.4.1
+	- GMSL3 support
+	- device tree as device tree overlays
+    - supported features:
+    	- Gain
+    	- Frame rate
+    	- Exposure
+    	- Black level
+    	- Broadcast
+    	- Test Pattern		
+    	- IS Mode
+    	- Data rate
+    	- Synchronizing Master mode
