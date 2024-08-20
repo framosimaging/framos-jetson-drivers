@@ -1,0 +1,561 @@
+/* SPDX-License-Identifier: GPL-2.0
+ *
+ * Copyright (c) 2024 Framos. All rights reserved.
+ *
+ * fr_imx568_mode_tbls.h - imx662 sensor mode tables
+ */
+
+#ifndef __fr_IMX568_TABLES__
+#define __fr_IMX568_TABLES__
+
+
+#define STANDBY					0x3000
+#define XMSTA					0x3010
+#define INCKSEL_ST0				0x3014
+#define INCKSEL_ST1				0x3015
+#define INCKSEL_ST2				0x3016
+#define INCKSEL_ST3				0x3018
+#define INCKSEL_ST4				0x3019
+#define INCKSEL_ST5				0x301B
+#define REGHOLD					0x3034
+#define HVMODE					0x303C
+#define VOPB_VBLK_HWID_LOW			0x30D0
+#define VOPB_VBLK_HWID_HIGH			0x30D1
+#define FINFO_HWIDTH_LOW			0x30D2
+#define FINFO_HWIDTH_HIGH			0x30D3
+#define VMAX_LOW				0x30D4
+#define VMAX_MID				0x30D5
+#define VMAX_HIGH				0x30D6
+#define HMAX_LOW				0x30D8
+#define HMAX_HIGH				0x30D9
+#define GMRWT					0x30E2
+#define GMTWT					0x30E3
+#define GSDLY					0x30E6
+
+#define ROI_MODE				0x3100
+#define FID0_ROI				0x3104
+#define FID0_ROI5678				0x3105
+#define FID0_ROIPH1_LOW				0x3120
+#define FID0_ROIPH1_HIGH			0x3121
+#define FID0_ROIPV1_LOW				0x3122
+#define FID0_ROIPV1_HIGH			0x3123
+#define FID0_ROIWH1_LOW				0x3124
+#define FID0_ROIWH1_HIGH			0x3125
+#define FID0_ROIWV1_LOW				0x3126
+#define FID0_ROIWV1_HIGH			0x3127
+
+#define ADBIT					0x3200
+#define HREVERSE_VREVERSE			0x3204
+#define INCKSEL_N0				0x321C
+#define INCKSEL_N1				0x321D
+#define INCKSEL_N2				0x321E
+#define INCKSEL_N3				0x321F
+#define INCKSEL_D0				0x3224
+#define INCKSEL_D1				0x3225
+#define INCKSEL_D2				0x3226
+#define INCKSEL_D3				0x3227
+#define LLBLANK_LOW				0x323C
+#define LLBLANK_HIGH				0x323D
+#define VINT_EN					0x323E
+#define SHS_LOW					0x3240
+#define SHS_MID					0x3241
+#define SHS_HIGH				0x3242
+
+#define TRIGMODE_TIMMING			0x3400
+#define ODBIT					0x3430
+#define TOUT12SEL				0x3435
+#define TOUT0SEL				0x343C
+#define TRIG_TOUT12_SEL				0x343A
+#define SYNCSEL					0x343C
+#define PULSE1_ENNORTRIGPOL			0x3478
+#define PULSE1_UP_LOW				0x3479
+#define PULSE1_UP_MID				0x347A
+#define PULSE1_UP_HIGH				0x347B
+#define PULSE1_DN_LOW				0x347C
+#define PULSE1_DN_MID				0x347D
+#define PULSE1_DN_HIGH				0x347E
+#define PULSE2_ENNORTRIGPOL			0x3480
+#define PULSE2_UP_LOW				0x3481
+#define PULSE2_UP_MID				0x3482
+#define PULSE2_UP_HIGH				0x3483
+#define PULSE2_DN_LOW				0x3484
+#define PULSE2_DN_MID				0x3485
+#define PULSE2_DN_HIGH				0x3486
+
+#define GAIN_RTS				0x3502
+#define GAIN_LOW				0x3514
+#define GAIN_HIGH				0x3515
+#define BLKLEVEL_LOW				0x35B4
+#define BLKLEVEL_HIGH				0x35B5
+
+#define LANESEL					0x3904
+#define EAV_SEL_MIPI				0x3942
+
+#define TXCLKESC_FREQ_LOW			0x3CA4
+#define TXCLKESC_FREQ_HIGH			0x3CA5
+#define THS_PREPARE_LOW				0x3CB4
+#define THS_PREPARE_HIGH			0x3CB5
+#define TCLK_POST_LOW				0x3CB6
+#define TCLK_POST_HIGH				0x3CB7
+#define THS_TRAIL_LOW				0x3CB8
+#define THS_TRAIL_HIGH				0x3CB9
+#define THS_ZERO_LOW				0x3CBA
+#define THS_ZERO_HIGH				0x3CBB
+#define TCLK_PREPARE_LOW			0x3CBC
+#define TCLK_PREPARE_HIGH			0x3CBD
+#define TCLK_TRAIL_LOW				0x3CBE
+#define TCLK_TRAIL_HIGH				0x3CBF
+#define TLPX_LOW				0x3CC0
+#define TLPX_HIGH				0x3CC1
+#define TCLK_ZERO_LOW				0x3CC2
+#define TCLK_ZERO_HIGH				0x3CC3
+#define TCLK_PRE_LOW				0x3CC4
+#define TCLK_PRE_HIGH				0x3CC5
+#define THS_EXIT_LOW				0x3CC6
+#define THS_EXIT_HIGH				0x3CC7
+
+#define CHROMACITY				0x3817
+
+#define HSST_EN1				0x35A5
+#define HSST_EN2				0x35A9
+#define HSST_EN3				0x35ED
+
+#define CHROMACITY				0x3817
+
+/* Resolutions of implemented frame modes */
+#define IMX568_DEFAULT_WIDTH			2472
+#define IMX568_DEFAULT_HEIGHT			2064
+
+#define IMX568_ROI_MODE_WIDTH			1920
+#define IMX568_ROI_MODE_HEIGHT			1080
+
+#define IMX568_ROI_MODE_720_WIDTH		1280
+#define IMX568_ROI_MODE_720_HEIGHT		720
+
+#define IMX568_BINNING_MODE_WIDTH		1236
+#define IMX568_BINNING_MODE_HEIGHT		1032
+
+/* Special values for the write table function */
+#define IMX568_TABLE_WAIT_MS			0
+#define IMX568_TABLE_END			1
+#define IMX568_WAIT_MS				10
+
+#define IMX568_MIN_FRAME_DELTA			134
+
+#define IMX568_TO_LOW_BYTE(x)			(x & 0xFF)
+#define IMX568_TO_MID_BYTE(x)			(x >> 8)
+
+typedef struct reg_8 imx568_reg;
+
+/* Tables for the write table function */
+static const imx568_reg imx568_stop[] = {
+	{STANDBY, 0x01},
+	{IMX568_TABLE_WAIT_MS, IMX568_WAIT_MS},
+	{XMSTA, 0x01},
+
+	{IMX568_TABLE_WAIT_MS, 30},
+	{IMX568_TABLE_END, 0x00}
+};
+
+static const imx568_reg imx568_8bit_mode[] = {
+	{ADBIT, 0x25},
+	{ODBIT, 0x02},
+	{BLKLEVEL_LOW, 0x0F},
+	{0x35A4, 0x62},
+	{0x35A8, 0x62},
+	{0x35EC, 0x62},
+	{0x433C, 0x8A},
+	{0x433D, 0x02},
+	{0x433E, 0xE8},
+	{0x433F, 0x05},
+	{0x4340, 0x9E},
+	{0x4341, 0x0C},
+	{0x446A, 0x4C},
+	{0x446E, 0x51},
+	{0x4472, 0x57},
+	{0x44EC, 0x3F},
+	{0x44F0, 0x44},
+	{0x44F4, 0x4A},
+
+	{IMX568_TABLE_WAIT_MS, IMX568_WAIT_MS},
+	{IMX568_TABLE_END, 0x00},
+};
+
+static const imx568_reg imx568_10bit_mode[] = {
+	{ADBIT, 0x05},
+	{ODBIT, 0x00},
+	{BLKLEVEL_LOW, 0x3C},
+	{0x35A4, 0xD0},
+	{0x35A8, 0xD0},
+	{0x35EC, 0xD0},
+	{0x433C, 0x8A},
+	{0x433D, 0x02},
+	{0x433E, 0xE8},
+	{0x433F, 0x05},
+	{0x4340, 0x9E},
+	{0x4341, 0x0C},
+	{0x446A, 0x4C},
+	{0x446E, 0x51},
+	{0x4472, 0x57},
+	{0x44EC, 0x3F},
+	{0x44F0, 0x44},
+	{0x44F4, 0x4A},
+
+	{IMX568_TABLE_WAIT_MS, IMX568_WAIT_MS},
+	{IMX568_TABLE_END, 0x00},
+};
+
+static const imx568_reg imx568_12bit_mode[] = {
+	{ADBIT, 0x15},
+	{ODBIT, 0x01},
+	{0x35A4, 0x30},
+	{0x35A8, 0x30},
+	{BLKLEVEL_LOW, 0xF0},
+	{0x35EC, 0x30},
+	{0x433C, 0xFB},
+	{0x433D, 0x07},
+	{0x433E, 0xFF},
+	{0x433F, 0x0F},
+	{0x4340, 0xFF},
+	{0x4341, 0x0F},
+	{0x446A, 0x6A},
+	{0x446E, 0x79},
+	{0x4472, 0x79},
+	{0x44EC, 0x69},
+	{0x44F0, 0x69},
+	{0x44F4, 0x69},
+
+	{IMX568_TABLE_WAIT_MS, IMX568_WAIT_MS},
+	{IMX568_TABLE_END, 0x00},
+};
+
+static const imx568_reg imx568_1188_mbps[] = {
+	{INCKSEL_D2, 0x80},
+	{INCKSEL_D3, 0x80},
+
+	{THS_PREPARE_LOW, 0x4F},
+	{THS_PREPARE_HIGH, 0x00},
+	{TCLK_POST_LOW, 0x8F},
+	{TCLK_POST_HIGH, 0x00},
+	{THS_TRAIL_LOW, 0x4F},
+	{THS_TRAIL_HIGH, 0x00},
+	{THS_ZERO_LOW, 0x87},
+	{THS_ZERO_HIGH, 0x00},
+	{TCLK_PREPARE_LOW, 0x4F},
+	{TCLK_PREPARE_HIGH, 0x00},
+	{TCLK_TRAIL_LOW, 0x47},
+	{TCLK_TRAIL_HIGH, 0x00},
+	{TLPX_LOW, 0x3F},
+	{TLPX_HIGH, 0x00},
+	{TCLK_ZERO_LOW, 0x37},
+	{TCLK_ZERO_HIGH, 0x01},
+	{TCLK_PRE_LOW, 0x0F},
+	{TCLK_PRE_HIGH, 0x00},
+	{THS_EXIT_LOW, 0x7F},
+	{THS_EXIT_HIGH, 0x00},
+
+	{IMX568_TABLE_WAIT_MS, IMX568_WAIT_MS},
+	{IMX568_TABLE_END, 0x0000}
+};
+
+static const imx568_reg imx568_891_mbps[] = {
+	{INCKSEL_D2, 0xC0},
+	{INCKSEL_D3, 0xD0},
+
+	{THS_PREPARE_LOW, 0x3F},
+	{THS_PREPARE_HIGH, 0x00},
+	{TCLK_POST_LOW, 0x7F},
+	{TCLK_POST_HIGH, 0x00},
+	{THS_TRAIL_LOW, 0x3F},
+	{THS_TRAIL_HIGH, 0x00},
+	{THS_ZERO_LOW, 0x6F},
+	{THS_ZERO_HIGH, 0x00},
+	{TCLK_PREPARE_LOW, 0x37},
+	{TCLK_PREPARE_HIGH, 0x00},
+	{TCLK_TRAIL_LOW, 0x37},
+	{TCLK_TRAIL_HIGH, 0x00},
+	{TLPX_LOW, 0x2F},
+	{TLPX_HIGH, 0x00},
+	{TCLK_ZERO_LOW, 0xF7},
+	{TCLK_ZERO_HIGH, 0x00},
+	{TCLK_PRE_LOW, 0x0F},
+	{TCLK_PRE_HIGH, 0x00},
+	{THS_EXIT_LOW, 0x5F},
+	{THS_EXIT_HIGH, 0x00},
+
+	{IMX568_TABLE_WAIT_MS, IMX568_WAIT_MS},
+	{IMX568_TABLE_END, 0x0000}
+};
+
+static const imx568_reg imx568_594_mbps[] = {
+	{INCKSEL_D2, 0x80},
+	{INCKSEL_D3, 0x90},
+
+	{THS_PREPARE_LOW, 0x2F},
+	{THS_PREPARE_HIGH, 0x00},
+	{TCLK_POST_LOW, 0x67},
+	{TCLK_POST_HIGH, 0x00},
+	{THS_TRAIL_LOW, 0x2F},
+	{THS_TRAIL_HIGH, 0x00},
+	{THS_ZERO_LOW, 0x4F},
+	{THS_ZERO_HIGH, 0x00},
+	{TCLK_PREPARE_LOW, 0x27},
+	{TCLK_PREPARE_HIGH, 0x00},
+	{TCLK_TRAIL_LOW, 0x27},
+	{TCLK_TRAIL_HIGH, 0x00},
+	{TLPX_LOW, 0x27},
+	{TLPX_HIGH, 0x00},
+	{TCLK_ZERO_LOW, 0xB7},
+	{TCLK_ZERO_HIGH, 0x00},
+	{TCLK_PRE_LOW, 0x0F},
+	{TCLK_PRE_HIGH, 0x00},
+	{THS_EXIT_LOW, 0x47},
+	{THS_EXIT_HIGH, 0x00},
+
+	{IMX568_TABLE_WAIT_MS, IMX568_WAIT_MS},
+	{IMX568_TABLE_END, 0x0000}
+};
+
+static const imx568_reg imx568_init_settings[] = {
+	{INCKSEL_ST0, 0x05},
+	{INCKSEL_ST1, 0x91},
+	{INCKSEL_ST2, 0x50},
+	{INCKSEL_ST3, 0x20},
+	{INCKSEL_ST4, 0x02},
+	{INCKSEL_ST5, 0x1D},
+	{INCKSEL_N0, 0x40},
+	{INCKSEL_N1, 0x05},
+	{INCKSEL_N2, 0xE0},
+	{INCKSEL_N3, 0x00},
+	{INCKSEL_D0, 0x40},
+	{INCKSEL_D1, 0x14},
+	{INCKSEL_D2, 0x80},
+	{INCKSEL_D3, 0x80},
+
+	{GAIN_RTS, 0x09},
+
+	{LANESEL, 0x02},
+
+	{TXCLKESC_FREQ_LOW, 0x80},
+	{TXCLKESC_FREQ_HIGH, 0x09},
+
+	{EAV_SEL_MIPI, 0x03},
+
+	{0x3542, 0x27},
+	{0x354A, 0x20},
+	{0x359C, 0x0F},
+	{0x35A5, 0x12},
+	{0x35A9, 0x42},
+	{0x35AC, 0x62},
+	{0x35B6, 0x02},
+	{0x35ED, 0x12},
+	{0x35F0, 0xFB},
+	{0x35F1, 0x0B},
+	{0x35F2, 0xFB},
+	{0x35F3, 0x0B},
+
+	{0x3E30, 0x4E},
+	{0x3E96, 0x01},
+	{0x3EA0, 0x4C},
+
+	{0x3F3A, 0x04},
+
+	{0x4056, 0x23},
+	{0x4096, 0x23},
+
+	{0x4182, 0x00},
+	{0x41A2, 0x03},
+
+	{0x4232, 0x3C},
+
+	{0x4306, 0x00},
+	{0x4307, 0x00},
+	{0x4308, 0x00},
+	{0x4309, 0x00},
+	{0x4310, 0x04},
+	{0x4311, 0x04},
+	{0x4312, 0x04},
+	{0x4313, 0x04},
+
+	{0x4467, 0x83},
+
+	{0x4749, 0x9F},
+	{0x474A, 0x99},
+	{0x474B, 0x09},
+	{0x4788, 0x04},
+	{0x479C, 0x40},
+
+	{0x4864, 0xDC},
+	{0x4868, 0xDC},
+	{0x486C, 0xDC},
+	{0x48A4, 0xF4},
+	{0x48A8, 0xF4},
+	{0x48AC, 0xF4},
+
+	{HSST_EN1, 0x00},
+	{HSST_EN2, 0x00},
+	{HSST_EN3, 0x00},
+
+	{IMX568_TABLE_WAIT_MS, IMX568_WAIT_MS},
+	{IMX568_TABLE_END, 0x0000}
+};
+
+static const imx568_reg mode_2472x2064[] = {
+	{HVMODE, 0x00},
+	{VINT_EN, 0x33},
+
+	{VOPB_VBLK_HWID_LOW, IMX568_TO_LOW_BYTE(2472)},
+	{VOPB_VBLK_HWID_HIGH, IMX568_TO_MID_BYTE(2472)},
+	{FINFO_HWIDTH_LOW, IMX568_TO_LOW_BYTE(2472)},
+	{FINFO_HWIDTH_HIGH, IMX568_TO_MID_BYTE(2472)},
+
+	{FID0_ROI, 0x00},
+
+	{IMX568_TABLE_WAIT_MS, IMX568_WAIT_MS},
+	{IMX568_TABLE_END, 0x0000}
+};
+
+static const imx568_reg mode_1920x1080[] = {
+	{HVMODE, 0x00},
+	{VINT_EN, 0x33},
+
+	{VOPB_VBLK_HWID_LOW, IMX568_TO_LOW_BYTE(1920)},
+	{VOPB_VBLK_HWID_HIGH, IMX568_TO_MID_BYTE(1920)},
+	{FINFO_HWIDTH_LOW, IMX568_TO_LOW_BYTE(1920)},
+	{FINFO_HWIDTH_HIGH, IMX568_TO_MID_BYTE(1920)},
+
+	{FID0_ROI, 0x03},
+
+	{FID0_ROIPH1_LOW, IMX568_TO_LOW_BYTE(280)},
+	{FID0_ROIPH1_HIGH, IMX568_TO_MID_BYTE(208)},
+	{FID0_ROIPV1_LOW, IMX568_TO_LOW_BYTE(496)},
+	{FID0_ROIPV1_HIGH, IMX568_TO_MID_BYTE(496)},
+
+	{FID0_ROIWH1_LOW, IMX568_TO_LOW_BYTE(IMX568_ROI_MODE_WIDTH)},
+	{FID0_ROIWH1_HIGH, IMX568_TO_MID_BYTE(IMX568_ROI_MODE_WIDTH)},
+
+	{FID0_ROIWV1_LOW, IMX568_TO_LOW_BYTE(IMX568_ROI_MODE_HEIGHT)},
+	{FID0_ROIWV1_HIGH, IMX568_TO_MID_BYTE(IMX568_ROI_MODE_HEIGHT)},
+
+	{IMX568_TABLE_WAIT_MS, IMX568_WAIT_MS},
+	{IMX568_TABLE_END, 0x0000},
+};
+
+static const imx568_reg mode_1280x720[] = {
+	{HVMODE, 0x00},
+	{VINT_EN, 0x33},
+
+	{VOPB_VBLK_HWID_LOW, IMX568_TO_LOW_BYTE(IMX568_ROI_MODE_720_WIDTH)},
+	{VOPB_VBLK_HWID_HIGH, IMX568_TO_MID_BYTE(IMX568_ROI_MODE_720_WIDTH)},
+	{FINFO_HWIDTH_LOW, IMX568_TO_LOW_BYTE(IMX568_ROI_MODE_720_WIDTH)},
+	{FINFO_HWIDTH_HIGH, IMX568_TO_MID_BYTE(IMX568_ROI_MODE_720_WIDTH)},
+
+	{FID0_ROI, 0x03},
+
+	{FID0_ROIPH1_LOW, IMX568_TO_LOW_BYTE(280)},
+	{FID0_ROIPH1_HIGH, IMX568_TO_MID_BYTE(208)},
+	{FID0_ROIPV1_LOW, IMX568_TO_LOW_BYTE(496)},
+	{FID0_ROIPV1_HIGH, IMX568_TO_MID_BYTE(496)},
+
+	{FID0_ROIWH1_LOW, IMX568_TO_LOW_BYTE(IMX568_ROI_MODE_720_WIDTH)},
+	{FID0_ROIWH1_HIGH, IMX568_TO_MID_BYTE(IMX568_ROI_MODE_720_WIDTH)},
+
+	{FID0_ROIWV1_LOW, IMX568_TO_LOW_BYTE(IMX568_ROI_MODE_720_HEIGHT)},
+	{FID0_ROIWV1_HIGH, IMX568_TO_MID_BYTE(IMX568_ROI_MODE_720_HEIGHT)},
+
+	{IMX568_TABLE_WAIT_MS, IMX568_WAIT_MS},
+	{IMX568_TABLE_END, 0x0000},
+};
+
+static const imx568_reg mode_1236x1032[] = {
+	{HVMODE, 0x10},
+	{FID0_ROI, 0x00},
+
+	{VOPB_VBLK_HWID_LOW, IMX568_TO_LOW_BYTE(1236)},
+	{VOPB_VBLK_HWID_HIGH, IMX568_TO_MID_BYTE(1236)},
+	{FINFO_HWIDTH_LOW, IMX568_TO_LOW_BYTE(1236)},
+	{FINFO_HWIDTH_HIGH, IMX568_TO_MID_BYTE(1236)},
+
+	{IMX568_TABLE_WAIT_MS, IMX568_WAIT_MS},
+	{IMX568_TABLE_END, 0x0000}
+};
+
+/* Enum of available frame modes */
+enum {
+	IMX568_MODE_2472x2064,
+	IMX568_MODE_ROI_1920x1080,
+	IMX568_MODE_ROI_1280x720,
+	IMX568_MODE_BINNING_1236x1032,
+	IMX568_INIT_SETTINGS,
+	IMX568_MODE_STOP_STREAM,
+	IMX568_8BIT_MODE,
+	IMX568_10BIT_MODE,
+	IMX568_12BIT_MODE,
+};
+
+typedef enum {
+	IMX568_1188_MBPS,
+	IMX568_891_MBPS,
+	IMX568_594_MBPS,
+} data_rate_mode;
+
+typedef enum {
+	IMX568_COLOR = 0,
+	IMX568_MONO = 1,
+} chromacity_mode;
+
+static const imx568_reg *data_rate_table[] = {
+	[IMX568_1188_MBPS] = imx568_1188_mbps,
+	[IMX568_891_MBPS] = imx568_891_mbps,
+	[IMX568_594_MBPS] = imx568_594_mbps,
+};
+
+/* Connecting frame modes to mode tables */
+static const imx568_reg *mode_table[] = {
+	[IMX568_MODE_2472x2064] = mode_2472x2064,
+	[IMX568_MODE_ROI_1920x1080] = mode_1920x1080,
+	[IMX568_MODE_ROI_1280x720] = mode_1280x720,
+	[IMX568_MODE_BINNING_1236x1032] = mode_1236x1032,
+	[IMX568_INIT_SETTINGS] = imx568_init_settings,
+	[IMX568_8BIT_MODE] = imx568_8bit_mode,
+	[IMX568_10BIT_MODE] = imx568_10bit_mode,
+	[IMX568_12BIT_MODE] = imx568_12bit_mode,
+	[IMX568_MODE_STOP_STREAM] = imx568_stop,
+};
+
+/* Framerates of available frame modes */
+static const int imx568_67fps[] = {
+	67,
+};
+
+static const int imx568_122fps[] = {
+	122,
+};
+
+static const int imx568_233fps[] = {233};
+
+/* Connecting resolutions, framerates and mode tables */
+static const struct camera_common_frmfmt imx568_frmfmt[] = {
+	{.size = {IMX568_DEFAULT_WIDTH, IMX568_DEFAULT_HEIGHT},
+	.framerates = imx568_67fps,
+	.num_framerates = 1,
+	.hdr_en = false,
+	.mode = IMX568_MODE_2472x2064},
+	{.size = {IMX568_ROI_MODE_WIDTH, IMX568_ROI_MODE_HEIGHT},
+	.framerates = imx568_122fps,
+	.num_framerates = 1,
+	.hdr_en = false,
+	.mode = IMX568_MODE_ROI_1920x1080},
+	{.size = {IMX568_ROI_MODE_720_WIDTH, IMX568_ROI_MODE_720_HEIGHT},
+	.framerates = imx568_122fps,
+	.num_framerates = 1,
+	.hdr_en = false,
+	.mode = IMX568_MODE_ROI_1280x720},
+	{.size = {IMX568_BINNING_MODE_WIDTH, IMX568_BINNING_MODE_HEIGHT},
+	.framerates = imx568_233fps,
+	.num_framerates = 1,
+	.hdr_en = false,
+	.mode = IMX568_MODE_BINNING_1236x1032},
+};
+
+#endif

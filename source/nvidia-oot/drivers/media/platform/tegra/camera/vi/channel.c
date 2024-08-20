@@ -692,7 +692,7 @@ tegra_channel_queue_setup(struct vb2_queue *vq,
 
 	*nplanes = 1;
 
-	sizes[0] = chan->format.sizeimage;
+	sizes[0] = chan->format.sizeimage + EMBEDDED_DATA_MAX_SIZE + EMBEDDED_DATA_BUFFER_ZONE_SIZE;
 	alloc_devs[0] = tegra_channel_get_vi_unit(chan);
 
 	if (vi->fops && vi->fops->vi_setup_queue)
@@ -2061,6 +2061,23 @@ __tegra_channel_try_format(struct tegra_channel *chan,
 	if (ret == -ENOIOCTLCMD)
 		return -ENOTTY;
 
+	/* if set_fmt suggests a different pixel format, use that */
+	if (fmt.format.code != vfmt->code) {
+
+		vfmt = tegra_core_get_format_by_code(chan, fmt.format.code, 0);
+		pix->pixelformat = vfmt->fourcc;
+
+		/* Use the channel format if pixformat is not supported */
+		if (!vfmt) {
+			pix->pixelformat = chan->format.pixelformat;
+			vfmt = tegra_core_get_format_by_fourcc(chan, pix->pixelformat);
+		}
+
+		fmt.which = V4L2_SUBDEV_FORMAT_TRY;
+		fmt.pad = 0;
+		v4l2_fill_mbus_format(&fmt.format, pix, vfmt->code);
+	}
+
 	v4l2_fill_pix_format(pix, &fmt.format);
 
 	tegra_channel_fmt_align(chan, vfmt,
@@ -2363,8 +2380,11 @@ int tegra_vi_get_port_info(struct tegra_channel *chan,
 			continue;
 
 		ret = of_property_read_u32(port, "reg", &value);
-		if (ret < 0)
+		/* TODO: Find other workaround */
+		if (ret < 0) {
+			ret = 0;
 			continue;
+		}
 
 		if (value != index)
 			continue;

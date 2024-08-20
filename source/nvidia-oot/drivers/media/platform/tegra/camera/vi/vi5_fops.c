@@ -19,6 +19,7 @@
 #include <media/tegra-v4l2-camera.h>
 #include <media/tegra_camera_platform.h>
 #include <soc/tegra/camrtc-capture.h>
+#include <media/vi.h>
 #include <trace/events/camera_common.h>
 
 #include "vi5_fops.h"
@@ -365,6 +366,30 @@ static int tegra_channel_capture_setup(struct tegra_channel *chan, unsigned int 
 	return 0;
 }
 
+/* XXX originally defined in kernel-4.9/drivers/media/v4l2-core/videobuf2-dma-contig.c
+   This struct is private, so it is redefined here to be able to access the virtual address of the buffer.
+*/
+struct vb2_dc_buf {
+    struct device            *dev;
+    void                *vaddr;
+    unsigned long            size;
+    void                *cookie;
+    dma_addr_t            dma_addr;
+    unsigned long            attrs;
+    enum dma_data_direction        dma_dir;
+    struct sg_table            *dma_sgt;
+    struct frame_vector        *vec;
+#if 0
+    /* MMAP related */
+    struct vb2_vmarea_handler    handler;
+    atomic_t            refcount;
+    struct sg_table            *sgt_base;
+
+    /* DMABUF related */
+    struct dma_buf_attachment    *db_attach;
+#endif
+};
+
 static void vi5_setup_surface(struct tegra_channel *chan,
 	struct tegra_channel_buffer *buf, unsigned int descr_index, unsigned int vi_port)
 {
@@ -379,6 +404,11 @@ static void vi5_setup_surface(struct tegra_channel *chan,
 		&chan->tegra_vi_channel[vi_port]->
 		capture_data->requests_memoryinfo[descr_index];
 	struct capture_descriptor *desc = &chan->request[vi_port][descr_index];
+
+	dma_addr_t embedded_data_buf = buf->addr + chan->buffer_offset[vi_port] + chan->format.sizeimage + EMBEDDED_DATA_BUFFER_ZONE_SIZE; // add 8 bytes of space for storing info about embedded data
+	struct vb2_dc_buf* buf_priv = (struct vb2_dc_buf*)buf->buf.vb2_buf.planes[vi_port].mem_priv;
+	uint16_t * ptr_to_embedded_data = (uint16_t *)buf_priv->vaddr;
+	uint32_t end_of_image_offset_words = (chan->buffer_offset[vi_port] + chan->format.sizeimage) / 2;
 
 	if (chan->valid_ports > NVCSI_STREAM_1) {
 		height = chan->gang_height;
@@ -414,13 +444,17 @@ static void vi5_setup_surface(struct tegra_channel *chan,
 		desc->ch_cfg.frame.embed_y = chan->embedded_data_height;
 
 		desc_memoryinfo->surface[VI_ATOMP_SURFACE_EMBEDDED].base_address
-			= chan->emb_buf;
+			= embedded_data_buf;
 		desc_memoryinfo->surface[VI_ATOMP_SURFACE_EMBEDDED].size
 			= desc->ch_cfg.frame.embed_x * desc->ch_cfg.frame.embed_y;
 
 		desc->ch_cfg.atomp.surface_stride[VI_ATOMP_SURFACE_EMBEDDED]
 			= chan->embedded_data_width * BPP_MEM;
 	}
+
+	ptr_to_embedded_data[end_of_image_offset_words] = chan->embedded_data_width;
+	ptr_to_embedded_data[end_of_image_offset_words + 1] = chan->embedded_data_height;
+
 	//capture sequence should increment for each vi channel
 	if ((chan->valid_ports - vi_port) == 1)
 		chan->capture_descr_sequence += 1;

@@ -183,6 +183,7 @@ int tegracam_v4l2subdev_register(struct tegracam_device *tc_dev,
 				bool is_sensor)
 {
 	struct camera_common_data *s_data = tc_dev->s_data;
+	struct camera_common_sensor_ops *sensor_ops = s_data->ops;
 	struct tegracam_ctrl_handler *ctrl_hdl;
 	struct v4l2_subdev *sd = NULL;
 	struct device *dev = tc_dev->dev;
@@ -207,6 +208,13 @@ int tegracam_v4l2subdev_register(struct tegracam_device *tc_dev,
 	if (err) {
 		dev_err(dev, "Failed to init ctrls %s\n", tc_dev->name);
 		return err;
+	}
+	if (sensor_ops->init_private_controls){
+	    err = sensor_ops->init_private_controls(tc_dev);
+	    if (err) {
+		    dev_err(dev, "Failed to init private ctrls %s\n", tc_dev->name);
+		    return err;
+	    }
 	}
 	if (ctrl_hdl->ctrl_ops != NULL)
 		tc_dev->numctrls = ctrl_hdl->ctrl_ops->numctrls;

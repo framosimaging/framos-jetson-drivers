@@ -1,0 +1,635 @@
+/* SPDX-License-Identifier: GPL-2.0
+ *
+ * Copyright (c) 2024 Framos. All rights reserved.
+ *
+ * fr_imx565_mode_tbls.h - imx662 sensor mode tables
+ */
+
+#ifndef __fr_IMX565_TABLES__
+#define __fr_IMX565_TABLES__
+
+
+#define STANDBY					0x3000
+#define XMSTA					0x3010
+
+#define INCKSEL_ST0				0x3014
+#define INCKSEL_ST1				0x3015
+#define INCKSEL_ST2				0x3016
+#define INCKSEL_ST3				0x3018
+#define INCKSEL_ST4				0x3019
+#define INCKSEL_ST5				0x301B
+#define REGHOLD					0x3034
+#define HVMODE					0x303C
+#define VOPB_VBLK_HWID_LOW			0x30D0
+#define VOPB_VBLK_HWID_HIGH			0x30D1
+#define FINFO_HWIDTH_LOW			0x30D2
+#define FINFO_HWIDTH_HIGH			0x30D3
+
+#define VMAX_LOW				0x30D4
+#define VMAX_MID				0x30D5
+#define VMAX_HIGH				0x30D6
+#define HMAX_LOW				0x30D8
+#define HMAX_HIGH				0x30D9
+#define GMRWT					0x30E2
+#define GMTWT					0x30E3
+#define GAINDLY					0x30E5
+#define GSDLY					0x30E6
+
+#define ROI_MODE				0x3100
+#define FID0_ROI				0x3104
+#define FID0_ROIPH1_LOW				0x3120
+#define FID0_ROIPH1_HIGH			0x3121
+#define FID0_ROIPV1_LOW				0x3122
+#define FID0_ROIPV1_HIGH			0x3123
+#define FID0_ROIWH1_LOW				0x3124
+#define FID0_ROIWH1_HIGH			0x3125
+#define FID0_ROIWV1_LOW				0x3126
+#define FID0_ROIWV1_HIGH			0x3127
+
+#define ADBIT					0x3200
+#define HREVERSE_VREVERSE			0x3204
+
+#define INCKSEL_N0				0x321C
+#define INCKSEL_N1				0x321D
+#define INCKSEL_N2				0x321E
+#define INCKSEL_N3				0x321F
+
+#define INCKSEL_S0				0x3220
+#define INCKSEL_S1				0x3221
+#define INCKSEL_S2				0x3222
+#define INCKSEL_S3				0x3223
+
+#define INCKSEL_D0				0x3224
+#define INCKSEL_D1				0x3225
+#define INCKSEL_D2				0x3226
+#define INCKSEL_D3				0x3227
+
+#define LLBLANK_LOW				0x323C
+#define LLBLANK_HIGH				0x323D
+#define VINT_EN					0x323E
+
+#define SHS_LOW					0x3240
+#define SHS_MID					0x3241
+#define SHS_HIGH				0x3242
+
+#define TRIGMODE				0x3400
+#define ODBIT					0x3430
+#define SYNCSEL					0x343C
+
+#define GAIN_RTS				0x3502
+#define GAIN_LOW				0x3514
+#define GAIN_HIGH				0x3515
+#define BLKLEVEL_LOW				0x35B4
+#define BLKLEVEL_HIGH				0x35B5
+
+#define LANESEL					0x3904
+#define EAV_SEL_MIPI				0x3942
+
+#define TXCLKESC_FREQ_LOW			0x3CA4
+#define TXCLKESC_FREQ_HIGH			0x3CA5
+#define THS_PREPARE_LOW				0x3CB4
+#define THS_PREPARE_HIGH			0x3CB5
+#define TCLK_POST_LOW				0x3CB6
+#define TCLK_POST_HIGH				0x3CB7
+#define THS_TRAIL_LOW				0x3CB8
+#define THS_TRAIL_HIGH				0x3CB9
+#define THS_ZERO_LOW				0x3CBA
+#define THS_ZERO_HIGH				0x3CBB
+#define TCLK_PREPARE_LOW			0x3CBC
+#define TCLK_PREPARE_HIGH			0x3CBD
+#define TCLK_TRAIL_LOW				0x3CBE
+#define TCLK_TRAIL_HIGH				0x3CBF
+#define TLPX_LOW				0x3CC0
+#define TLPX_HIGH				0x3CC1
+#define TCLK_ZERO_LOW				0x3CC2
+#define TCLK_ZERO_HIGH				0x3CC3
+#define TCLK_PRE_LOW				0x3CC4
+#define TCLK_PRE_HIGH				0x3CC5
+#define THS_EXIT_LOW				0x3CC6
+#define THS_EXIT_HIGH				0x3CC7
+
+#define IMX565_DEFAULT_WIDTH			4128
+#define IMX565_DEFAULT_HEIGHT			3008
+
+#define HSST_EN1				0x35A5
+#define HSST_EN2				0x35A9
+#define HSST_EN3				0x35ED
+
+/* Resolutions of implemented frame modes */
+#define IMX565_ROI_MODE_WIDTH			3840
+#define IMX565_ROI_MODE_HEIGHT			2160
+
+#define IMX565_BINNING_CROP_MODE_WIDTH		1920
+#define IMX565_BINNING_CROP_MODE_HEIGHT		1080
+
+/* Special values for the write table function */
+#define IMX565_TABLE_WAIT_MS			0
+#define IMX565_TABLE_END			1
+#define IMX565_WAIT_MS				10
+
+#define IMX565_MIN_FRAME_DELTA			116
+
+#define IMX565_TO_LOW_BYTE(x)			(x & 0xFF)
+#define IMX565_TO_MID_BYTE(x)			(x >> 8)
+
+typedef struct reg_8 imx565_reg;
+
+/* Tables for the write table function */
+static const imx565_reg imx565_stop[] = {
+	{STANDBY, 0x01},
+	{IMX565_TABLE_WAIT_MS, IMX565_WAIT_MS},
+	{XMSTA, 0x01},
+	{IMX565_TABLE_WAIT_MS, 30},
+	{IMX565_TABLE_END, 0x00}
+};
+
+static const imx565_reg imx565_8bit_mode[] = {
+	{0x35A4, 0x08},
+	{0x35A8, 0x08},
+	{0x35EC, 0x08},
+
+	{0x36E8, 0x11},
+
+	{0x4460, 0x6C},
+
+	{0x4728, 0xFB},
+	{0x4729, 0x07},
+	{0x472E, 0x06},
+	{0x472F, 0x06},
+	{0x4730, 0x06},
+	{0x4731, 0x06},
+
+	{0x4900, 0x44},
+	{0x4908, 0x6E},
+
+	{ADBIT, 0x25},
+	{ODBIT, 0x02},
+
+	{IMX565_TABLE_WAIT_MS, IMX565_WAIT_MS},
+	{IMX565_TABLE_END, 0x00}
+};
+
+static const imx565_reg imx565_10bit_mode[] = {
+	{0x35A4, 0x1C},
+	{0x35A8, 0x1C},
+	{0x35EC, 0x1C},
+
+	{0x36E8, 0x11},
+
+	{0x4460, 0x6C},
+
+	{0x4728, 0xD4},
+	{0x4729, 0x0E},
+	{0x472E, 0x05},
+	{0x472F, 0x04},
+	{0x4730, 0x04},
+	{0x4731, 0x04},
+
+	{0x4900, 0x64},
+	{0x4908, 0x6E},
+
+	{ADBIT, 0x05},
+	{ODBIT, 0x00},
+
+	{IMX565_TABLE_WAIT_MS, IMX565_WAIT_MS},
+	{IMX565_TABLE_END, 0x00}
+};
+
+static const imx565_reg imx565_12bit_mode[] = {
+	{0x35A4, 0x08},
+	{0x35A8, 0x08},
+	{0x35EC, 0x08},
+
+	{0x36E8, 0x13},
+
+	{0x4460, 0x6E},
+
+	{0x4728, 0xFB},
+	{0x4729, 0x07},
+	{0x472E, 0x06},
+	{0x472F, 0x06},
+	{0x4730, 0x06},
+	{0x4731, 0x06},
+
+	{0x4900, 0x6C},
+	{0x4908, 0x68},
+
+	{ADBIT, 0x15},
+	{ODBIT, 0x01},
+
+	{IMX565_TABLE_WAIT_MS, IMX565_WAIT_MS},
+	{IMX565_TABLE_END, 0x00}
+};
+
+static const imx565_reg imx565_1188_mbps[] = {
+	{INCKSEL_D2, 0x80},
+	{INCKSEL_D3, 0x80},
+
+	{THS_PREPARE_LOW, 0x4F},
+	{THS_PREPARE_HIGH, 0x00},
+	{TCLK_POST_LOW, 0x8F},
+	{TCLK_POST_HIGH, 0x00},
+	{THS_TRAIL_LOW, 0x4F},
+	{THS_TRAIL_HIGH, 0x00},
+	{THS_ZERO_LOW, 0x87},
+	{THS_ZERO_HIGH, 0x00},
+	{TCLK_PREPARE_LOW, 0x4F},
+	{TCLK_PREPARE_HIGH, 0x00},
+	{TCLK_TRAIL_LOW, 0x47},
+	{TCLK_TRAIL_HIGH, 0x00},
+	{TLPX_LOW, 0x3F},
+	{TLPX_HIGH, 0x00},
+	{TCLK_ZERO_LOW, 0x37},
+	{TCLK_ZERO_HIGH, 0x01},
+	{TCLK_PRE_LOW, 0x0F},
+	{TCLK_PRE_HIGH, 0x00},
+	{THS_EXIT_LOW, 0x7F},
+	{THS_EXIT_HIGH, 0x00},
+
+	{IMX565_TABLE_WAIT_MS, IMX565_WAIT_MS},
+	{IMX565_TABLE_END, 0x0000}
+};
+
+static const imx565_reg imx565_891_mbps[] = {
+	{INCKSEL_D2, 0xC0},
+	{INCKSEL_D3, 0xD0},
+
+	{THS_PREPARE_LOW, 0x3F},
+	{THS_PREPARE_HIGH, 0x00},
+	{TCLK_POST_LOW, 0x7F},
+	{TCLK_POST_HIGH, 0x00},
+	{THS_TRAIL_LOW, 0x3F},
+	{THS_TRAIL_HIGH, 0x00},
+	{THS_ZERO_LOW, 0x6F},
+	{THS_ZERO_HIGH, 0x00},
+	{TCLK_PREPARE_LOW, 0x37},
+	{TCLK_PREPARE_HIGH, 0x00},
+	{TCLK_TRAIL_LOW, 0x37},
+	{TCLK_TRAIL_HIGH, 0x00},
+	{TLPX_LOW, 0x2F},
+	{TLPX_HIGH, 0x00},
+	{TCLK_ZERO_LOW, 0xF7},
+	{TCLK_ZERO_HIGH, 0x00},
+	{TCLK_PRE_LOW, 0x0F},
+	{TCLK_PRE_HIGH, 0x00},
+	{THS_EXIT_LOW, 0x5F},
+	{THS_EXIT_HIGH, 0x00},
+
+	{IMX565_TABLE_WAIT_MS, IMX565_WAIT_MS},
+	{IMX565_TABLE_END, 0x0000}
+};
+
+static const imx565_reg imx565_594_mbps[] = {
+	{INCKSEL_D2, 0x80},
+	{INCKSEL_D3, 0x90},
+
+	{THS_PREPARE_LOW, 0x2F},
+	{THS_PREPARE_HIGH, 0x00},
+	{TCLK_POST_LOW, 0x67},
+	{TCLK_POST_HIGH, 0x00},
+	{THS_TRAIL_LOW, 0x2F},
+	{THS_TRAIL_HIGH, 0x00},
+	{THS_ZERO_LOW, 0x4F},
+	{THS_ZERO_HIGH, 0x00},
+	{TCLK_PREPARE_LOW, 0x27},
+	{TCLK_PREPARE_HIGH, 0x00},
+	{TCLK_TRAIL_LOW, 0x27},
+	{TCLK_TRAIL_HIGH, 0x00},
+	{TLPX_LOW, 0x27},
+	{TLPX_HIGH, 0x00},
+	{TCLK_ZERO_LOW, 0xB7},
+	{TCLK_ZERO_HIGH, 0x00},
+	{TCLK_PRE_LOW, 0x0F},
+	{TCLK_PRE_HIGH, 0x00},
+	{THS_EXIT_LOW, 0x47},
+	{THS_EXIT_HIGH, 0x00},
+
+	{IMX565_TABLE_WAIT_MS, IMX565_WAIT_MS},
+	{IMX565_TABLE_END, 0x0000}
+};
+
+static const imx565_reg imx565_init_settings[] = {
+	{INCKSEL_ST0, 0x05},
+	{INCKSEL_ST1, 0x91},
+	{INCKSEL_ST2, 0x50},
+	{INCKSEL_ST3, 0x20},
+	{INCKSEL_ST4, 0x02},
+	{INCKSEL_ST5, 0x1D},
+
+	{INCKSEL_N0, 0x40},
+	{INCKSEL_N1, 0x05},
+	{INCKSEL_N2, 0xE0},
+	{INCKSEL_N3, 0x00},
+
+	{INCKSEL_S0, 0x40},
+	{INCKSEL_S1, 0x05},
+	{INCKSEL_S2, 0xE0},
+	{INCKSEL_S3, 0x00},
+
+	{INCKSEL_D0, 0x40},
+	{INCKSEL_D1, 0x14},
+	{INCKSEL_D2, 0x80},
+	{INCKSEL_D3, 0x80},
+
+	{FINFO_HWIDTH_LOW, 0x20},
+	{FINFO_HWIDTH_HIGH, 0x10},
+
+	{LLBLANK_LOW, 0x19},
+	{LLBLANK_HIGH, 0x00},
+	{VINT_EN, 0x33},
+
+	{HVMODE, 0x00},
+	{LANESEL, 0x02},
+
+	{GAIN_RTS, 0x09},
+	{SYNCSEL, 0xC0},
+
+	{TXCLKESC_FREQ_LOW, 0x80},
+	{TXCLKESC_FREQ_HIGH, 0x09},
+
+	{EAV_SEL_MIPI, 0x03},
+
+	{0x3004, 0xA8},
+	{0x3005, 0x02},
+
+	{0x322B, 0x06},
+	{0x3233, 0x10},
+
+	{0x3521, 0x51},
+	{0x3522, 0xB1},
+	{0x3535, 0x00},
+	{0x3542, 0x27},
+	{0x3546, 0x54},
+	{0x354A, 0x20},
+	{0x359C, 0x0F},
+	{0x35A5, 0x12},
+	{0x35A9, 0x42},
+	{0x35B6, 0x02},
+	{0x35CE, 0x0E},
+	{0x35ED, 0x12},
+	{0x35F0, 0xFB},
+	{0x35F1, 0x0B},
+	{0x35F2, 0xFB},
+	{0x35F3, 0x0B},
+
+	{0x362E, 0x24},
+	{0x3642, 0x10},
+	{0x3656, 0x44},
+	{0x366A, 0x2E},
+	{0x3670, 0xC3},
+	{0x3672, 0x05},
+	{0x3674, 0xB6},
+	{0x3675, 0x01},
+	{0x3676, 0x05},
+	{0x367E, 0x24},
+	{0x3692, 0x10},
+	{0x36F5, 0x0F},
+
+	{0x3797, 0x20},
+
+	{0x3E2E, 0x07},
+	{0x3E30, 0x4E},
+	{0x3E6E, 0x07},
+	{0x3E70, 0x35},
+	{0x3E96, 0x01},
+	{0x3E9E, 0x38},
+	{0x3EA0, 0x4C},
+
+	{0x3F3A, 0x04},
+
+	{0x4056, 0x23},
+	{0x4096, 0x23},
+
+	{0x4182, 0x00},
+	{0x41A2, 0x03},
+
+	{0x4232, 0x3C},
+	{0x4235, 0x22},
+
+	{0x4306, 0x00},
+	{0x4307, 0x00},
+	{0x4308, 0x00},
+	{0x4309, 0x00},
+	{0x4310, 0x04},
+	{0x4311, 0x04},
+	{0x4312, 0x04},
+	{0x4313, 0x04},
+	{0x431E, 0x16},
+	{0x431F, 0x16},
+	{0x433C, 0x8A},
+	{0x433D, 0x02},
+	{0x433E, 0xE8},
+	{0x433F, 0x05},
+	{0x4340, 0x9E},
+	{0x4341, 0x0C},
+
+	{0x446A, 0x4C},
+	{0x446E, 0x51},
+	{0x4472, 0x57},
+	{0x4476, 0x79},
+	{0x448A, 0x4C},
+	{0x448E, 0x51},
+	{0x4492, 0x57},
+	{0x4496, 0x79},
+	{0x44EC, 0x3F},
+	{0x44F0, 0x44},
+	{0x44F4, 0x4A},
+
+	{0x4510, 0x3F},
+	{0x4514, 0x44},
+	{0x4518, 0x4A},
+	{0x4576, 0xBE},
+	{0x457A, 0xB1},
+	{0x4580, 0xBC},
+	{0x4584, 0xAF},
+
+	{0x473C, 0x06},
+	{0x473D, 0x06},
+	{0x473E, 0x06},
+	{0x473F, 0x06},
+	{0x4749, 0x9F},
+	{0x474A, 0x99},
+	{0x474B, 0x09},
+	{0x4753, 0x90},
+	{0x4754, 0x99},
+	{0x4755, 0x09},
+	{0x4788, 0x04},
+
+	{HSST_EN1, 0x00},
+	{HSST_EN2, 0x00},
+	{HSST_EN3, 0x00},
+
+	{0x4864, 0xDC},
+	{0x4868, 0xDC},
+	{0x486C, 0xDC},
+	{0x4874, 0xDC},
+	{0x4878, 0xDC},
+	{0x487C, 0xDC},
+	{0x48A4, 0xF4},
+	{0x48A8, 0xF4},
+	{0x48AC, 0xF4},
+	{0x48B4, 0xF4},
+	{0x48B8, 0xF4},
+	{0x48BC, 0xF4},
+
+	{0x4901, 0x0A},
+	{0x4902, 0x01},
+	{0x4916, 0x00},
+	{0x4917, 0x00},
+	{0x4918, 0xFF},
+	{0x4919, 0x0F},
+	{0x491E, 0xFF},
+	{0x491F, 0x0F},
+	{0x4920, 0x00},
+	{0x4921, 0x00},
+	{0x4926, 0xFF},
+	{0x4927, 0x0F},
+	{0x4928, 0x00},
+	{0x4929, 0x00},
+
+	{0x4A34, 0x0A},
+
+	{IMX565_TABLE_WAIT_MS, IMX565_WAIT_MS},
+	{IMX565_TABLE_END, 0x0000}
+};
+
+static const imx565_reg mode_4128x3008[] = {
+	{HVMODE, 0x00},
+	{VINT_EN, 0x33},
+
+	{VOPB_VBLK_HWID_LOW, IMX565_TO_LOW_BYTE(4128)},
+	{VOPB_VBLK_HWID_HIGH, IMX565_TO_MID_BYTE(4128)},
+	{FINFO_HWIDTH_LOW, IMX565_TO_LOW_BYTE(4128)},
+	{FINFO_HWIDTH_HIGH, IMX565_TO_MID_BYTE(4128)},
+
+	{FID0_ROI, 0x00},
+
+	{IMX565_TABLE_WAIT_MS, IMX565_WAIT_MS},
+	{IMX565_TABLE_END, 0x0000}
+};
+
+static const imx565_reg mode_3840x2160[] = {
+	{HVMODE, 0x00},
+	{VINT_EN, 0x33},
+
+	{VOPB_VBLK_HWID_LOW, IMX565_TO_LOW_BYTE(3840)},
+	{VOPB_VBLK_HWID_HIGH, IMX565_TO_MID_BYTE(3840)},
+	{FINFO_HWIDTH_LOW, IMX565_TO_LOW_BYTE(3840)},
+	{FINFO_HWIDTH_HIGH, IMX565_TO_MID_BYTE(3840)},
+
+	{FID0_ROI, 0x03},
+
+	{FID0_ROIPH1_LOW, IMX565_TO_LOW_BYTE(144)},
+	{FID0_ROIPH1_HIGH, IMX565_TO_MID_BYTE(144)},
+	{FID0_ROIPV1_LOW, IMX565_TO_LOW_BYTE(424)},
+	{FID0_ROIPV1_HIGH, IMX565_TO_MID_BYTE(424)},
+
+	{FID0_ROIWH1_LOW, IMX565_TO_LOW_BYTE(IMX565_ROI_MODE_WIDTH)},
+	{FID0_ROIWH1_HIGH, IMX565_TO_MID_BYTE(IMX565_ROI_MODE_WIDTH)},
+
+	{FID0_ROIWV1_LOW, IMX565_TO_LOW_BYTE(IMX565_ROI_MODE_HEIGHT)},
+	{FID0_ROIWV1_HIGH, IMX565_TO_MID_BYTE(IMX565_ROI_MODE_HEIGHT)},
+
+	{IMX565_TABLE_WAIT_MS, IMX565_WAIT_MS},
+	{IMX565_TABLE_END, 0x0000}
+};
+
+static const imx565_reg mode_1920x1080[] = {
+	{HVMODE, 0x10},
+	{VINT_EN, 0x2B},
+
+	{VOPB_VBLK_HWID_LOW, IMX565_TO_LOW_BYTE(1920)},
+	{VOPB_VBLK_HWID_HIGH, IMX565_TO_MID_BYTE(1920)},
+	{FINFO_HWIDTH_LOW, IMX565_TO_LOW_BYTE(1920)},
+	{FINFO_HWIDTH_HIGH, IMX565_TO_MID_BYTE(1920)},
+
+	{FID0_ROI, 0x03},
+
+	{FID0_ROIPH1_LOW, IMX565_TO_LOW_BYTE(72)},
+	{FID0_ROIPH1_HIGH, IMX565_TO_MID_BYTE(72)},
+	{FID0_ROIPV1_LOW, IMX565_TO_LOW_BYTE(216)},
+	{FID0_ROIPV1_HIGH, IMX565_TO_MID_BYTE(216)},
+
+	{FID0_ROIWH1_LOW, IMX565_TO_LOW_BYTE(IMX565_BINNING_CROP_MODE_WIDTH)},
+	{FID0_ROIWH1_HIGH, IMX565_TO_MID_BYTE(IMX565_BINNING_CROP_MODE_WIDTH)},
+
+	{FID0_ROIWV1_LOW, IMX565_TO_LOW_BYTE(IMX565_BINNING_CROP_MODE_HEIGHT)},
+	{FID0_ROIWV1_HIGH, IMX565_TO_MID_BYTE(IMX565_BINNING_CROP_MODE_HEIGHT)},
+
+	{IMX565_TABLE_WAIT_MS, IMX565_WAIT_MS},
+	{IMX565_TABLE_END, 0x0000}
+};
+
+/* Enum of available frame modes */
+enum {
+	IMX565_MODE_4128x3008,
+	IMX565_MODE_ROI_3840x2160,
+	IMX565_MODE_BINNING_CROP_1920x1080,
+
+	IMX565_INIT_SETTINGS,
+	IMX565_MODE_STOP_STREAM,
+
+	IMX565_8BIT_MODE,
+	IMX565_10BIT_MODE,
+	IMX565_12BIT_MODE,
+};
+
+typedef enum {
+	IMX565_1188_MBPS,
+	IMX565_891_MBPS,
+	IMX565_594_MBPS,
+} data_rate_mode;
+
+static const imx565_reg *data_rate_table[] = {
+	[IMX565_1188_MBPS] = imx565_1188_mbps,
+	[IMX565_891_MBPS] = imx565_891_mbps,
+	[IMX565_594_MBPS] = imx565_594_mbps,
+};
+
+/* Connecting frame modes to mode tables */
+static const imx565_reg *mode_table[] = {
+
+	[IMX565_MODE_4128x3008] = mode_4128x3008,
+	[IMX565_MODE_ROI_3840x2160] = mode_3840x2160,
+	[IMX565_MODE_BINNING_CROP_1920x1080] = mode_1920x1080,
+
+	[IMX565_INIT_SETTINGS] = imx565_init_settings,
+
+	[IMX565_8BIT_MODE] = imx565_8bit_mode,
+	[IMX565_10BIT_MODE] = imx565_10bit_mode,
+	[IMX565_12BIT_MODE] = imx565_12bit_mode,
+
+	[IMX565_MODE_STOP_STREAM] = imx565_stop,
+};
+
+/* Framerates of available frame modes */
+static const int imx565_42fps[] = {
+	42,
+};
+
+static const int imx565_58fps[] = {
+	58,
+};
+
+static const int imx565_205fps[] = {205};
+
+/* Connecting resolutions, framerates and mode tables */
+static const struct camera_common_frmfmt imx565_frmfmt[] = {
+	{.size = {IMX565_DEFAULT_WIDTH, IMX565_DEFAULT_HEIGHT},
+	 .framerates = imx565_42fps,
+	 .num_framerates = 1,
+	 .hdr_en = false,
+	 .mode = IMX565_MODE_4128x3008},
+	{.size = {IMX565_ROI_MODE_WIDTH, IMX565_ROI_MODE_HEIGHT},
+	 .framerates = imx565_58fps,
+	 .num_framerates = 1,
+	 .hdr_en = false,
+	 .mode = IMX565_MODE_ROI_3840x2160},
+	{.size = {IMX565_BINNING_CROP_MODE_WIDTH, IMX565_BINNING_CROP_MODE_HEIGHT},
+	 .framerates = imx565_205fps,
+	 .num_framerates = 1,
+	 .hdr_en = false,
+	 .mode = IMX565_MODE_BINNING_CROP_1920x1080},
+};
+
+#endif
