@@ -1,0 +1,448 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * Copyright (c) 2024 Framos. All rights reserved.
+ *
+ * tegra234-p3737-camera-fr_fpa_4a_txa-overlay.dts - FPA-4.A/TXA device tree
+ */
+
+/dts-v1/;
+/plugin/;
+
+#include <dt-bindings/clock/tegra234-clock.h>
+#include <dt-bindings/gpio/tegra234-gpio.h>
+#include <dt-bindings/tegra234-p3737-0000+p3701-0000.h>
+
+
+#define CAM_RST	TEGRA234_MAIN_GPIO(H, 3)
+#define PW_EN	TEGRA234_MAIN_GPIO(H, 6)
+#define CRESETB TEGRA234_MAIN_GPIO(AC, 0)
+
+/ {
+	overlay-name = "Framos FPA-4.A/TXA";
+	jetson-header-name = "Jetson AGX CSI Connector";
+	compatible = JETSON_COMPATIBLE;
+
+	fragment@0 {
+		target-path = "/";
+		__overlay__ {
+			framos_platform_adapter {
+				cam,use-cam-gpio = "true";
+			};
+			tegra-camera-platform {
+				num_csi_lanes = <16>;
+				max_lane_speed = <2500000>;
+				min_bits_per_pixel = <10>;
+				vi_peak_byte_per_pixel = <2>;
+				vi_bw_margin_pct = <25>;
+				isp_peak_byte_per_pixel = <5>;
+				isp_bw_margin_pct = <25>;
+				modules {
+					status = "okay";
+					sensor_module0: module0 {
+						status = "disabled";
+						position = "bottomleft";
+						orientation = "1";
+						drivernode0 {
+							status = "disabled";
+							pcl_id = "v4l2_sensor";
+						};
+					};
+					sensor_module1: module1 {
+						status = "disabled";
+						position = "centerright";
+						orientation = "1";
+						drivernode0 {
+							status = "disabled";
+							pcl_id = "v4l2_sensor";
+						};
+					};
+					sensor_module2: module2 {
+						status = "disabled";
+						position = "bottomright";
+						orientation = "1";
+						drivernode0 {
+							status = "disabled";
+							pcl_id = "v4l2_sensor";
+						};
+					};
+					sensor_module3: module3 {
+						status = "disabled";
+						position = "topright";
+						orientation = "1";
+						drivernode0 {
+							status = "disabled";
+							pcl_id = "v4l2_sensor";
+						};
+					};
+				};
+			};
+			tegra-capture-vi {
+				num-channels=<6>;
+				ports {
+					status = "okay";
+					sensor_vi_port0: port@0 {
+						reg = <0>;
+						status = "disabled";
+						sensor_vi_in0: endpoint {
+							status = "disabled";
+							vc-id = <0>;
+							port-index = <0>;
+							remote-endpoint = <&sensor_csi_ch0_out>;
+						};
+					};
+					sensor_vi_port1: port@1 {
+						reg = <1>;
+						status = "disabled";
+						sensor_vi_in1: endpoint {
+							status = "disabled";
+							vc-id = <0>;
+							port-index = <1>;
+							remote-endpoint = <&sensor_csi_ch1_out>;
+						};
+					};
+					sensor_vi_port2: port@2 {
+						reg = <2>;
+						status = "disabled";
+						sensor_vi_in2: endpoint {
+							status = "disabled";
+							vc-id = <0>;
+							port-index = <2>;
+							remote-endpoint = <&sensor_csi_ch2_out>;
+						};
+					};
+					sensor_vi_port3: port@3 {
+						reg = <3>;
+						status = "disabled";
+						sensor_vi_in3: endpoint {
+							status = "disabled";
+							vc-id = <0>;
+							port-index = <3>;
+							remote-endpoint = <&sensor_csi_ch3_out>;
+						};
+					};
+					sensor_vi_port4: port@4 {
+						reg = <4>;
+						status = "disabled";
+						sensor_vi_in4: endpoint {
+							status = "disabled";
+							vc-id = <0>;
+							port-index = <4>;
+							remote-endpoint = <&sensor_csi_ch4_out>;
+						};
+					};
+					sensor_vi_port5: port@5 {
+						reg = <5>;
+						status = "disabled";
+						sensor_vi_in5: endpoint {
+							status = "disabled";
+							vc-id = <0>;
+							port-index = <5>;
+							remote-endpoint = <&sensor_csi_ch6_out>;
+						};
+					};
+				};
+			};
+		};
+	};
+
+	fragment@1 {
+		target-path = "/bus@0";
+		__overlay__ {
+			host1x@13e00000 {
+				nvcsi@15a00000 {
+					num-channels=<8>;
+					sensor_csi_ch0: channel@0 {
+						reg = <0>;
+						status = "disabled";
+						ports {
+							status = "disabled";
+							sensor_csi_ch0_port0: port@0 {
+								reg = <0>;
+								status = "disabled";
+								sensor_csi_ch0_in: endpoint@0 {
+									status = "disabled";
+									port-index = <0>;
+								};
+							};
+							sensor_csi_ch0_port1: port@1 {
+								reg = <1>;
+								status = "disabled";
+								sensor_csi_ch0_out: endpoint@1 {
+									status = "disabled";
+									remote-endpoint = <&sensor_vi_in0>;
+								};
+							};
+						};
+					};
+					sensor_csi_ch1: channel@1 {
+						reg = <1>;
+						status = "disabled";
+						ports {
+							status = "disabled";
+							sensor_csi_ch1_port0: port@0 {
+								reg = <0>;
+								status = "disabled";
+								sensor_csi_ch1_in: endpoint@2 {
+									status = "disabled";
+									port-index = <1>;
+								};
+							};
+							sensor_csi_ch1_port1: port@1 {
+								reg = <1>;
+								status = "disabled";
+								sensor_csi_ch1_out: endpoint@3 {
+									status = "disabled";
+									remote-endpoint = <&sensor_vi_in1>;
+								};
+							};
+						};
+					};
+					sensor_csi_ch2: channel@2 {
+						reg = <2>;
+						status = "disabled";
+						ports {
+							status = "disabled";
+							sensor_csi_ch2_port0: port@0 {
+								reg = <0>;
+								status = "disabled";
+								sensor_csi_ch2_in: endpoint@4 {
+									status = "disabled";
+									port-index = <2>;
+								};
+							};
+							sensor_csi_ch2_port1: port@1 {
+								reg = <1>;
+								status = "disabled";
+								sensor_csi_ch2_out: endpoint@5 {
+									status = "disabled";
+									remote-endpoint = <&sensor_vi_in2>;
+								};
+							};
+						};
+					};
+					sensor_csi_ch3: channel@3 {
+						reg = <3>;
+						status = "disabled";
+						ports {
+							status = "disabled";
+							sensor_csi_ch3_port0: port@0 {
+								reg = <0>;
+								status = "disabled";
+								sensor_csi_ch3_in: endpoint@6 {
+									status = "disabled";
+									port-index = <3>;
+								};
+							};
+							sensor_csi_ch3_port1: port@1 {
+								reg = <1>;
+								status = "disabled";
+								sensor_csi_ch3_out: endpoint@7 {
+									status = "disabled";
+									remote-endpoint = <&sensor_vi_in3>;
+								};
+							};
+						};
+					};
+					sensor_csi_ch4: channel@4 {
+						reg = <4>;
+						status = "disabled";
+						ports {
+							status = "disabled";
+							sensor_csi_ch4_port0: port@0 {
+								reg = <0>;
+								status = "disabled";
+								sensor_csi_ch4_in: endpoint@8 {
+									status = "disabled";
+									port-index = <4>;
+								};
+							};
+							sensor_csi_ch4_port1: port@1 {
+								reg = <1>;
+								status = "disabled";
+								sensor_csi_ch4_out: endpoint@9 {
+									status = "disabled";
+									remote-endpoint = <&sensor_vi_in4>;
+								};
+							};
+						};
+					};
+					sensor_csi_ch5: channel@5 {
+						reg = <5>;
+						status = "disabled";
+						ports {
+							status = "disabled";
+							sensor_csi_ch5_port0: port@0 {
+								reg = <0>;
+								status = "disabled";
+								sensor_csi_ch5_in: endpoint@10 {
+									status = "disabled";
+									port-index = <5>;
+								};
+							};
+							sensor_csi_ch5_port1: port@1 {
+								reg = <1>;
+								status = "disabled";
+								sensor_csi_ch5_out: endpoint@11 {
+									status = "disabled";
+									remote-endpoint = <&sensor_vi_in4>;
+								};
+							};
+						};
+					};
+					sensor_csi_ch6: channel@6 {
+						reg = <6>;
+						status = "disabled";
+						ports {
+							status = "disabled";
+							sensor_csi_ch6_port0: port@0 {
+								reg = <0>;
+								status = "disabled";
+								sensor_csi_ch6_in: endpoint@12 {
+									status = "disabled";
+									port-index = <6>;
+								};
+							};
+							sensor_csi_ch6_port1: port@1 {
+								reg = <1>;
+								status = "disabled";
+								sensor_csi_ch6_out: endpoint@13 {
+									status = "disabled";
+									remote-endpoint = <&sensor_vi_in5>;
+								};
+							};
+						};
+					};
+					sensor_csi_ch7: channel@7 {
+						reg = <7>;
+						status = "disabled";
+						ports {
+							status = "disabled";
+							sensor_csi_ch7_port0: port@0 {
+								reg = <0>;
+								status = "disabled";
+								sensor_csi_ch7_in: endpoint@14 {
+									status = "disabled";
+									port-index = <7>;
+								};
+							};
+							sensor_csi_ch7_port1: port@1 {
+								reg = <1>;
+								status = "disabled";
+								sensor_csi_ch7_out: endpoint@15 {
+									status = "disabled";
+									remote-endpoint = <&sensor_vi_in5>;
+								};
+							};
+						};
+					};
+				};
+			};
+			gpio@2200000 {
+				camera-control-output-low {
+					status = "disabled";
+				};
+				som_gpio_pw_en-hog {
+					gpio-hog;
+					output-high;
+					gpios = <PW_EN 0>;
+					label = "pw_en";
+					status = "okay";
+				};
+				som_gpio_cresetb {
+					output-high;
+					gpios = <CRESETB 0>;
+					label = "cresetb";
+					status = "okay";
+				};
+				som_gpio_cam_rst-hog {
+					gpio-hog;
+					output-low;
+					gpios = <CAM_RST 0>;
+					label = "cam_rst";
+					status = "okay";
+				};
+			};
+			i2c@3180000 {
+				status = "okay";
+				tca9548_70: tca9548@70 {
+					status = "okay";
+					compatible = "nxp,pca9548";
+					reg = <0x70>;
+					#address-cells = <1>;
+					#size-cells = <0>;
+					skip_mux_detect;
+					vcc-supply = <&vdd_1v8_sys>;
+				};
+			};
+		};
+	};
+
+	fragment@2 {
+		target = <&tca9548_70>;
+		__overlay__ {
+			/* Channel connected to J5 */
+			tca9548_70_i2c0: i2c@0 {
+				status = "okay";
+				reg = <0>;
+				i2c-mux,deselect-on-exit;
+				#address-cells = <1>;
+				#size-cells = <0>;
+				reset-gpios = <&gpio CAM_RST GPIO_ACTIVE_HIGH>;
+				cresetb = <&gpio CRESETB GPIO_ACTIVE_HIGH>;
+				pwdn-gpios = <&gpio PW_EN GPIO_ACTIVE_HIGH>;
+			};
+			/* Channel connected to J6 */
+			tca9548_70_i2c2: i2c@2 {
+				status = "okay";
+				reg = <2>;
+				i2c-mux,deselect-on-exit;
+				#address-cells = <1>;
+				#size-cells = <0>;
+				reset-gpios = <&gpio CAM_RST GPIO_ACTIVE_HIGH>;
+				cresetb = <&gpio CRESETB GPIO_ACTIVE_HIGH>;
+				pwdn-gpios = <&gpio PW_EN GPIO_ACTIVE_HIGH>;
+			};
+			/* Channel connected to J7 */
+			tca9548_70_i2c4: i2c@4 {
+				status = "okay";
+				reg = <4>;
+				i2c-mux,deselect-on-exit;
+				#address-cells = <1>;
+				#size-cells = <0>;
+				reset-gpios = <&gpio CAM_RST GPIO_ACTIVE_HIGH>;
+				cresetb = <&gpio CRESETB GPIO_ACTIVE_HIGH>;
+				pwdn-gpios = <&gpio PW_EN GPIO_ACTIVE_HIGH>;
+			};
+			/* Channel connected to J8 */
+			tca9548_70_i2c6: i2c@6 {
+				status = "okay";
+				reg = <6>;
+				i2c-mux,deselect-on-exit;
+				#address-cells = <1>;
+				#size-cells = <0>;
+				reset-gpios = <&gpio CAM_RST GPIO_ACTIVE_HIGH>;
+				cresetb = <&gpio CRESETB GPIO_ACTIVE_HIGH>;
+				pwdn-gpios = <&gpio PW_EN GPIO_ACTIVE_HIGH>;
+			};
+			/* Broadcast MUX channel */
+			tca9548_70_i2c7: i2c@7 {
+				reg = <7>;
+				i2c-mux,deselect-on-exit;
+				#address-cells = <1>;
+				#size-cells = <0>;
+			};
+		};
+	};
+
+	fragment@3 {
+		target = <&tca9548_70_i2c7>;
+		__overlay__ {
+			broadcast_i2c_dev: broadcast_i2c_dev@36 {
+				compatible = "framos, mux_broadcast_ch";
+				device="i2c-mux";
+				reg = <0x36>;
+			};
+		};
+	};
+
+};
