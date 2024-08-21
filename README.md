@@ -1,10 +1,10 @@
 &nbsp;
+# Short procedure
 
 Supported Nvidia Jetson platforms:
   - Jetson AGX Orin developer kit
   - Jetson Orin Nano/NX developer kit
 
-# Short procedure
 ## 1. Clone, Compile and Install
 Clone, Compile and install can be used with two methods:
 
