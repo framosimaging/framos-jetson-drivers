@@ -24,7 +24,7 @@ Two methods:
 * [Command line version](https://github.com/framosimaging/framos-jetson-drivers/wiki/Command-line-version)
 
 ## 3. Run streaming software
-See [framos-jetson-libsv GitHub](https://github.com/framosimaging/framos-jetson-libsv)
+See [framos-jetson-libsv](https://github.com/framosimaging/framos-jetson-libsv) GitHub
 
 
 # For detailed guide and additional options and descriptions - [FRAMOS Sensor Module Ecosystem ‐ Driver User Guide](https://github.com/framosimaging/framos-jetson-drivers/wiki/FRAMOS-Sensor-Module-Ecosystem-%E2%80%90-Driver-User-Guide)
