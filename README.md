@@ -5,9 +5,8 @@ Supported Nvidia Jetson platforms:
   - Jetson Orin Nano/NX developer kit
 
 # Short procedure
-
-## 1. Compile and Installation
-Compile and install can be used with two methods:
+## 1. Clone, Compile and Install
+Clone, Compile and install can be used with two methods:
 
 * [Compile and installation on target system(Jetson platform)](https://github.com/framosimaging/framos-jetson-drivers/wiki/Compile-and-installation-on-target-system(Jetson-platform))
 
