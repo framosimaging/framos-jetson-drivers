@@ -8,11 +8,11 @@ Supported Nvidia Jetson platforms:
 ## 1. Clone, Compile and Install
 Clone, Compile and install can be used with two methods:
 
-* [Compile and installation on target system(Jetson platform)](https://github.com/framosimaging/framos-jetson-drivers/wiki/Compile-and-installation-on-target-system(Jetson-platform))
+* [Clone, Compile and Install on target system(Jetson platform)](https://github.com/framosimaging/framos-jetson-drivers/wiki/Clone,-Compile-and-Install-on-target-system(Jetson-platform))
 
   or
 
-* [Cross-Compile on host system(Ubuntu 22.04)](https://github.com/framosimaging/framos-jetson-drivers/wiki/Cross%E2%80%90Compile-on-host-system(Ubuntu-22.04))
+* [Clone, Cross‐Compile, Install and flash on host system(Ubuntu 22.04)](https://github.com/framosimaging/framos-jetson-drivers/wiki/Clone,-Cross%E2%80%90Compile,-Install-and-flash-on-host-system(Ubuntu-22.04))
 
 ## 2. Configuration of Image Sensors on the Jetson platform (Target System)
 Two methods:
