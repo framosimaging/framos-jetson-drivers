@@ -7,11 +7,11 @@ Supported Nvidia Jetson platforms:
 # 1. Compile and Installation
 Compile and install can be used with two methods:
 
-* [Compile and installation on target system(Jetson platform)](https://github.com/framosimaging/framos-jetson-drivers/wiki/FRAMOS-Sensor-Module-Ecosystem-%E2%80%90-Driver-User-Guide#121-compile-and-installation-on-target-systemjetson-platform)
+* [Compile and installation on target system(Jetson platform)](https://github.com/framosimaging/framos-jetson-drivers/wiki/Compile-and-installation-on-target-system(Jetson-platform))
 
   or
 
-* [Cross-Compile on host system(Ubuntu 22.04)](https://github.com/framosimaging/framos-jetson-drivers/wiki/FRAMOS-Sensor-Module-Ecosystem-%E2%80%90-Driver-User-Guide#122-cross-compile-on-host-systemubuntu-2204)
+* [Cross-Compile on host system(Ubuntu 22.04)](https://github.com/framosimaging/framos-jetson-drivers/wiki/Cross%E2%80%90Compile-on-host-system(Ubuntu-22.04))
 
 # 2. Configuration of Image Sensors on the Jetson platform (Target System)
 Two methods:
