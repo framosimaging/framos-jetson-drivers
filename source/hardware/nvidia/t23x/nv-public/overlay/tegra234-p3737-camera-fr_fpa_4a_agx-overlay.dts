@@ -339,6 +339,22 @@
 						};
 					};
 				};
+
+				vi0@15c00000 {
+					dma-noncoherent;
+				};
+
+				vi0-thi@15f00000 {
+					dma-noncoherent;
+				};
+
+				vi1@14c00000 {
+					dma-noncoherent;
+				};
+
+				vi1-thi@14f00000 {
+					dma-noncoherent;
+				};
 			};
 			gpio@2200000 {
 				camera-control-output-low {
@@ -611,5 +627,4 @@
 			};
 		};
 	};
-
 };

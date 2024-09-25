@@ -7,6 +7,7 @@ obj-m += fr_common.o
 fr_common-objs := fr_sensor_common.o ./../../i2c/fr_i2c_generic.o
 
 obj-m += fr_lifmd_lvds2mipi_1.o
+obj-m += fr_lifcl_var2fixed_1.o
 
 obj-m += max9295.o
 obj-m += max9296.o
@@ -37,6 +38,7 @@ obj-m += fr_imx565.o
 obj-m += fr_imx568.o
 obj-m += fr_imx577.o
 obj-m += fr_imx585.o
+obj-m += fr_imx636.o
 obj-m += fr_imx662.o
 obj-m += fr_imx675.o
 obj-m += fr_imx676.o
