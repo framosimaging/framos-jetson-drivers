@@ -5,14 +5,17 @@ Supported Nvidia Jetson platforms:
   - Jetson AGX Orin developer kit
   - Jetson Orin Nano/NX developer kit
 
-## 1. Clone, Compile and Install
-Clone, Compile and install can be used with two methods:
-
-* [Clone, Compile and Install on target system(Jetson platform)](https://github.com/framosimaging/framos-jetson-drivers/wiki/Clone,-Compile-and-Install-on-target-system(Jetson-platform))
+## 1. Get & Install Framos drivers
+Three methods:
+* [Using Framos prebuilt binaries - debian package on target system(Jetson platform)](https://github.com/framosimaging/framos-jetson-drivers/wiki/Install-binaries%E2%80%90debian-on-target-system(Jetson-platform))
 
   or
 
-* [Clone, Cross‐Compile, Install and flash on host system(Ubuntu 22.04)](https://github.com/framosimaging/framos-jetson-drivers/wiki/Clone,-Cross%E2%80%90Compile,-Install-and-flash-on-host-system(Ubuntu-22.04))
+* [Using Framos source code on target system(Jetson platform)](https://github.com/framosimaging/framos-jetson-drivers/wiki/Clone,-Compile-and-Install-on-target-system(Jetson-platform))
+
+  or
+
+* [Using Framos source code on host system(Ubuntu 22.04)](https://github.com/framosimaging/framos-jetson-drivers/wiki/Clone,-Cross%E2%80%90Compile,-Install-and-flash-on-host-system(Ubuntu-22.04))
 
 ## 2. Configuration of Image Sensors on the Jetson platform (Target System)
 Two methods:
