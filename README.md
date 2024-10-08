@@ -1,9 +1,30 @@
 &nbsp;
 # Short procedure
 
-Supported Nvidia Jetson platforms:
-  - Jetson AGX Orin developer kit
-  - Jetson Orin Nano/NX developer kit
+Supported JetPack (L4T) version: JetPack 6.0 (L4T 36.3)
+
+Framos Sensor Module supported list:
+
+| Framos Sensor module  | Jetson AGX Orin developer kit | Jetson Orin Nano / NX developer kit |
+|-----------------------|-------------------------------|-------------------------------------|
+| IMX296                |              +                |                 +                   |
+| IMX304                |              +                |                 -                   |
+| IMX335                |              +                |                 +                   |
+| IMX412                |              +                |                 +                   |
+| IMX464                |              +                |                 +                   |
+| IMX530                |              +                |                 -                   |
+| IMX565                |              +                |                 +                   |
+| IMX568                |              +                |                 +                   |
+| IMX577                |              +                |                 +                   |
+| IMX585                |              +                |                 +                   |
+| IMX636                |              +                |                 -                   |
+| IMX662                |              +                |                 +                   |
+| IMX675                |              +                |                 +                   |
+| IMX676                |              +                |                 +                   |
+| IMX678                |              +                |                 +                   |
+| IMX715                |              +                |                 +                   |
+| IMX900                |              +                |                 +                   |
+
 
 ## 1. Get & Install Framos drivers
 Three methods:
