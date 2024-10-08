@@ -1,0 +1,209 @@
+v4.0.0.0 (2024-10-09)
+==========================
+    - Initial GitHub release
+    - Support for L4T-36.3
+    - Device tree as device tree overlays
+    - supported sensors & features:
+        - IMX296:
+	    - Support for FPA-4.A/TXA & FPA-4.A/AGX for AGX Orin developer kit
+	    - Support for FPA-A/P22 for Orin Nano/NX developer kit
+	    - GMSL3 mode support
+	    - Gain
+            - Frame rate
+            - Exposure
+	    - Black level
+            - Test Pattern
+            - Sensor specific controls
+            - Multisensor support
+            - Master/Slave mode
+	    - Fast trigger
+        - IMX304:
+	    - Support for FPA-4.A/TXA & FPA-4.A/AGX for AGX Orin developer kit
+	    - GMSL3 mode support
+	    - Gain
+            - Frame rate
+            - Exposure
+	    - Black level
+            - Test Pattern
+            - Sensor specific controls
+            - Multisensor support
+            - Master/Slave mode
+	    - Timing generator controls
+	    - Check firmware compatibility
+	- IMX335:
+	    - Support for FPA-4.A/TXA & FPA-4.A/AGX for AGX Orin developer kit
+	    - Support for FPA-A/P22 for Orin Nano/NX developer kit
+	    - GMSL3 mode support
+	    - Gain
+            - Frame rate
+            - Exposure
+	    - Black level
+            - Test Pattern
+            - Sensor specific controls
+            - Multisensor support
+            - Master/Slave mode
+	- IMX412:
+	    - Support for FPA-4.A/TXA & FPA-4.A/AGX for AGX Orin developer kit
+	    - Support for FPA-A/P22 for Orin Nano/NX developer kit
+	    - GMSL3 mode support
+	    - Gain
+            - Frame rate
+            - Exposure
+	    - Black level
+            - Test Pattern
+            - Sensor specific controls
+            - Multisensor support
+            - Master/Slave mode
+	- IMX464:
+	    - Support for FPA-4.A/TXA & FPA-4.A/AGX for AGX Orin developer kit
+	    - Support for FPA-A/P22 for Orin Nano/NX developer kit
+	    - GMSL3 mode support
+	    - Gain
+            - Frame rate
+            - Exposure
+	    - Black level
+            - Test Pattern
+            - Sensor specific controls
+            - Multisensor support
+            - Master/Slave mode
+	- IMX530:
+	    - Support for FPA-4.A/TXA & FPA-4.A/AGX for AGX Orin developer kit
+	    - GMSL3 mode support
+	    - Gain
+            - Frame rate
+            - Exposure
+	    - Black level
+            - Test Pattern
+            - Sensor specific controls
+            - Multisensor support
+            - Master/Slave mode
+	    - Timing generator controls
+	    - Check firmware compatibility
+	- IMX565:
+	    - Support for FPA-4.A/TXA & FPA-4.A/AGX for AGX Orin developer kit
+	    - Support for FPA-A/P22 for Orin Nano/NX developer kit
+	    - GMSL3 mode support
+	    - Gain
+            - Frame rate
+            - Exposure
+	    - Black level
+            - Test Pattern
+            - Sensor specific controls
+            - Multisensor support
+            - Master/Slave mode
+	    - Fast trigger
+	- IMX568:
+	    - Support for FPA-4.A/TXA & FPA-4.A/AGX for AGX Orin developer kit
+	    - Support for FPA-A/P22 for Orin Nano/NX developer kit
+	    - GMSL3 mode support
+	    - Gain
+            - Frame rate
+            - Exposure
+	    - Black level
+            - Test Pattern
+            - Sensor specific controls
+            - Multisensor support
+            - Master/Slave mode
+	- IMX577:
+	    - Support for FPA-4.A/TXA & FPA-4.A/AGX for AGX Orin developer kit
+	    - Support for FPA-A/P22 for Orin Nano/NX developer kit
+	    - GMSL3 mode support
+	    - Gain
+            - Frame rate
+            - Exposure
+	    - Black level
+            - Test Pattern
+            - Sensor specific controls
+            - Multisensor support
+            - Master/Slave mode
+	- IMX585:
+	    - Support for FPA-4.A/TXA & FPA-4.A/AGX for AGX Orin developer kit
+	    - Support for FPA-A/P22 for Orin Nano/NX developer kit
+	    - GMSL3 mode support
+	    - Gain
+            - Frame rate
+            - Exposure
+	    - Black level
+            - Test Pattern
+            - Sensor specific controls
+            - Multisensor support
+            - Master/Slave mode
+	- IMX636:
+	    - Support for FPA-4.A/TXA & FPA-4.A/AGX for AGX Orin developer kit
+	    - ROI
+            - Bias
+            - Crosslink-NX blankings
+            - EEPROM content
+            - Check firmware compatibility
+	- IMX662:
+	    - Support for FPA-4.A/TXA & FPA-4.A/AGX for AGX Orin developer kit
+	    - Support for FPA-A/P22 for Orin Nano/NX developer kit
+	    - GMSL3 mode support
+	    - Gain
+            - Frame rate
+            - Exposure
+	    - Black level
+            - Test Pattern
+            - Sensor specific controls
+            - Multisensor support
+            - Master/Slave mode
+	- IMX675:
+	    - Support for FPA-4.A/TXA & FPA-4.A/AGX for AGX Orin developer kit
+	    - Support for FPA-A/P22 for Orin Nano/NX developer kit
+	    - GMSL3 mode support
+	    - Gain
+            - Frame rate
+            - Exposure
+	    - Black level
+            - Test Pattern
+            - Sensor specific controls
+            - Multisensor support
+            - Master/Slave mode
+	- IMX676:
+	    - Support for FPA-4.A/TXA & FPA-4.A/AGX for AGX Orin developer kit
+	    - Support for FPA-A/P22 for Orin Nano/NX developer kit
+	    - GMSL3 mode support
+	    - Gain
+            - Frame rate
+            - Exposure
+	    - Black level
+            - Test Pattern
+            - Sensor specific controls
+            - Multisensor support
+            - Master/Slave mode
+	- IMX678:
+	    - Support for FPA-4.A/TXA & FPA-4.A/AGX for AGX Orin developer kit
+	    - Support for FPA-A/P22 for Orin Nano/NX developer kit
+	    - GMSL3 mode support
+	    - Gain
+            - Frame rate
+            - Exposure
+	    - Black level
+            - Test Pattern
+            - Sensor specific controls
+            - Multisensor support
+            - Master/Slave mode
+	- IMX715:
+	    - Support for FPA-4.A/TXA & FPA-4.A/AGX for AGX Orin developer kit
+	    - Support for FPA-A/P22 for Orin Nano/NX developer kit
+	    - GMSL3 mode support
+	    - Gain
+            - Frame rate
+            - Exposure
+	    - Black level
+            - Test Pattern
+            - Sensor specific controls
+            - Multisensor support
+            - Master/Slave mode
+	- IMX900:
+	    - Support for FPA-4.A/TXA & FPA-4.A/AGX for AGX Orin developer kit
+	    - Support for FPA-A/P22 for Orin Nano/NX developer kit
+	    - GMSL3 mode support
+	    - Gain
+            - Frame rate
+            - Exposure
+	    - Black level
+            - Test Pattern
+            - Sensor specific controls
+            - Multisensor support
+            - Master/Slave mode
