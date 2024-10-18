@@ -1,29 +1,7 @@
 &nbsp;
 # Short procedure
 
-Supported JetPack (L4T) version: JetPack 6.0 (L4T 36.3)
-
-Framos Sensor Module supported list:
-
-| Framos Sensor module  | Jetson AGX Orin developer kit | Jetson Orin Nano / NX developer kit |
-|-----------------------|-------------------------------|-------------------------------------|
-| IMX296                |              +                |                 +                   |
-| IMX304                |              +                |                 -                   |
-| IMX335                |              +                |                 +                   |
-| IMX412                |              +                |                 +                   |
-| IMX464                |              +                |                 +                   |
-| IMX530                |              +                |                 -                   |
-| IMX565                |              +                |                 +                   |
-| IMX568                |              +                |                 +                   |
-| IMX577                |              +                |                 +                   |
-| IMX585                |              +                |                 +                   |
-| IMX636                |              +                |                 -                   |
-| IMX662                |              +                |                 +                   |
-| IMX675                |              +                |                 +                   |
-| IMX676                |              +                |                 +                   |
-| IMX678                |              +                |                 +                   |
-| IMX715                |              +                |                 +                   |
-| IMX900                |              +                |                 +                   |
+[Release Notes](https://github.com/framosimaging/framos-jetson-drivers/wiki/Release-Notes)
 
 
 ## 1. Get & Install Framos drivers
@@ -49,6 +27,8 @@ Two methods:
 
 ## 3. Run streaming software
 See [framos-jetson-libsv](https://github.com/framosimaging/framos-jetson-libsv) GitHub
+
+***When using the IMX636 event based sensor, use [OpenED software GitHub](https://github.com/framosimaging/openeb)
 
 
 # For detailed guide and additional options and descriptions - [FRAMOS Sensor Module Ecosystem ‐ Driver User Guide](https://github.com/framosimaging/framos-jetson-drivers/wiki/FRAMOS-Sensor-Module-Ecosystem-%E2%80%90-Driver-User-Guide)
