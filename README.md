@@ -28,7 +28,7 @@ Two methods:
 ## 3. Run streaming software
 See [framos-jetson-libsv](https://github.com/framosimaging/framos-jetson-libsv) GitHub
 
-***When using the IMX636 event based sensor, use [OpenED software GitHub](https://github.com/framosimaging/openeb)
+***When using the IMX636 event based sensor, use [OpenEB software GitHub](https://github.com/framosimaging/openeb)
 
 
 # For detailed guide and additional options and descriptions - [FRAMOS Sensor Module Ecosystem ‐ Driver User Guide](https://github.com/framosimaging/framos-jetson-drivers/wiki/FRAMOS-Sensor-Module-Ecosystem-%E2%80%90-Driver-User-Guide)
