@@ -1,0 +1,107 @@
+#
+# Tegra SOC HWPM T234 sources
+#
+
+# SPDX-License-Identifier: GPL-2.0
+
+ifeq ($(CONFIG_TEGRA_T234_HWPM),y)
+nvhwpm-t234-objs += hal/t234/t234_aperture.o
+nvhwpm-t234-objs += hal/t234/t234_interface.o
+nvhwpm-t234-objs += hal/t234/t234_ip.o
+nvhwpm-t234-objs += hal/t234/t234_mem_mgmt.o
+nvhwpm-t234-objs += hal/t234/t234_regops_allowlist.o
+nvhwpm-t234-objs += hal/t234/t234_resource.o
+
+#
+# Control IP config
+# To disable an IP config in compilation, add condition for both
+# IP config flag and IP specific .o file.
+#
+
+#
+# RTR/PMA are HWPM IPs and can be enabled by default
+#
+nvhwpm-t234-objs += hal/t234/ip/rtr/t234_rtr.o
+nvhwpm-t234-objs += hal/t234/ip/pma/t234_pma.o
+
+#
+# One of the HWPM components is a perfmux. Perfmux registers belong to the
+# IP domain. There are 2 ways of accessing perfmux registers
+# - option 1: implement HWPM <-> IP interface. IP drivers register with HWPM
+#             driver and share required function pointers
+# - option 2: map perfmux register address in HWPM driver
+# Option 1 is the preferred solution. However, IP drivers have yet to
+# implement the interface. Such IPs can be force enabled from HWPM driver
+# perspective (option 2). Marking an IP available forcefully requires the user
+# to unpowergate the IP before running any HWPM experiments.
+#
+# Enable CONFIG_T234_HWPM_ALLOW_FORCE_ENABLE for internal builds.
+# Note: We should work towards removing force enable flag dependency.
+#
+ifeq ($(NV_BUILD_CONFIGURATION_IS_EXTERNAL),0)
+ccflags-y += -DCONFIG_T234_HWPM_ALLOW_FORCE_ENABLE
+endif
+
+#
+# Currently, PVA, DLA and MSS channel are the IPs supported
+# for performance metrics in external builds.
+# Define CONFIG_TEGRA_HWPM_MINIMAL_IP_ENABLE flag.
+#
+ifeq ($(NV_BUILD_CONFIGURATION_IS_EXTERNAL),1)
+CONFIG_TEGRA_HWPM_MINIMAL_IP_ENABLE=y
+ccflags-y += -DCONFIG_TEGRA_HWPM_MINIMAL_IP_ENABLE
+endif
+
+ccflags-y += -DCONFIG_T234_HWPM_IP_NVDLA
+nvhwpm-t234-objs += hal/t234/ip/nvdla/t234_nvdla.o
+
+ccflags-y += -DCONFIG_T234_HWPM_IP_PVA
+nvhwpm-t234-objs += hal/t234/ip/pva/t234_pva.o
+
+ccflags-y += -DCONFIG_T234_HWPM_IP_MSS_CHANNEL
+nvhwpm-t234-objs += hal/t234/ip/mss_channel/t234_mss_channel.o
+
+ccflags-y += -DCONFIG_T234_HWPM_IP_NVENC
+nvhwpm-t234-objs += hal/t234/ip/nvenc/t234_nvenc.o
+
+ccflags-y += -DCONFIG_T234_HWPM_IP_OFA
+nvhwpm-t234-objs += hal/t234/ip/ofa/t234_ofa.o
+
+ccflags-y += -DCONFIG_T234_HWPM_IP_VIC
+nvhwpm-t234-objs += hal/t234/ip/vic/t234_vic.o
+
+# Include other IPs if minimal build is not enabled.
+ifneq ($(CONFIG_TEGRA_HWPM_MINIMAL_IP_ENABLE),y)
+ccflags-y += -DCONFIG_T234_HWPM_IP_DISPLAY
+nvhwpm-t234-objs += hal/t234/ip/display/t234_display.o
+
+ccflags-y += -DCONFIG_T234_HWPM_IP_ISP
+nvhwpm-t234-objs += hal/t234/ip/isp/t234_isp.o
+
+ccflags-y += -DCONFIG_T234_HWPM_IP_MGBE
+nvhwpm-t234-objs += hal/t234/ip/mgbe/t234_mgbe.o
+
+ccflags-y += -DCONFIG_T234_HWPM_IP_MSS_ISO_NISO_HUBS
+nvhwpm-t234-objs += hal/t234/ip/mss_iso_niso_hubs/t234_mss_iso_niso_hubs.o
+
+ccflags-y += -DCONFIG_T234_HWPM_IP_MSS_MCF
+nvhwpm-t234-objs += hal/t234/ip/mss_mcf/t234_mss_mcf.o
+
+ccflags-y += -DCONFIG_T234_HWPM_IP_MSS_GPU_HUB
+nvhwpm-t234-objs += hal/t234/ip/mss_gpu_hub/t234_mss_gpu_hub.o
+
+ccflags-y += -DCONFIG_T234_HWPM_IP_NVDEC
+nvhwpm-t234-objs += hal/t234/ip/nvdec/t234_nvdec.o
+
+ccflags-y += -DCONFIG_T234_HWPM_IP_PCIE
+nvhwpm-t234-objs += hal/t234/ip/pcie/t234_pcie.o
+
+ccflags-y += -DCONFIG_T234_HWPM_IP_SCF
+nvhwpm-t234-objs += hal/t234/ip/scf/t234_scf.o
+
+ccflags-y += -DCONFIG_T234_HWPM_IP_VI
+nvhwpm-t234-objs += hal/t234/ip/vi/t234_vi.o
+
+endif
+
+endif

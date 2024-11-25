@@ -1,0 +1,113 @@
+NVIDIA nvpps driver bindings
+
+Nvpps is a Linux Kernel mode driver to support the Xavier & Orin time domain
+correlation feature.
+
+Required properties:
+
+- compatible: This should be nvidia,tegra194-nvpps for Xavier and nvidia,tegra234-nvpps for Orin.
+
+Optional properties:
+- primary-emac: specifies ethernet emac device DT. This is the primary ethernet MAC device utilized
+		to calculate PTP time. For example, if MGBE0 is used to calculate the PTP time,
+		then phandle of the device tree node corresponding to MGBE0 needs to be passed.
+
+                For Example for Orin:
+                        mgbe0: ethernet@6800000
+                        eqos: ethernet@2310000
+
+                For Example for Xavier:
+                        eqos: ethernet@2490000
+
+- sec-emac: specifies secondary ethernet MAC device DT node to be used to calculate PTP time.
+- memmap_phc_regs: boolean flag to indicate MAC PHC regs to be memory mapped
+				   for getting PTP time. If not defined ptp notifer method will
+				   be used with selected interface
+- ptp_tsc_k_int: Specifies the integer part of the factor used to calculate the delta to
+				 apply to NUM when the fast convergence algorithm is enabled when syncing
+				 or locking TSC time with PTP time domain.
+				 The value is a 8bit hexa-decimal value. If unspecified, NvPPS driver uses
+				 0x70 as default value
+- ptp_tsc_lock_threshold: specifies the threshold value which is used by HW to determine
+				 if the TSC PTP sync/Lock is lost. The lock is deemed to be lost if the HW
+				 determined absolute diff between PTP & TSC time exceed this value.
+				 The value is a 16bit hexa-decimal value. The minimum value(0x1F) supported
+				 correspond to 1us and max value(0xFFFF) supported correspond to approx 2.1ms.
+				 If unspecified, NvPPS driver uses 0x26C(corresponding to 20us) by default
+- ptp_tsc_sync_dis: boolean flag to indicate if nvpps should disable PTP TSC sync logic.
+					The default behaviour is to keep PTP TSC sync logic enabled.
+- reg: specifies start address and registers count details of TSC module. It is only applicable for Orin.
+- nvpps-gpios: specifies GPIO number for PPS input signal.
+- timestamps: specifies timestamp for the GPIO provided by HTE.
+- timestamp-names: specifies name for GPIO timestamp.
+
+Example: Timer mode on Orin.
+
+mgbe0: ethernet@6800000{
+};
+
+nvpps {
+	status = "okay";
+	compatible = "nvidia,tegra234-nvpps";
+	primary-emac = <&mgbe0>;
+	sec-emac = <&mgbe0>;
+	reg = <0x0 0xc6a0000 0x0 0x1000>;
+};
+
+Example: Timer mode on Xavier
+
+eqos: ethernet@2490000{
+};
+
+nvpps {
+	status = "okay";
+	compatible = "nvidia,tegra194-nvpps";
+	primary-emac = <&eqos>;
+	sec-emac = <&eqos>;
+};
+
+Example: MAC PHC regs to be memory mapped on Orin
+
+mgbe0: ethernet@6800000{
+};
+
+nvpps {
+	status = "okay";
+	compatible = "nvidia,tegra234-nvpps";
+	primary-emac = <&mgbe0>
+	sec-emac = <&mgbe0>;
+	memmap_phc_regs;
+	reg = <0x0 0xc6a0000 0x0 0x1000>;
+};
+
+
+Example: GPIO mode on Orin
+
+mgbe0: ethernet@6800000{
+};
+
+nvpps {
+	status = "okay";
+	compatible = "nvidia,tegra234-nvpps";
+	reg = <0x0 0xc6a0000 0x0 0x1000>;
+	nvpps-gpios = <&gpio_aon TEGRA234_AON_GPIO(BB, 0) GPIO_ACTIVE_HIGH>;
+	timestamps = <&hte_aon TEGRA234_AON_GPIO(BB, 0)>;
+	timestamp-names = "nvpps_gpio";
+};
+
+
+Example: Timer mode on Orin with additional properties.
+
+mgbe0: ethernet@6800000{
+};
+
+nvpps {
+	status = "okay";
+	compatible = "nvidia,tegra234-nvpps";
+	primary-emac = <&mgbe0>;
+	sec-emac = <&mgbe0>;
+	reg = <0x0 0xc6a0000 0x0 0x1000>;
+	ptp_tsc_k_int = /bits/ 8 <0x70>;
+	ptp_tsc_lock_threshold = /bits/ 16 <0x26C>;
+	ptp_tsc_sync_dis;
+};
