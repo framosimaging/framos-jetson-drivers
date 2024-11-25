@@ -1,0 +1,184 @@
+/* SPDX-License-Identifier: GPL-2.0 */
+/*
+ * Copyright (c) 2024 Framos. All rights reserved.
+ *
+ * fr_imx636_mode_tbls.h - imx636 sensor mode tables
+ */
+
+#ifndef __fr_IMX636_TABLES__
+#define __fr_IMX636_TABLES__
+
+
+#define IMX636_MODE_0_WIDTH	1024
+#define IMX636_MODE_0_HEIGHT	64
+
+#define BIAS_FO			(0x00001004)
+#define BIAS_HPF		(0x0000100C)
+#define BIAS_DIFF_ON		(0x00001010)
+#define BIAS_DIFF		(0x00001014)
+#define BIAS_DIFF_OFF		(0x00001018)
+#define BIAS_REFR		(0x00001020)
+
+#define ROI_CTRL		(0x00000004)
+#define ROI_CTRL_MASK		(0xF0005440)
+#define ROI_TD_EN		(1 << 1)
+#define ROI_TD_SHADOW_TRIGGER	(1 << 5)
+#define TD_ROI_X_START		(0x00002000)
+#define TD_ROI_X_SIZE		(40)
+#define TD_ROI_Y_START		(0x00004000)
+#define TD_ROI_Y_SIZE		(23)
+#define TD_ROI_Y22_MASK		(0x00FF0000)
+
+#define IMX636_WIDTH		(1280)
+#define IMX636_HEIGHT		(720)
+#define CROP_STEP_X		(32)
+#define CROP_X_MASK		(0x7FF)
+#define CROP_Y_MASK		(0x3FF)
+#define CROP_Y_SHIFT		(16)
+#define CROP_ENABLE		(0x05)
+#define CROP_DISABLE		(0x00)
+#define CROP_CTRL		(0x0000900C)
+#define CROP_START		(0x00009010)
+#define CROP_END		(0x00009014)
+
+/* Special values for the write table function */
+#define IMX636_TABLE_WAIT_MS	0xFFFFFFFF
+#define IMX636_TABLE_END	0xFFFFFFFE
+#define IMX636_WAIT_MS		10
+
+typedef struct reg_32 imx636_reg;
+
+/* Tables for the write table function */
+static const imx636_reg imx636_stop[] = {
+	{0x00000004,		0xF0005042},
+	{0x0000002C,		0x0022C324},
+	{0x00009028,		0x00000002},
+	{IMX636_TABLE_WAIT_MS,	1},
+	{0x00009008,		0x00000644},
+	{0x0000B000,		0x00000298},
+	{IMX636_TABLE_WAIT_MS,	1},
+	{IMX636_TABLE_END,	0x00}
+};
+
+static const imx636_reg imx636_start[] = {
+	{0x0000B000,		0x00000299},
+	{0x00009028,		0x00000000},
+	{0x00009008,		0x00000645},
+	{0x0000002C,		0x0022C724},
+	{0x00000004,		0xF0005442},
+	{IMX636_TABLE_END,	0x00}
+};
+
+static const imx636_reg imx636_init_settings[] = {
+	{0x0000001C,		0x00000001},
+	{IMX636_TABLE_WAIT_MS,	1000},
+	{0x00400004,		0x00000001},
+	{IMX636_TABLE_WAIT_MS,	500},
+	{0x00400004,		0x00000000},
+	{IMX636_TABLE_WAIT_MS,	1000},
+	{0x0000B000,		0x00000158},
+	{IMX636_TABLE_WAIT_MS,	1},
+	{0x0000B044,		0x00000000},
+	{0x0000B004,		0x0000000A},
+	{0x0000B040,		0x00000000},
+	{0x0000B0C8,		0x00000000},
+	{0x0000B040,		0x00000000},
+	{0x0000B040,		0x00000000},
+	{0x00000000,		0x4F006442},
+	{0x00000000,		0x0F006442},
+	{0x000000B8,		0x00000400},
+	{0x000000B8,		0x00000400},
+	{0x0000B07C,		0x00000000},
+	{0x0000B074,		0x00000002},
+	{0x0000B078,		0x000000A0},
+	{0x000000C0,		0x00000110},
+	{0x000000C0,		0x00000210},
+	{0x0000B120,		0x00000001},
+	{0x0000E120,		0x00000000},
+	{0x0000B068,		0x00000004},
+	{0x0000B07C,		0x00000001},
+	{IMX636_TABLE_WAIT_MS,	1},
+	{0x0000B07C,		0x00000003},
+	{IMX636_TABLE_WAIT_MS,	1},
+	{0x000000B8,		0x00000401},
+	{0x000000B8,		0x00000409},
+	{0x00000000,		0x4F006442},
+	{0x00000000,		0x4F00644A},
+	{0x0000B080,		0x00000077},
+	{0x0000B084,		0x0000000F},
+	{0x0000B088,		0x00000037},
+	{0x0000B08C,		0x00000037},
+	{0x0000B090,		0x000000DF},
+	{0x0000B094,		0x00000057},
+	{0x0000B098,		0x00000037},
+	{0x0000B09C,		0x00000067},
+	{0x0000B0A0,		0x00000037},
+	{0x0000B0A4,		0x0000002F},
+	{0x0000B0AC,		0x00000028},
+	{0x0000B0CC,		0x00000001},
+	{0x0000B000,		0x00000298},
+	{0x0000B004,		0x0000008A},
+	{0x0000B01C,		0x00000030},
+	{0x0000B020,		0x00001000},
+	{0x0000B02C,		0x000000FF},
+	{0x0000B030,		0x00003E80},
+	{0x0000B028,		0x00000FA0},
+	{0x0000A000,		0x000B0501},
+	{IMX636_TABLE_WAIT_MS,	1},
+	{0x0000A008,		0x00002405},
+	{IMX636_TABLE_WAIT_MS,	1},
+	{0x0000A004,		0x000B0501},
+	{IMX636_TABLE_WAIT_MS,	1},
+	{0x0000A020,		0x00000150},
+	{IMX636_TABLE_WAIT_MS,	1},
+	{0x0000B040,		0x00000007},
+	{0x0000B064,		0x00000006},
+	{0x0000B040,		0x0000000F},
+	{IMX636_TABLE_WAIT_MS,	1},
+	{0x0000B004,		0x0000008A},
+	{IMX636_TABLE_WAIT_MS,	1},
+	{0x0000B0C8,		0x00000003},
+	{IMX636_TABLE_WAIT_MS,	1},
+	{0x0000B044,		0x00000001},
+	{0x0000B000,		0x00000298},
+	{0x00009008,		0x00000644},
+	{0x00000004,		0xF0005042},
+	{0x00000018,		0x00000200},
+	{0x00001014,		0x11A1504D},
+	{0x00009004,		0x00000000},
+	{IMX636_TABLE_WAIT_MS,	1},
+
+	{IMX636_TABLE_END,	0x0000}
+};
+
+/* Enum of available frame modes */
+enum {
+	IMX636_INIT_SETTINGS,
+	IMX636_MODE_STOP_STREAM,
+	IMX636_MODE_START_STREAM,
+};
+
+/*Connecting frame modes to mode tables */
+static const imx636_reg *mode_table[] = {
+	[IMX636_INIT_SETTINGS]		= imx636_init_settings,
+	[IMX636_MODE_START_STREAM]	= imx636_start,
+	[IMX636_MODE_STOP_STREAM]	= imx636_stop,
+};
+
+/* Framerates of available frame modes */
+static const int imx636_500fps[] = {
+	500,
+};
+
+/* Connecting resolutions, framerates and mode tables */
+static const struct camera_common_frmfmt imx636_frmfmt[] = {
+	{
+		.size = {IMX636_MODE_0_WIDTH, IMX636_MODE_0_HEIGHT},
+		.framerates = imx636_500fps,
+		.num_framerates = 1,
+		.hdr_en = false,
+		.mode = 0
+	},
+};
+
+#endif
