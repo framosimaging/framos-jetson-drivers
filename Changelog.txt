@@ -1,0 +1,4 @@
+v4.1.0.0 (2024-11-29)
+==========================
+    - Support for L4T-36.4
+    - changed - cosmetic changes in fr_max96793.c file
