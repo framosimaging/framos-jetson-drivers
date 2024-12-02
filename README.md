@@ -1,8 +1,8 @@
 &nbsp;
-# Short procedure
-
 [Release Notes l4t‐r36.4](https://github.com/framosimaging/framos-jetson-drivers/wiki/Release-Notes-l4t%E2%80%90r36.4)
 
+
+# Short procedure
 
 ## 1. Get & Install Framos drivers
 Three methods:
