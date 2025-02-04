@@ -1,0 +1,56 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * Copyright (c) 2024 Framos. All rights reserved.
+ *
+ * tegra234-p3767-camera-p3768-fr_cam0-gmsl-overlay.dts
+ */
+
+/dts-v1/;
+/plugin/;
+
+#include <dt-bindings/clock/tegra234-clock.h>
+#include <dt-bindings/gpio/tegra234-gpio.h>
+#include <dt-bindings/tegra234-p3767-0000-common.h>
+
+
+/ {
+	overlay-name = "Framos GMSL-CAM0";
+	jetson-header-name = "Jetson 24pin CSI Connector";
+	compatible = JETSON_COMPATIBLE_P3768;
+
+	fragment@0 {
+		target = <&cam_i2cmux_i2c0>;
+		__overlay__ {
+			framos_dser_b: max96792_b@6a {
+				compatible = "framos,max96792";
+				reg = <0x6a>;
+				csi-mode = "2x4";
+				max-src = <1>;
+			};
+			framos_ser_prim_b: max96793_prim_b@42 {
+				compatible = "framos,max96793";
+				reg = <0x42>;
+				nvidia,gmsl-dser-device = <&framos_dser_b>;
+				is-prim-ser;
+			};
+		};
+	};
+
+	fragment@1 {
+		target = <&sensor_b>;
+		__overlay__ {
+			nvidia,gmsl-ser-device = <&framos_ser_prim_b>;
+			nvidia,gmsl-dser-device = <&framos_dser_b>;
+			gmsl-link {
+				src-csi-port = "b";
+				dst-csi-port = "a";
+				serdes-csi-link = "a";
+				csi-mode = "1x4";
+				st-vc = <0>;
+				vc-id = <0>;
+				streams = "raw12";
+			};
+		};
+	};
+
+};
