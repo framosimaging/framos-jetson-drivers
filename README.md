@@ -4,6 +4,17 @@
 
 # Short procedure
 
+This list describes which "Jetpack/L4T source_sync tag" and "framos-jetson-drivers branch" to use for the desired Jetpack/L4T release.
+
+If using target build, the "framos-jetson-drivers branch" is used to checkout to compatible Framos drivers source code for the desired Jetpack/L4T.
+
+If using cross-compilation, the "source_sync tag" is used to checkout to correct tag of the Jetpack/L4T kernel source code and the "framos-jetson-drivers branch" to checkout to compatible Framos drivers source code.
+
+| Jetpack / L4T version | source_sync tag | framos-jetson-drivers branch |
+|-----------------------|-----------------|------------------------------|
+| 6.1 / 36.4            | jetson_36.4     | l4t-r36.4                    |
+| 6.0 / 36.3            | jetson_36.3     | l4t-r36.3                    |
+
 ## 1. Get & Install Framos drivers
 Three methods:
 * [Using Framos prebuilt binaries - debian package on target system(Jetson platform)](https://github.com/framosimaging/framos-jetson-drivers/wiki/Install-binaries%E2%80%90debian-on-target-system(Jetson-platform))
