@@ -12,7 +12,7 @@ If using cross-compilation, the "source_sync tag" is used to checkout to correct
 
 | Jetpack / L4T version | source_sync tag | framos-jetson-drivers branch |
 |-----------------------|-----------------|------------------------------|
-| 6.1 / 36.4.3          | jetson_36.4.3   | l4t-r36.4.3                  |
+| 6.2 / 36.4.3          | jetson_36.4.3   | l4t-r36.4.3                  |
 | 6.1 / 36.4            | jetson_36.4     | l4t-r36.4                    |
 | 6.0 / 36.3            | jetson_36.3     | l4t-r36.3                    |
 
@@ -34,7 +34,7 @@ Two methods:
 * [Command line version](https://github.com/framosimaging/framos-jetson-drivers/wiki/Command-line-version)
 
 ## 3. Run streaming software
-See [framos-jetson-libsv](https://github.com/framosimaging/framos-jetson-libsv) GitHub
+See [framos-jetson-libsv](https://github.com/framosimaging/framos-jetson-libsv/tree/l4t-r36.4.3) GitHub
 
 ***When using the IMX636 event based sensor, use [OpenEB software GitHub](https://github.com/framosimaging/openeb)
 
