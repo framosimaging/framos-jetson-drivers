@@ -29,6 +29,7 @@ obj-m += nv_ov5693.o
 obj-m += nv_ar0234.o
 obj-m += nv_hawk_owl.o
 obj-m += max929x.o
+obj-m += fr_imx283.o
 obj-m += fr_imx296.o
 obj-m += fr_imx304.o
 obj-m += fr_imx335.o
