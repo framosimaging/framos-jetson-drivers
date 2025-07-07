@@ -2951,6 +2951,13 @@ static int imx900_board_setup(struct imx900 *priv)
 		goto error2;
 	}
 
+	err = imx900_chromacity_mode(priv->tc_dev);
+	if (err) {
+		dev_err(dev, "%s: unable to get chromacity information\n",
+								__func__);
+		goto error2;
+	}
+
 error2:
 	imx900_power_off(s_data);
 	camera_common_mclk_disable(s_data);
