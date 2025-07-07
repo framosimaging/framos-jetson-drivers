@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
- * Copyright (c) 2024 Framos. All rights reserved.
+ * Copyright (c) 2025 Framos. All rights reserved.
  *
  * fr_imx900.c - Framos fr_imx900.c driver
  */
@@ -2948,6 +2948,13 @@ static int imx900_board_setup(struct imx900 *priv)
 	err = imx900_calculate_line_time(priv->tc_dev);
 	if (err) {
 		dev_err(dev, "%s: unable to calculate line time\n", __func__);
+		goto error2;
+	}
+
+	err = imx900_chromacity_mode(priv->tc_dev);
+	if (err) {
+		dev_err(dev, "%s: unable to get chromacity information\n",
+								__func__);
 		goto error2;
 	}
 
