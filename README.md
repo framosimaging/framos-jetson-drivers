@@ -12,9 +12,11 @@ If using cross-compilation, the "Nvidia tag" is used to checkout to correct tag 
 
 | Jetpack / L4T version |    Nvidia tag   |         Framos branch        |
 |-----------------------|-----------------|------------------------------|
-| 6.2 / 36.4.3          | jetson_36.4.3   | l4t-r36.4.3                  |
+| 6.2 / 36.4.3          | jetson_36.4.3   | l4t-r36.4.3   *              |
 | 6.1 / 36.4            | jetson_36.4     | l4t-r36.4                    |
 | 6.0 / 36.3            | jetson_36.3     | l4t-r36.3                    |
+
+_*_ [_Download overlay that fixes issue that causes blurry image capture._](https://developer.nvidia.com/embedded/jetson-linux-r3643#:~:text=Additional%20Files,for%20JetPack%206.2.1.)
 
 ## 1. Get & Install Framos drivers
 Two methods:
