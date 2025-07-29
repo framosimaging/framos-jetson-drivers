@@ -1,0 +1,30 @@
+v1.3.0.0 (2021-04-16)
+=====================
+    - changed- SubLVDS Image Sensor Receiver IP core version from v1.2 to v1.3
+
+v1.2.1.0 (2020-07-17)
+=====================
+    - fixed - slave mode pins set to High-Z when Timing generator is disabled
+
+v1.2.0.0 (2020-03-16)
+=====================
+    - added - Timing generator
+    - added - debouncer for external input sync/trigger signal
+    - added - slave mode driving pins 
+    - changed - external image sensor triggering (WARNING! - new hardware pin configurations)
+    - changed - LVDS/SLVS to MIPI CSI-2 converter implementation
+
+v1.1.0.0 (2019-11-22)
+=====================
+    - fixed - image sensor power up/down generator
+    - changed - support for 16-bit instead of 8-bit I2C addresses
+
+v1.0.0.0 (2019-07-25)
+=====================
+    - initial release
+    - supported features:
+        - SLVS to MIPI CSI-2 converter
+        - image sensor power up/down generator
+        - image sensor input clock generator
+        - image sensor XMASTER pin control
+        - firmware setting over I2C interface
