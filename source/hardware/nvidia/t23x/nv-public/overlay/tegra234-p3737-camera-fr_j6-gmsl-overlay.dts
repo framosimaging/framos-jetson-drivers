@@ -1,0 +1,69 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * Copyright (c) 2024 Framos. All rights reserved.
+ *
+ * tegra234-p3737-camera-fr_j6-gmsl-overlay.dts
+ */
+
+/dts-v1/;
+/plugin/;
+
+#include <dt-bindings/clock/tegra234-clock.h>
+#include <dt-bindings/gpio/tegra234-gpio.h>
+#include <dt-bindings/tegra234-p3737-0000+p3701-0000.h>
+
+
+/ {
+	overlay-name = "Framos GMSL-J6";
+	jetson-header-name = "Jetson AGX CSI Connector";
+	compatible = JETSON_COMPATIBLE;
+
+	fragment@0 {
+		target = <&tca9548_70_i2c2>;
+		__overlay__ {
+			framos_dser_c: max96792_c@6a {
+				compatible = "framos,max96792";
+				reg = <0x6a>;
+				csi-mode = "2x4";
+				max-src = <1>;
+			};
+			framos_ser_prim_c: max96793_prim_c@42 {
+				compatible = "framos,max96793";
+				reg = <0x42>;
+				nvidia,gmsl-dser-device = <&framos_dser_c>;
+				is-prim-ser;
+			};
+		};
+	};
+
+	fragment@1 {
+		target = <&sensor_c>;
+		__overlay__ {
+			nvidia,gmsl-ser-device = <&framos_ser_prim_c>;
+			nvidia,gmsl-dser-device = <&framos_dser_c>;
+			gmsl-link {
+				src-csi-port = "b";
+				dst-csi-port = "a";
+				serdes-csi-link = "a";
+				csi-mode = "1x4";
+				st-vc = <0>;
+				vc-id = <0>;
+				streams = "raw12";
+			};
+		};
+	};
+
+	fragment@2 {
+		target = <&tca9548_70_i2c2>;
+		__overlay__ {
+			tca6408_21_i2c2: tca6408@21 {
+				compatible = "ti,tca6408";
+				gpio-controller;
+				#gpio-cells = <2>;
+				reg = <0x21>;
+				status = "okay";
+				gpio-line-names = "", "", "J6-tca6408_21_i2c2_cresetb";
+			};
+		};
+	};
+};
