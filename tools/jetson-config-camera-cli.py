@@ -82,7 +82,7 @@ def main():
                     if (fpa_dtbo.count('.') == 2):
                         fpa_dtbo = fpa_dtbo.replace('.', '', 1)
 
-            match = re.match(r"^Framos ([a-zA-Z0-9]+)\-([0-9a-zA-Z]+)\-([0-9a-zA-z]+)([-a-zA-Z]*)", arg)
+            match = re.match(r"^Framos ([a-zA-Z0-9_]+)\-([0-9a-zA-Z]+)\-([0-9a-zA-z]+)([-a-zA-Z]*)", arg)
             if (match):
                 sensor = match.group(1).lower()
                 port = match.group(2).lower()
