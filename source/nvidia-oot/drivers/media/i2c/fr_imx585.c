@@ -33,6 +33,7 @@
 
 #define IMX585_MAX_GAIN_DEC 240
 #define IMX585_MAX_GAIN_DB 72
+#define IMX585_HIGH_GAIN_REG_MIN 34
 
 #define IMX585_MAX_BLACK_LEVEL_10BPP 1023
 #define IMX585_MAX_BLACK_LEVEL_12BPP 4095
@@ -211,6 +212,7 @@ static struct v4l2_ctrl_config imx585_custom_ctrl_list[] = {
 
 static const u32 ctrl_cid_list[] = {
 	TEGRA_CAMERA_CID_GAIN,
+	TEGRA_CAMERA_CID_CONVERSION_GAIN,
 	TEGRA_CAMERA_CID_EXPOSURE,
 	TEGRA_CAMERA_CID_FRAME_RATE,
 	TEGRA_CAMERA_CID_SENSOR_MODE_ID,
@@ -530,6 +532,63 @@ static int imx585_set_gain(struct tegracam_device *tc_dev, s64 val)
 	}
 
 	dev_dbg(dev, "%s: gain val [%lld] reg [%d]\n", __func__, val, gain);
+
+	return 0;
+}
+
+static int imx585_set_conversion_gain(struct tegracam_device *tc_dev, bool val)
+{
+	struct camera_common_data *s_data = tc_dev->s_data;
+	struct device *dev = tc_dev->dev;
+	const struct sensor_mode_properties *mode =
+		&s_data->sensor_props.sensor_modes[s_data->mode];
+	struct v4l2_ctrl *ctrl;
+	int err = 0;
+	u64 curr_gain = 0;
+	u64 min_high_gain = 0;
+
+	dev_dbg(dev, "%s: Enter conv gain: %d\n", __func__, val);
+	err = imx585_write_reg(s_data, FDG_SEL0, val);
+	if (err) {
+		dev_err(dev, "%s: changing conversion gain error\n", __func__);
+		return err;
+	}
+
+	ctrl = fr_find_v4l2_ctrl(tc_dev, TEGRA_CAMERA_CID_GAIN);
+	if (!ctrl) {
+		dev_err(dev, "%s: Unable to find gain control\n", __func__);
+	}
+
+	// minimal gain value is higher according to sensor datasheet
+	if (val) {
+		err = imx585_read_buffered_reg(s_data, GAIN_LOW, 2, &curr_gain);
+		if (err) {
+			dev_err(dev, "%s: reading gain value error\n", __func__);
+			return err;
+		}
+		min_high_gain = IMX585_HIGH_GAIN_REG_MIN * IMX585_MAX_GAIN_DB
+			* mode->control_properties.gain_factor / IMX585_MAX_GAIN_DEC;
+
+		if (curr_gain < IMX585_HIGH_GAIN_REG_MIN) {
+			dev_warn(dev, "%s:Gain value too large for high conversion gain\n", __func__);
+			curr_gain = IMX585_HIGH_GAIN_REG_MIN * IMX585_MAX_GAIN_DB
+				* mode->control_properties.gain_factor
+				/ IMX585_MAX_GAIN_DEC;
+			err = imx585_set_gain(tc_dev, curr_gain);
+			if (err) {
+				dev_err(dev, "%s:Error changing gain value\n", __func__);
+				return err;
+			}
+			*ctrl->p_new.p_s64 = curr_gain;
+			*ctrl->p_cur.p_s64 = curr_gain;
+			dev_dbg(tc_dev->dev, "%s: changing gain range\n", __func__);
+		}
+		ctrl->default_value = min_high_gain;
+		ctrl->minimum = min_high_gain;
+	} else {
+		ctrl->minimum = mode->control_properties.min_gain_val;
+		ctrl->default_value = mode->control_properties.default_gain;
+	}
 
 	return 0;
 }
@@ -2332,6 +2391,7 @@ static struct tegracam_ctrl_ops imx585_ctrl_ops = {
 	.numctrls = ARRAY_SIZE(ctrl_cid_list),
 	.ctrl_cid_list = ctrl_cid_list,
 	.set_gain = imx585_set_gain,
+	.set_conversion_gain = imx585_set_conversion_gain,
 	.set_exposure = imx585_set_exposure,
 	.set_frame_rate = imx585_set_frame_rate,
 	.set_group_hold = imx585_set_group_hold,

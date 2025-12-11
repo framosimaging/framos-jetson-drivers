@@ -2,7 +2,7 @@
 /*
  * Copyright (c) 2024 Framos. All rights reserved.
  *
- * fr_imx678.c - Framos fr_imx678.c driver
+ * fr_imx838.c - Framos fr_imx838.c driver
  */
 
 //#define DEBUG 1
@@ -23,58 +23,53 @@
 #include <media/tegra_v4l2_camera.h>
 #include <media/tegracam_core.h>
 
-#include "fr_imx678_mode_tbls.h"
+#include "fr_imx838_mode_tbls.h"
 #include "media/fr_sensor_common.h"
 
-#define IMX678_K_FACTOR 1000LL
-#define IMX678_M_FACTOR 1000000LL
-#define IMX678_G_FACTOR 1000000000LL
-#define IMX678_T_FACTOR 1000000000000LL
+#define IMX838_K_FACTOR 1000LL
+#define IMX838_M_FACTOR 1000000LL
+#define IMX838_G_FACTOR 1000000000LL
+#define IMX838_T_FACTOR 1000000000000LL
 
-#define IMX678_MAX_GAIN_DEC 240
-#define IMX678_MAX_GAIN_DB 72
-#define IMX678_HIGH_GAIN_REG_MIN 34
+#define IMX838_MAX_GAIN_DEC 240
+#define IMX838_MAX_GAIN_DB 72
+#define IMX838_HIGH_GAIN_REG_MIN 34
 
-#define IMX678_MAX_BLACK_LEVEL_10BPP 1023
-#define IMX678_MAX_BLACK_LEVEL_12BPP 4095
-#define IMX678_DEFAULT_BLACK_LEVEL_10BPP 50
-#define IMX678_DEFAULT_BLACK_LEVEL_12BPP 200
+#define IMX838_MAX_BLACK_LEVEL_10BPP 1023
+#define IMX838_MAX_BLACK_LEVEL_12BPP 4095
+#define IMX838_DEFAULT_BLACK_LEVEL_10BPP 50
+#define IMX838_DEFAULT_BLACK_LEVEL_12BPP 200
 
-#define IMX678_MIN_SHR0_LENGTH 8
-#define IMX678_MIN_INTEGRATION_LINES 2
-#define IMX678_MIN_SHR1_LENGTH 5
+#define IMX838_MIN_SHR0_LENGTH 8
+#define IMX838_MIN_INTEGRATION_LINES 2
 
-#define IMX678_4_CSI_LANES 4
-#define IMX678_TWO_LANE_MODE 2
+#define IMX838_4_CSI_LANES 4
+#define IMX838_TWO_LANE_MODE 2
 
-#define IMX678_INCK 74250000LL
+#define IMX838_INCK 74250000LL
 
-#define IMX678_DOL2_MIN_SHR0_LENGTH (IMX678_DEFAULT_RHS1 + 5)
-#define IMX678_DOL2_MIN_INTEGRATION_LINES 4
-
-
-LIST_HEAD(imx678_sensor_list);
+LIST_HEAD(imx838_sensor_list);
 
 static struct mutex serdes_lock__;
 
-static const struct of_device_id imx678_of_match[] = {
-	{ .compatible = "framos,imx678",},
+static const struct of_device_id imx838_of_match[] = {
+	{ .compatible = "framos,imx838",},
 	{ },
 };
-MODULE_DEVICE_TABLE(of, imx678_of_match);
+MODULE_DEVICE_TABLE(of, imx838_of_match);
 
-const char * const imx678_data_rate_menu[] = {
-	[IMX678_2376_MBPS] = "2376 Mbps/lane",
-	[IMX678_2079_MBPS] = "2079 Mbps/lane",
-	[IMX678_1782_MBPS] = "1782 Mbps/lane",
-	[IMX678_1440_MBPS] = "1440 Mbps/lane",
-	[IMX678_1188_MBPS] = "1188 Mbps/lane",
-	[IMX678_891_MBPS] = "891 Mbps/lane",
-	[IMX678_720_MBPS] = "720 Mbps/lane",
-	[IMX678_594_MBPS] = "594 Mbps/lane",
+const char * const imx838_data_rate_menu[] = {
+	[IMX838_2376_MBPS] = "2376 Mbps/lane",
+	[IMX838_2079_MBPS] = "2079 Mbps/lane",
+	[IMX838_1782_MBPS] = "1782 Mbps/lane",
+	[IMX838_1440_MBPS] = "1440 Mbps/lane",
+	[IMX838_1188_MBPS] = "1188 Mbps/lane",
+	[IMX838_891_MBPS] = "891 Mbps/lane",
+	[IMX838_720_MBPS] = "720 Mbps/lane",
+	[IMX838_594_MBPS] = "594 Mbps/lane",
 };
 
-static const char * const imx678_test_pattern_menu[] = {
+static const char * const imx838_test_pattern_menu[] = {
 	[0] = "No pattern",
 	[1] = "000h Pattern",
 	[2] = "3FF(FFFh) Pattern",
@@ -102,11 +97,9 @@ static const u32 ctrl_cid_list[] = {
 	TEGRA_CAMERA_CID_BLACK_LEVEL,
 	TEGRA_CAMERA_CID_TEST_PATTERN,
 	TEGRA_CAMERA_CID_DATA_RATE,
-	TEGRA_CAMERA_CID_EXPOSURE_SHORT,
-	TEGRA_CAMERA_CID_HDR_EN,
 };
 
-struct imx678 {
+struct imx838 {
 	struct i2c_client		*i2c_client;
 	struct v4l2_subdev		*subdev;
 	u64				frame_length;
@@ -128,18 +121,17 @@ static const struct regmap_config sensor_regmap_config = {
 	.use_single_write = true,
 };
 
-static bool imx678_is_binning_mode(struct camera_common_data *s_data)
+static bool imx838_is_binning_mode(struct camera_common_data *s_data)
 {
 	switch (s_data->mode) {
-	case IMX678_MODE_H2V2_BINNING:
-	case IMX678_MODE_DOL_BINNING:
+	case IMX838_MODE_H2V2_BINNING:
 		return true;
 	default:
 		return false;
 	}
 }
 
-static inline int imx678_read_reg(struct camera_common_data *s_data,
+static inline int imx838_read_reg(struct camera_common_data *s_data,
 							u16 addr, u8 *val)
 {
 	int err = 0;
@@ -151,7 +143,7 @@ static inline int imx678_read_reg(struct camera_common_data *s_data,
 	return err;
 }
 
-static int imx678_write_reg(struct camera_common_data *s_data,
+static int imx838_write_reg(struct camera_common_data *s_data,
 							u16 addr, u8 val)
 {
 	int err;
@@ -165,7 +157,7 @@ static int imx678_write_reg(struct camera_common_data *s_data,
 	return err;
 }
 
-static int imx678_write_reg_broadcast(struct camera_common_data *s_data,
+static int imx838_write_reg_broadcast(struct camera_common_data *s_data,
 							u16 addr, u8 val)
 {
 	int err;
@@ -180,7 +172,7 @@ static int imx678_write_reg_broadcast(struct camera_common_data *s_data,
 	return err;
 }
 
-static int imx678_read_buffered_reg(struct camera_common_data *s_data,
+static int imx838_read_buffered_reg(struct camera_common_data *s_data,
 			u16 addr_low, u8 number_of_registers, u64 *val)
 {
 	struct device *dev = s_data->dev;
@@ -189,7 +181,7 @@ static int imx678_read_buffered_reg(struct camera_common_data *s_data,
 	*val = 0;
 
 	if (!s_data->group_hold_active) {
-		err = imx678_write_reg(s_data, REGHOLD, 0x01);
+		err = imx838_write_reg(s_data, REGHOLD, 0x01);
 		if (err) {
 			dev_err(dev, "%s: error setting register hold\n",
 								__func__);
@@ -198,7 +190,7 @@ static int imx678_read_buffered_reg(struct camera_common_data *s_data,
 	}
 
 	for (i = 0; i < number_of_registers; i++) {
-		err = imx678_read_reg(s_data, addr_low + i, &reg);
+		err = imx838_read_reg(s_data, addr_low + i, &reg);
 		*val += reg << (i * 8);
 		if (err) {
 			dev_err(dev, "%s: error reading buffered registers\n",
@@ -208,7 +200,7 @@ static int imx678_read_buffered_reg(struct camera_common_data *s_data,
 	}
 
 	if (!s_data->group_hold_active) {
-		err = imx678_write_reg(s_data, REGHOLD, 0x00);
+		err = imx838_write_reg(s_data, REGHOLD, 0x00);
 		if (err) {
 			dev_err(dev, "%s: error unsetting register hold\n",
 								__func__);
@@ -219,14 +211,14 @@ static int imx678_read_buffered_reg(struct camera_common_data *s_data,
 	return err;
 }
 
-static int imx678_write_buffered_reg(struct camera_common_data *s_data,
+static int imx838_write_buffered_reg(struct camera_common_data *s_data,
 			u16 addr_low, u8 number_of_registers, u64 val)
 {
 	int err, i;
 	struct device *dev = s_data->dev;
 
 	if (!s_data->group_hold_active) {
-		err = imx678_write_reg(s_data, REGHOLD, 0x01);
+		err = imx838_write_reg(s_data, REGHOLD, 0x01);
 		if (err) {
 			dev_err(dev, "%s: GRP_PARAM_HOLD error\n", __func__);
 			return err;
@@ -234,7 +226,7 @@ static int imx678_write_buffered_reg(struct camera_common_data *s_data,
 	}
 
 	for (i = 0; i < number_of_registers; i++) {
-		err = imx678_write_reg(s_data, addr_low + i,
+		err = imx838_write_reg(s_data, addr_low + i,
 						(u8)(val >> (i * 8)));
 		if (err) {
 			dev_err(dev, "%s: BUFFERED register write error\n",
@@ -244,7 +236,7 @@ static int imx678_write_buffered_reg(struct camera_common_data *s_data,
 	}
 
 	if (!s_data->group_hold_active) {
-		err = imx678_write_reg(s_data, REGHOLD, 0x00);
+		err = imx838_write_reg(s_data, REGHOLD, 0x00);
 		if (err) {
 			dev_err(dev, "%s: GRP_PARAM_HOLD erroror\n", __func__);
 			return err;
@@ -254,14 +246,14 @@ static int imx678_write_buffered_reg(struct camera_common_data *s_data,
 	return err;
 }
 
-static int imx678_broadcast_buffered_reg(struct camera_common_data *s_data,
+static int imx838_broadcast_buffered_reg(struct camera_common_data *s_data,
 			u16 addr_low, u8 number_of_registers, u32 val)
 {
 	int err, i;
 	struct device *dev = s_data->dev;
 
 	if (!s_data->group_hold_active) {
-		err = imx678_write_reg_broadcast(s_data, REGHOLD, 0x01);
+		err = imx838_write_reg_broadcast(s_data, REGHOLD, 0x01);
 		if (err) {
 			dev_err(dev, "%s: GRP_PARAM_HOLD error\n", __func__);
 			return err;
@@ -269,7 +261,7 @@ static int imx678_broadcast_buffered_reg(struct camera_common_data *s_data,
 	}
 
 	for (i = 0; i < number_of_registers; i++) {
-		err = imx678_write_reg_broadcast(s_data, addr_low + i,
+		err = imx838_write_reg_broadcast(s_data, addr_low + i,
 			(u8)(val >> (i * 8)));
 		if (err) {
 			dev_err(dev, "%s: BUFFERED register write error\n",
@@ -279,7 +271,7 @@ static int imx678_broadcast_buffered_reg(struct camera_common_data *s_data,
 	}
 
 	if (!s_data->group_hold_active) {
-		err = imx678_write_reg_broadcast(s_data, REGHOLD, 0x00);
+		err = imx838_write_reg_broadcast(s_data, REGHOLD, 0x00);
 		if (err) {
 			dev_err(dev, "%s: GRP_PARAM_HOLD erroror\n", __func__);
 			return err;
@@ -289,18 +281,18 @@ static int imx678_broadcast_buffered_reg(struct camera_common_data *s_data,
 	return err;
 }
 
-static int imx678_write_table(struct imx678 *priv, const imx678_reg table[])
+static int imx838_write_table(struct imx838 *priv, const imx838_reg table[])
 {
 	struct camera_common_data *s_data = priv->s_data;
 
 	return regmap_util_write_table_8(s_data->regmap,
 					 table,
 					 NULL, 0,
-					 IMX678_TABLE_WAIT_MS,
-					 IMX678_TABLE_END);
+					 IMX838_TABLE_WAIT_MS,
+					 IMX838_TABLE_END);
 }
 
-static int imx678_set_group_hold(struct tegracam_device *tc_dev, bool val)
+static int imx838_set_group_hold(struct tegracam_device *tc_dev, bool val)
 {
 	struct camera_common_data *s_data = tc_dev->s_data;
 	struct device *dev = tc_dev->dev;
@@ -308,7 +300,7 @@ static int imx678_set_group_hold(struct tegracam_device *tc_dev, bool val)
 
 	s_data->group_hold_active = val;
 
-	err = imx678_write_reg(s_data, REGHOLD, val);
+	err = imx838_write_reg(s_data, REGHOLD, val);
 	if (err) {
 		dev_err(dev, "%s: GRP_PARAM_HOLD error\n", __func__);
 		return err;
@@ -317,11 +309,11 @@ static int imx678_set_group_hold(struct tegracam_device *tc_dev, bool val)
 	return err;
 }
 
-static int imx678_update_ctrl(struct tegracam_device *tc_dev, int ctrl_id,
+static int imx838_update_ctrl(struct tegracam_device *tc_dev, int ctrl_id,
 				u64 current_val, u64 default_val, u64 min_val,
 								u64 max_val)
 {
-	struct imx678 *priv = (struct imx678 *)tegracam_get_privdata(tc_dev);
+	struct imx838 *priv = (struct imx838 *)tegracam_get_privdata(tc_dev);
 	struct v4l2_ctrl *ctrl;
 
 	ctrl = fr_find_v4l2_ctrl(tc_dev, ctrl_id);
@@ -334,11 +326,11 @@ static int imx678_update_ctrl(struct tegracam_device *tc_dev, int ctrl_id,
 			priv->s_data->blklvl_max_range = max_val;
 			break;
 		case TEGRA_CAMERA_CID_TEST_PATTERN:
-			ctrl->qmenu = imx678_test_pattern_menu;
+			ctrl->qmenu = imx838_test_pattern_menu;
 			ctrl->maximum = max_val;
 			break;
 		case TEGRA_CAMERA_CID_DATA_RATE:
-			ctrl->qmenu = imx678_data_rate_menu;
+			ctrl->qmenu = imx838_data_rate_menu;
 			ctrl->maximum = max_val;
 			break;
 		}
@@ -347,26 +339,7 @@ static int imx678_update_ctrl(struct tegracam_device *tc_dev, int ctrl_id,
 	return 0;
 }
 
-static int imx678_in_dol_mode(struct tegracam_device *tc_dev)
-{
-	struct camera_common_data *s_data = tc_dev->s_data;
-	struct device *dev = tc_dev->dev;
-	struct v4l2_control control;
-	int hdr_en = 0;
-	int err;
-
-	control.id = TEGRA_CAMERA_CID_HDR_EN;
-	err = camera_common_g_ctrl(s_data, &control);
-	if (err < 0) {
-		dev_err(dev, "could not find hdr enable device ctrl.\n");
-		return err;
-	}
-	hdr_en = switch_ctrl_qmenu[control.value];
-
-	return hdr_en;
-}
-
-static int imx678_set_black_level(struct tegracam_device *tc_dev, s64 val)
+static int imx838_set_black_level(struct tegracam_device *tc_dev, s64 val)
 {
 	struct camera_common_data *s_data = tc_dev->s_data;
 	struct device *dev = tc_dev->dev;
@@ -378,7 +351,7 @@ static int imx678_set_black_level(struct tegracam_device *tc_dev, s64 val)
 	else
 		black_level_reg = val >> 2;
 
-	err = imx678_write_buffered_reg(s_data, BLKLEVEL_LOW, 2,
+	err = imx838_write_buffered_reg(s_data, BLKLEVEL_LOW, 2,
 							black_level_reg);
 	if (err) {
 		dev_dbg(dev, "%s: BLACK LEVEL control error\n", __func__);
@@ -390,37 +363,27 @@ static int imx678_set_black_level(struct tegracam_device *tc_dev, s64 val)
 	return 0;
 }
 
-static int imx678_set_gain(struct tegracam_device *tc_dev, s64 val)
+static int imx838_set_gain(struct tegracam_device *tc_dev, s64 val)
 {
 	struct camera_common_data *s_data = tc_dev->s_data;
-	struct imx678 *priv = (struct imx678 *)tc_dev->priv;
+	struct imx838 *priv = (struct imx838 *)tc_dev->priv;
 	struct device *dev = tc_dev->dev;
 	const struct sensor_mode_properties *mode =
 		&s_data->sensor_props.sensor_modes[s_data->mode];
 	int err = 0;
-	const int hdr_en = imx678_in_dol_mode(tc_dev);
 	u32 gain;
 
-	if (hdr_en < 0) {
-		dev_err(dev, "%s: Could not read hdr enable control\n",
-								__func__);
-		return hdr_en;
-	}
-
-	gain = val * IMX678_MAX_GAIN_DEC /
-				(IMX678_MAX_GAIN_DB *
+	gain = val * IMX838_MAX_GAIN_DEC /
+				(IMX838_MAX_GAIN_DB *
 					mode->control_properties.gain_factor);
 
 
 	if (priv->broadcast_ctrl == BROADCAST)
-		err = imx678_broadcast_buffered_reg(s_data,
+		err = imx838_broadcast_buffered_reg(s_data,
 							GAIN_LOW, 2, gain);
 	else {
-		err = imx678_write_buffered_reg(s_data,
+		err = imx838_write_buffered_reg(s_data,
 							GAIN_LOW, 2, gain);
-		if (hdr_en > 0)
-			err |= imx678_write_buffered_reg(s_data,
-							GAIN_1, 2, gain);
 	}
 
 	if (err) {
@@ -433,7 +396,7 @@ static int imx678_set_gain(struct tegracam_device *tc_dev, s64 val)
 	return 0;
 }
 
-static int imx678_set_conversion_gain(struct tegracam_device *tc_dev, bool val)
+static int imx838_set_conversion_gain(struct tegracam_device *tc_dev, bool val)
 {
 	struct camera_common_data *s_data = tc_dev->s_data;
 	struct device *dev = tc_dev->dev;
@@ -445,8 +408,7 @@ static int imx678_set_conversion_gain(struct tegracam_device *tc_dev, bool val)
 	u64 min_high_gain = 0;
 
 	dev_dbg(dev, "%s: Enter conv gain: %d\n", __func__, val);
-	err = imx678_write_reg(s_data, FDG_SEL0, val);
-	err |= imx678_write_reg(s_data, FDG_SEL1, val); // change conversion gain for dol2 also
+	err = imx838_write_reg(s_data, FDG_SEL0, val);
 	if (err) {
 		dev_err(dev, "%s: changing conversion gain error\n", __func__);
 		return err;
@@ -459,20 +421,20 @@ static int imx678_set_conversion_gain(struct tegracam_device *tc_dev, bool val)
 
 	// minimal gain value is higher according to sensor datasheet
 	if (val) {
-		err = imx678_read_buffered_reg(s_data, GAIN_LOW, 2, &curr_gain);
+		err = imx838_read_buffered_reg(s_data, GAIN_LOW, 2, &curr_gain);
 		if (err) {
 			dev_err(dev, "%s: reading gain value error\n", __func__);
 			return err;
 		}
-		min_high_gain = IMX678_HIGH_GAIN_REG_MIN * IMX678_MAX_GAIN_DB
-			* mode->control_properties.gain_factor / IMX678_MAX_GAIN_DEC;
+		min_high_gain = IMX838_HIGH_GAIN_REG_MIN * IMX838_MAX_GAIN_DB
+			* mode->control_properties.gain_factor / IMX838_MAX_GAIN_DEC;
 
-		if (curr_gain < IMX678_HIGH_GAIN_REG_MIN) {
+		if (curr_gain < IMX838_HIGH_GAIN_REG_MIN) {
 			dev_warn(dev, "%s:Gain value too large for high conversion gain\n", __func__);
-			curr_gain = IMX678_HIGH_GAIN_REG_MIN * IMX678_MAX_GAIN_DB
+			curr_gain = IMX838_HIGH_GAIN_REG_MIN * IMX838_MAX_GAIN_DB
 				* mode->control_properties.gain_factor
-				/ IMX678_MAX_GAIN_DEC;
-			err = imx678_set_gain(tc_dev, curr_gain);
+				/ IMX838_MAX_GAIN_DEC;
+			err = imx838_set_gain(tc_dev, curr_gain);
 			if (err) {
 				dev_err(dev, "%s:Error changing gain value\n", __func__);
 				return err;
@@ -491,29 +453,16 @@ static int imx678_set_conversion_gain(struct tegracam_device *tc_dev, bool val)
 	return 0;
 }
 
-static int imx678_set_exposure(struct tegracam_device *tc_dev, s64 val)
+static int imx838_set_exposure(struct tegracam_device *tc_dev, s64 val)
 {
 	struct camera_common_data *s_data = tc_dev->s_data;
-	struct imx678 *priv = (struct imx678 *)tc_dev->priv;
+	struct imx838 *priv = (struct imx838 *)tc_dev->priv;
 	struct device *dev = tc_dev->dev;
 	struct v4l2_ctrl *ctrl;
 	int err = 0;
 	u32 integration_time_line;
-	const int hdr_en = imx678_in_dol_mode(tc_dev);
-	u8 min_shr0;
-	u64 max_shr0;
 	u64 shr0;
-
-	if (hdr_en < 0) {
-		dev_err(dev, "%s: unable to read hdr enable mode\n", __func__);
-		return hdr_en;
-	}
-	min_shr0 = hdr_en ? IMX678_DOL2_MIN_SHR0_LENGTH :
-						IMX678_MIN_SHR0_LENGTH;
-	max_shr0 = hdr_en ? priv->frame_length -
-					IMX678_DOL2_MIN_INTEGRATION_LINES :
-			priv->frame_length - IMX678_MIN_INTEGRATION_LINES;
-
+	u64 max_shr0;
 
 	dev_dbg(dev, "%s: integration time: %lld [us]\n", __func__, val);
 
@@ -522,20 +471,19 @@ static int imx678_set_exposure(struct tegracam_device *tc_dev, s64 val)
 	else if (val < s_data->exposure_min_range)
 		val = s_data->exposure_min_range;
 
-	integration_time_line = (val * IMX678_K_FACTOR) / priv->line_time;
+	integration_time_line = (val * IMX838_K_FACTOR) / priv->line_time;
 	shr0 = priv->frame_length - integration_time_line;
-	if (hdr_en)
-		shr0 = shr0 - (shr0 % 2);
+	max_shr0 = priv->frame_length - IMX838_MIN_INTEGRATION_LINES;
 
-	if (shr0 < min_shr0)
-		shr0 = min_shr0;
+	if (shr0 < IMX838_MIN_SHR0_LENGTH)
+		shr0 = IMX838_MIN_SHR0_LENGTH;
 	else if (shr0 > max_shr0)
 		shr0 = max_shr0;
 
 	if (priv->broadcast_ctrl == BROADCAST)
-		err = imx678_broadcast_buffered_reg(s_data, SHR0_LOW, 3, shr0);
+		err = imx838_broadcast_buffered_reg(s_data, SHR0_LOW, 3, shr0);
 	else
-		err = imx678_write_buffered_reg(s_data, SHR0_LOW, 3, shr0);
+		err = imx838_write_buffered_reg(s_data, SHR0_LOW, 3, shr0);
 	if (err) {
 		dev_err(dev, "%s: failed to set frame length\n", __func__);
 		return err;
@@ -555,141 +503,42 @@ static int imx678_set_exposure(struct tegracam_device *tc_dev, s64 val)
 	return err;
 }
 
-static int imx678_set_exposure_short(struct tegracam_device *tc_dev, s64 val)
+static int imx838_set_frame_rate(struct tegracam_device *tc_dev, s64 val)
 {
 	struct camera_common_data *s_data = tc_dev->s_data;
-	struct imx678 *priv = (struct imx678 *)tc_dev->priv;
-	struct device *dev = tc_dev->dev;
-	struct v4l2_ctrl *ctrl;
-	int err = 0;
-	u32 integration_time_line;
-	u64 shr1;
-
-	dev_dbg(dev, "%s: short integration time: %lld [us]\n", __func__, val);
-
-	if (val > s_data->short_exposure_max_range)
-		val = s_data->short_exposure_max_range;
-	else if (val < s_data->short_exposure_min_range)
-		val = s_data->short_exposure_min_range;
-
-	integration_time_line = DIV_ROUND_CLOSEST(val
-					* IMX678_K_FACTOR, priv->line_time);
-
-
-	shr1 = IMX678_DEFAULT_RHS1 - integration_time_line;
-
-	shr1 = shr1 - (shr1 % 2) + 1;
-
-	if (shr1 < IMX678_MIN_SHR1_LENGTH)
-		shr1 = IMX678_MIN_SHR1_LENGTH;
-	else if (shr1 > IMX678_DEFAULT_RHS1 - IMX678_DOL2_MIN_INTEGRATION_LINES)
-		shr1 = IMX678_DEFAULT_RHS1 - IMX678_DOL2_MIN_INTEGRATION_LINES;
-
-	if (priv->broadcast_ctrl == BROADCAST)
-		err = imx678_broadcast_buffered_reg(s_data, SHR1_LOW, 3, shr1);
-	else
-		err = imx678_write_buffered_reg(s_data, SHR1_LOW, 3, shr1);
-	if (err) {
-		dev_err(dev, "%s: failed to set frame length\n", __func__);
-		return err;
-	}
-
-	/* Update new ctrl value */
-	ctrl = fr_find_v4l2_ctrl(tc_dev, TEGRA_CAMERA_CID_EXPOSURE_SHORT);
-	if (ctrl) {
-		*ctrl->p_new.p_s64 = val;
-		*ctrl->p_cur.p_s64 = val;
-	}
-
-	dev_dbg(dev,
-	"%s: set short integration time: %lld [us], short integration time:%u [line], shr1: %llu [line]\n",
-			__func__, val, integration_time_line, shr1);
-
-	dev_dbg(dev,
-	"%s: min short exp: %lld [us], max short exp:%lld [us]\n",
-				__func__, s_data->short_exposure_min_range,
-					s_data->short_exposure_max_range);
-
-	return err;
-}
-
-static int imx678_update_exposure_ranges(struct tegracam_device *tc_dev)
-{
-	struct imx678 *priv = (struct imx678 *)tc_dev->priv;
-	struct device *dev = tc_dev->dev;
-	u8 min_shr0;
-	int ret = 0;
-	u64 exposure_max_range, exposure_min_range;
-	u64 short_exposure_max_range, short_exposure_min_range;
-	const int hdr_en = imx678_in_dol_mode(tc_dev);
-
-	if (hdr_en < 0) {
-		dev_err(dev, "%s: unable to get hdr enable mode\n", __func__);
-		return hdr_en;
-	}
-
-	min_shr0 = hdr_en ? IMX678_DOL2_MIN_SHR0_LENGTH : IMX678_MIN_SHR0_LENGTH;
-	exposure_min_range = min_shr0 * priv->line_time / IMX678_K_FACTOR;
-
-	if (hdr_en) {
-		exposure_max_range = (priv->frame_length - min_shr0) *
-					priv->line_time / IMX678_K_FACTOR;
-		short_exposure_min_range = (IMX678_DOL2_MIN_INTEGRATION_LINES *
-					priv->line_time) / IMX678_K_FACTOR;
-		short_exposure_max_range = ((IMX678_DEFAULT_RHS1 - 10) *
-					priv->line_time) / IMX678_K_FACTOR;
-	} else {
-		exposure_max_range = (priv->frame_length -
-					IMX678_MIN_INTEGRATION_LINES) *
-					priv->line_time / IMX678_K_FACTOR;
-	}
-
-	dev_dbg(dev,
-		"min_shr0: %u, exp min: %llu, exp max: %llu\n",
-		min_shr0, exposure_min_range, exposure_max_range);
-
-	fr_update_ctrl_range(tc_dev, TEGRA_CAMERA_CID_EXPOSURE,
-				exposure_min_range, exposure_max_range);
-
-	if (hdr_en) {
-		fr_update_ctrl_range(tc_dev, TEGRA_CAMERA_CID_EXPOSURE_SHORT,
-						short_exposure_min_range,
-						short_exposure_max_range);
-	}
-	return ret;
-}
-
-static int imx678_set_frame_rate(struct tegracam_device *tc_dev, s64 val)
-{
-	struct camera_common_data *s_data = tc_dev->s_data;
-	struct imx678 *priv = (struct imx678 *)tc_dev->priv;
+	struct imx838 *priv = (struct imx838 *)tc_dev->priv;
 	struct device *dev = tc_dev->dev;
 	int err = 0;
 	u64 frame_length;
+	u64 exposure_max_range, exposure_min_range;
+
 	const struct sensor_mode_properties *mode =
 		&s_data->sensor_props.sensor_modes[s_data->mode];
 
 	frame_length = (((u64)mode->control_properties.framerate_factor *
-				IMX678_G_FACTOR) / (val * priv->line_time));
+				IMX838_G_FACTOR) / (val * priv->line_time));
 
+	/* Value must be multiple of 2 */
+	frame_length = (frame_length % 2) ? frame_length + 1 : frame_length;
 	if (frame_length < priv->min_frame_length)
 		frame_length = priv->min_frame_length;
-
-	frame_length = (frame_length % 2) ? frame_length + 1 : frame_length;
-
 	priv->frame_length = frame_length;
 
-	err = imx678_update_exposure_ranges(tc_dev);
-	if (err < 0) {
-		dev_err(dev, "%s: failed to update exposure ranges\n", __func__);
-		return err;
-	}
+	/* Update exposure range, before writing the new frame length */
+	exposure_min_range = IMX838_MIN_INTEGRATION_LINES
+					    * priv->line_time / IMX838_K_FACTOR;
+
+	exposure_max_range = (priv->frame_length - IMX838_MIN_INTEGRATION_LINES)
+					    * priv->line_time / IMX838_K_FACTOR;
+
+	fr_update_ctrl_range(tc_dev, TEGRA_CAMERA_CID_EXPOSURE,
+			     exposure_min_range, exposure_max_range);
 
 	if (priv->broadcast_ctrl == BROADCAST)
-		err = imx678_broadcast_buffered_reg(s_data,
+		err = imx838_broadcast_buffered_reg(s_data,
 					VMAX_LOW, 3, priv->frame_length);
 	else
-		err = imx678_write_buffered_reg(s_data,
+		err = imx838_write_buffered_reg(s_data,
 					VMAX_LOW, 3, priv->frame_length);
 
 	if (err) {
@@ -704,22 +553,22 @@ static int imx678_set_frame_rate(struct tegracam_device *tc_dev, s64 val)
 	return 0;
 }
 
-static int imx678_set_test_pattern(struct tegracam_device *tc_dev, u32 val)
+static int imx838_set_test_pattern(struct tegracam_device *tc_dev, u32 val)
 {
 	struct camera_common_data *s_data = tc_dev->s_data;
-	struct imx678 *priv = (struct imx678 *)tegracam_get_privdata(tc_dev);
+	struct imx838 *priv = (struct imx838 *)tegracam_get_privdata(tc_dev);
 	struct device *dev = tc_dev->dev;
 	int err;
 
 	if (val) {
-		err = imx678_write_table(priv, mode_table[IMX678_EN_PATTERN_GEN]);
+		err = imx838_write_table(priv, mode_table[IMX838_EN_PATTERN_GEN]);
 		if (err)
 			goto fail;
-		err = imx678_write_reg(s_data, TPG_PATSEL_DUOUT, (u8)(val - 1));
+		err = imx838_write_reg(s_data, TPG_PATSEL_DUOUT, (u8)(val - 1));
 		if (err)
 			goto fail;
 	} else {
-		err = imx678_write_table(priv, mode_table[IMX678_DIS_PATTERN_GEN]);
+		err = imx838_write_table(priv, mode_table[IMX838_DIS_PATTERN_GEN]);
 		if (err)
 			goto fail;
 	}
@@ -732,10 +581,10 @@ fail:
 	return err;
 }
 
-static int imx678_update_framerate_range(struct tegracam_device *tc_dev)
+static int imx838_update_framerate_range(struct tegracam_device *tc_dev)
 {
 	struct camera_common_data *s_data = tc_dev->s_data;
-	struct imx678 *priv = (struct imx678 *)tegracam_get_privdata(tc_dev);
+	struct imx838 *priv = (struct imx838 *)tegracam_get_privdata(tc_dev);
 	struct sensor_control_properties *ctrlprops = NULL;
 	struct device *dev = tc_dev->dev;
 	u64 max_framerate;
@@ -744,14 +593,14 @@ static int imx678_update_framerate_range(struct tegracam_device *tc_dev)
 	ctrlprops =
 		&s_data->sensor_props.sensor_modes[s_data->mode].control_properties;
 
-	if (imx678_is_binning_mode(s_data))
+	if (imx838_is_binning_mode(s_data))
 		priv->min_frame_length = frame_height * 2
-						+ IMX678_MIN_FRAME_LENGTH_DELTA;
+						+ IMX838_MIN_FRAME_LENGTH_DELTA;
 	else
 		priv->min_frame_length = frame_height
-						+ IMX678_MIN_FRAME_LENGTH_DELTA;
+						+ IMX838_MIN_FRAME_LENGTH_DELTA;
 
-	max_framerate = (IMX678_G_FACTOR * IMX678_M_FACTOR) /
+	max_framerate = (IMX838_G_FACTOR * IMX838_M_FACTOR) /
 				(priv->min_frame_length * priv->line_time);
 
 	dev_dbg(dev, "%s: Max framerate is equal to %llu\n",
@@ -766,7 +615,7 @@ static int imx678_update_framerate_range(struct tegracam_device *tc_dev)
 	return 0;
 }
 
-static int imx678_set_operation_mode(struct tegracam_device *tc_dev, u32 val)
+static int imx838_set_operation_mode(struct tegracam_device *tc_dev, u32 val)
 {
 	struct camera_common_data *s_data = tc_dev->s_data;
 	struct camera_common_pdata *pdata = s_data->pdata;
@@ -777,11 +626,11 @@ static int imx678_set_operation_mode(struct tegracam_device *tc_dev, u32 val)
 	return 0;
 }
 
-static bool imx678_find_broadcast_sensor(struct imx678 *broadcast_private)
+static bool imx838_find_broadcast_sensor(struct imx838 *broadcast_private)
 {
-	struct imx678 *current_private;
+	struct imx838 *current_private;
 
-	list_for_each_entry(current_private, &imx678_sensor_list, entry) {
+	list_for_each_entry(current_private, &imx838_sensor_list, entry) {
 		mutex_lock(&current_private->pw_mutex);
 		if (current_private->broadcast_ctrl == BROADCAST
 			&& current_private->s_data->power->state == SWITCH_ON) {
@@ -795,12 +644,12 @@ static bool imx678_find_broadcast_sensor(struct imx678 *broadcast_private)
 	return false;
 }
 
-static void imx678_enable_second_slave_address(struct imx678 *ack_private)
+static void imx838_enable_second_slave_address(struct imx838 *ack_private)
 {
-	struct imx678 *current_private;
+	struct imx838 *current_private;
 	int err;
 
-	list_for_each_entry(current_private, &imx678_sensor_list, entry) {
+	list_for_each_entry(current_private, &imx838_sensor_list, entry) {
 		mutex_lock(&current_private->pw_mutex);
 
 		if (current_private->s_data->power->state != SWITCH_ON) {
@@ -808,7 +657,7 @@ static void imx678_enable_second_slave_address(struct imx678 *ack_private)
 			continue;
 		}
 
-		err = imx678_write_reg(current_private->s_data,
+		err = imx838_write_reg(current_private->s_data,
 					SECOND_SLAVE_ADD, 1);
 		if (err)
 			dev_warn(&current_private->i2c_client->dev,
@@ -821,7 +670,7 @@ static void imx678_enable_second_slave_address(struct imx678 *ack_private)
 		"%s: Sensors 2nd slave address configured\n", __func__);
 	}
 
-	err = imx678_write_reg(ack_private->s_data, SECOND_SLAVE_ADD, 3);
+	err = imx838_write_reg(ack_private->s_data, SECOND_SLAVE_ADD, 3);
 	if (err)
 		dev_warn(&ack_private->i2c_client->dev,
 			"%s: Fail to write Second I2C register\n", __func__);
@@ -830,12 +679,12 @@ static void imx678_enable_second_slave_address(struct imx678 *ack_private)
 		": Sensors 2nd slave address configured with acknowlege\n");
 }
 
-static void imx678_disable_second_slave_address(void)
+static void imx838_disable_second_slave_address(void)
 {
-	struct imx678 *current_private;
+	struct imx838 *current_private;
 	int err;
 
-	list_for_each_entry(current_private, &imx678_sensor_list, entry) {
+	list_for_each_entry(current_private, &imx838_sensor_list, entry) {
 		mutex_lock(&current_private->pw_mutex);
 
 		if (current_private->s_data->power->state != SWITCH_ON) {
@@ -843,7 +692,7 @@ static void imx678_disable_second_slave_address(void)
 			continue;
 		}
 
-		err = imx678_write_reg(current_private->s_data,
+		err = imx838_write_reg(current_private->s_data,
 					SECOND_SLAVE_ADD, 0);
 		if (err)
 			dev_warn(&current_private->i2c_client->dev,
@@ -858,20 +707,20 @@ static void imx678_disable_second_slave_address(void)
 	}
 }
 
-static void imx678_configure_second_slave_address(void)
+static void imx838_configure_second_slave_address(void)
 {
-	struct imx678 broadcast_private = {};
+	struct imx838 broadcast_private = {};
 
-	if (imx678_find_broadcast_sensor(&broadcast_private))
-		imx678_enable_second_slave_address(&broadcast_private);
+	if (imx838_find_broadcast_sensor(&broadcast_private))
+		imx838_enable_second_slave_address(&broadcast_private);
 	else
-		imx678_disable_second_slave_address();
+		imx838_disable_second_slave_address();
 }
 
-static int imx678_set_broadcast_ctrl(struct tegracam_device *tc_dev,
+static int imx838_set_broadcast_ctrl(struct tegracam_device *tc_dev,
 						struct v4l2_ctrl *ctrl)
 {
-	struct imx678 *priv = (struct imx678 *)tegracam_get_privdata(tc_dev);
+	struct imx838 *priv = (struct imx838 *)tegracam_get_privdata(tc_dev);
 	struct device *dev = tc_dev->dev;
 	int err;
 
@@ -888,18 +737,18 @@ static int imx678_set_broadcast_ctrl(struct tegracam_device *tc_dev,
 		return err;
 
 	priv->broadcast_ctrl = *ctrl->p_new.p_u8;
-	imx678_configure_second_slave_address();
+	imx838_configure_second_slave_address();
 
 	return 0;
 }
 
-static int imx678_power_on(struct camera_common_data *s_data)
+static int imx838_power_on(struct camera_common_data *s_data)
 {
 	int err = 0;
 	struct camera_common_power_rail *pw = s_data->power;
 	struct camera_common_pdata *pdata = s_data->pdata;
 	struct device *dev = s_data->dev;
-	struct imx678 *priv = (struct imx678 *)s_data->priv;
+	struct imx838 *priv = (struct imx838 *)s_data->priv;
 
 	dev_dbg(dev, "%s: power on\n", __func__);
 
@@ -917,7 +766,7 @@ static int imx678_power_on(struct camera_common_data *s_data)
 
 	if (!pw->mclk) {
 		dev_err(dev, "%s: mclk not available\n", __func__);
-		goto imx678_mclk_fail;
+		goto imx838_mclk_fail;
 	}
 
 	usleep_range(1, 2);
@@ -943,28 +792,28 @@ static int imx678_power_on(struct camera_common_data *s_data)
 
 	mutex_unlock(&priv->pw_mutex);
 
-	imx678_configure_second_slave_address();
+	imx838_configure_second_slave_address();
 
 	return 0;
 
-imx678_mclk_fail:
+imx838_mclk_fail:
 	mutex_unlock(&priv->pw_mutex);
 	dev_err(dev, "%s failed.\n", __func__);
 
 	return -ENODEV;
 }
 
-static int imx678_power_off(struct camera_common_data *s_data)
+static int imx838_power_off(struct camera_common_data *s_data)
 {
 	struct camera_common_power_rail *pw = s_data->power;
 	struct camera_common_pdata *pdata = s_data->pdata;
 	struct device *dev = s_data->dev;
-	struct imx678 *priv = (struct imx678 *)s_data->priv;
+	struct imx838 *priv = (struct imx838 *)s_data->priv;
 	int err = 0;
 
 	dev_dbg(dev, "%s: power off\n", __func__);
 
-	err = imx678_write_reg(s_data, XVS_XHS_DRV, 0xF);
+	err = imx838_write_reg(s_data, XVS_XHS_DRV, 0xF);
 	if (err)
 		dev_err(dev, "%s: error setting XVS XHS to Hi-Z\n", __func__);
 
@@ -998,7 +847,7 @@ power_off_done:
 	return 0;
 }
 
-static int imx678_power_get(struct tegracam_device *tc_dev)
+static int imx838_power_get(struct tegracam_device *tc_dev)
 {
 	struct device *dev = tc_dev->dev;
 	struct camera_common_data *s_data = tc_dev->s_data;
@@ -1049,7 +898,7 @@ static int imx678_power_get(struct tegracam_device *tc_dev)
 	return err;
 }
 
-static int imx678_power_put(struct tegracam_device *tc_dev)
+static int imx838_power_put(struct tegracam_device *tc_dev)
 {
 	struct camera_common_data *s_data = tc_dev->s_data;
 	struct camera_common_power_rail *pw = s_data->power;
@@ -1071,15 +920,15 @@ static int imx678_power_put(struct tegracam_device *tc_dev)
 	return 0;
 }
 
-static int imx678_communication_verify(struct tegracam_device *tc_dev)
+static int imx838_communication_verify(struct tegracam_device *tc_dev)
 {
 	struct camera_common_data *s_data = tc_dev->s_data;
-	struct imx678 *priv = (struct imx678 *)tegracam_get_privdata(tc_dev);
+	struct imx838 *priv = (struct imx838 *)tegracam_get_privdata(tc_dev);
 	struct device *dev = tc_dev->dev;
 	int err;
 	u64 vmax;
 
-	err = imx678_read_buffered_reg(s_data, VMAX_LOW, 2, &vmax);
+	err = imx838_read_buffered_reg(s_data, VMAX_LOW, 2, &vmax);
 	if (err) {
 		dev_err(dev, "%s: failed to read VMAX\n", __func__);
 		return err;
@@ -1090,7 +939,7 @@ static int imx678_communication_verify(struct tegracam_device *tc_dev)
 	return err;
 }
 
-static struct camera_common_pdata *imx678_parse_dt(struct tegracam_device *tc_dev)
+static struct camera_common_pdata *imx838_parse_dt(struct tegracam_device *tc_dev)
 {
 	struct device *dev = tc_dev->dev;
 	struct device_node *sensor_node = dev->of_node;
@@ -1105,7 +954,7 @@ static struct camera_common_pdata *imx678_parse_dt(struct tegracam_device *tc_de
 	if (!sensor_node)
 		return NULL;
 
-	match = of_match_device(imx678_of_match, dev);
+	match = of_match_device(imx838_of_match, dev);
 	if (!match) {
 		dev_err(dev, "Failed to find matching dt id\n");
 		return NULL;
@@ -1168,19 +1017,19 @@ error:
 	return ret;
 }
 
-static int imx678_set_pixel_format(struct tegracam_device *tc_dev)
+static int imx838_set_pixel_format(struct tegracam_device *tc_dev)
 {
 	struct device *dev = tc_dev->dev;
-	struct imx678 *priv = (struct imx678 *)tegracam_get_privdata(tc_dev);
+	struct imx838 *priv = (struct imx838 *)tegracam_get_privdata(tc_dev);
 	struct camera_common_data *s_data = tc_dev->s_data;
 	int err;
 
 	switch (s_data->colorfmt->code) {
 	case MEDIA_BUS_FMT_SRGGB10_1X10:
-		err = imx678_write_table(priv, mode_table[IMX678_10BIT_MODE]);
+		err = imx838_write_table(priv, mode_table[IMX838_10BIT_MODE]);
 		break;
 	case MEDIA_BUS_FMT_SRGGB12_1X12:
-		err = imx678_write_table(priv, mode_table[IMX678_12BIT_MODE]);
+		err = imx838_write_table(priv, mode_table[IMX838_12BIT_MODE]);
 		break;
 	default:
 		dev_err(dev, "%s: unknown pixel format\n", __func__);
@@ -1190,14 +1039,14 @@ static int imx678_set_pixel_format(struct tegracam_device *tc_dev)
 	return err;
 }
 
-static int imx678_set_csi_lane_mode(struct tegracam_device *tc_dev)
+static int imx838_set_csi_lane_mode(struct tegracam_device *tc_dev)
 {
 	struct camera_common_data *s_data = tc_dev->s_data;
 	struct device *dev = tc_dev->dev;
 	int err;
 
-	if (s_data->numlanes == IMX678_TWO_LANE_MODE) {
-		err = imx678_write_reg(s_data, LANEMODE, 1);
+	if (s_data->numlanes == IMX838_TWO_LANE_MODE) {
+		err = imx838_write_reg(s_data, LANEMODE, 1);
 		if (err) {
 			dev_err(dev, "%s: error setting two lane mode\n",
 								__func__);
@@ -1211,9 +1060,9 @@ static int imx678_set_csi_lane_mode(struct tegracam_device *tc_dev)
 	return 0;
 }
 
-static int imx678_calculate_line_time(struct tegracam_device *tc_dev)
+static int imx838_calculate_line_time(struct tegracam_device *tc_dev)
 {
-	struct imx678 *priv = (struct imx678 *)tc_dev->priv;
+	struct imx838 *priv = (struct imx838 *)tc_dev->priv;
 	struct camera_common_data *s_data = tc_dev->s_data;
 	struct device *dev = tc_dev->dev;
 	u64 hmax;
@@ -1221,13 +1070,13 @@ static int imx678_calculate_line_time(struct tegracam_device *tc_dev)
 
 	dev_dbg(dev, "%s:++\n", __func__);
 
-	err = imx678_read_buffered_reg(s_data, HMAX_LOW, 2, &hmax);
+	err = imx838_read_buffered_reg(s_data, HMAX_LOW, 2, &hmax);
 	if (err) {
 		dev_err(dev, "%s: unable to read hmax\n", __func__);
 		return err;
 	}
 
-	priv->line_time = (hmax*IMX678_G_FACTOR) / (IMX678_INCK);
+	priv->line_time = (hmax*IMX838_G_FACTOR) / (IMX838_INCK);
 
 	dev_dbg(dev, "%s: hmax: %llu [inck], INCK: %u [Hz], line_time: %u [ns]\n",
 		__func__, hmax, s_data->def_clk_freq, priv->line_time);
@@ -1235,51 +1084,51 @@ static int imx678_calculate_line_time(struct tegracam_device *tc_dev)
 	return 0;
 }
 
-static int imx678_adjust_hmax_register(struct tegracam_device *tc_dev)
+static int imx838_adjust_hmax_register(struct tegracam_device *tc_dev)
 {
 	struct camera_common_data *s_data = tc_dev->s_data;
 	struct device *dev = tc_dev->dev;
 	int err;
 	u64 hmax = 1100;
-	u8 csi_lane_coef = IMX678_4_CSI_LANES / s_data->numlanes;
+	u8 csi_lane_coef = IMX838_4_CSI_LANES / s_data->numlanes;
 
 	dev_dbg(dev, "%s:++\n", __func__);
 
 	switch (fr_get_v4l2_ctrl_value(tc_dev, TEGRA_CAMERA_CID_DATA_RATE,
 								CURRENT)) {
-	case IMX678_2376_MBPS:
+	case IMX838_2376_MBPS:
 		hmax = 458;
 		break;
-	case IMX678_2079_MBPS:
-		hmax = (s_data->numlanes == IMX678_4_CSI_LANES) ? 458 : 1100;
+	case IMX838_2079_MBPS:
+		hmax = (s_data->numlanes == IMX838_4_CSI_LANES) ? 458 : 1100;
 		break;
-	case IMX678_1782_MBPS:
-		if (s_data->numlanes == IMX678_4_CSI_LANES)
+	case IMX838_1782_MBPS:
+		if (s_data->numlanes == IMX838_4_CSI_LANES)
 			hmax = 550;
 		else
 			hmax = (s_data->colorfmt->code ==
 				MEDIA_BUS_FMT_SRGGB10_1X10) ? 1100 : 1320;
 		break;
-	case IMX678_1440_MBPS:
-		if (imx678_is_binning_mode(s_data))
+	case IMX838_1440_MBPS:
+		if (imx838_is_binning_mode(s_data))
 			hmax = 550 * csi_lane_coef;
 		else {
-			if (s_data->numlanes == IMX678_TWO_LANE_MODE)
+			if (s_data->numlanes == IMX838_TWO_LANE_MODE)
 				hmax = 1320;
 			else
 				hmax = (s_data->colorfmt->code ==
 					MEDIA_BUS_FMT_SRGGB10_1X10) ? 550 : 660;
 		}
 		break;
-	case IMX678_1188_MBPS:
+	case IMX838_1188_MBPS:
 		hmax = 1100;
 		break;
-	case IMX678_891_MBPS:
+	case IMX838_891_MBPS:
 		hmax = (s_data->colorfmt->code ==
 					MEDIA_BUS_FMT_SRGGB10_1X10) ? 1100 : 1320;
 		break;
-	case IMX678_720_MBPS:
-		if (imx678_is_binning_mode(s_data))
+	case IMX838_720_MBPS:
+		if (imx838_is_binning_mode(s_data))
 			hmax = 1100;
 		else
 			hmax = (s_data->colorfmt->code ==
@@ -1291,18 +1140,18 @@ static int imx678_adjust_hmax_register(struct tegracam_device *tc_dev)
 		return 0;
 	}
 
-	err = imx678_write_buffered_reg(s_data, HMAX_LOW, 2, hmax);
+	err = imx838_write_buffered_reg(s_data, HMAX_LOW, 2, hmax);
 	if (err) {
 		dev_err(dev, "%s: failed to set HMAX register\n", __func__);
 		return err;
 	}
 
-	dev_err(dev, "%s: HMAX: %llu\n", __func__, hmax);
+	dev_dbg(dev, "%s: HMAX: %llu\n", __func__, hmax);
 
 	return 0;
 }
 
-static int imx678_verify_data_rate(struct tegracam_device *tc_dev)
+static int imx838_verify_data_rate(struct tegracam_device *tc_dev)
 {
 	struct camera_common_data *s_data = tc_dev->s_data;
 	struct device *dev = tc_dev->dev;
@@ -1319,85 +1168,85 @@ static int imx678_verify_data_rate(struct tegracam_device *tc_dev)
 	current_data_rate = fr_get_v4l2_ctrl_value(tc_dev,
 					TEGRA_CAMERA_CID_DATA_RATE, CURRENT);
 
-	if (s_data->numlanes == IMX678_TWO_LANE_MODE) {
-		if (imx678_is_binning_mode(s_data)) {
-			if (current_data_rate != IMX678_1440_MBPS) {
+	if (s_data->numlanes == IMX838_TWO_LANE_MODE) {
+		if (imx838_is_binning_mode(s_data)) {
+			if (current_data_rate != IMX838_1440_MBPS) {
 				dev_warn(dev,
 					"%s: Selected data rate is not supported with 2 CSI lane mode and binning mode, switching to default!\n",
 					__func__);
-				data_rate = IMX678_1440_MBPS;
+				data_rate = IMX838_1440_MBPS;
 				goto modify_ctrl;
 			} else {
 				return 0;
 			}
 		} else {
 			switch (current_data_rate) {
-			case IMX678_2376_MBPS:
-			case IMX678_1188_MBPS:
-			case IMX678_891_MBPS:
-			case IMX678_720_MBPS:
-			case IMX678_594_MBPS:
+			case IMX838_2376_MBPS:
+			case IMX838_1188_MBPS:
+			case IMX838_891_MBPS:
+			case IMX838_720_MBPS:
+			case IMX838_594_MBPS:
 				dev_warn(dev,
 					"%s: Selected data rate is not supported with 2 CSI lane mode, switching to default!\n",
 					__func__);
 				if (s_data->colorfmt->code ==
 						MEDIA_BUS_FMT_SRGGB10_1X10)
-					data_rate = IMX678_1782_MBPS;
+					data_rate = IMX838_1782_MBPS;
 				else
-					data_rate = IMX678_2079_MBPS;
+					data_rate = IMX838_2079_MBPS;
 				goto modify_ctrl;
-			case IMX678_2079_MBPS:
+			case IMX838_2079_MBPS:
 				if (s_data->colorfmt->code ==
 						MEDIA_BUS_FMT_SRGGB10_1X10) {
-					data_rate = IMX678_1782_MBPS;
+					data_rate = IMX838_1782_MBPS;
 					goto modify_ctrl;
 				}
 				break;
-			case IMX678_1440_MBPS:
+			case IMX838_1440_MBPS:
 				if (s_data->colorfmt->code ==
 						MEDIA_BUS_FMT_SRGGB12_1X12) {
-					data_rate = IMX678_2079_MBPS;
+					data_rate = IMX838_2079_MBPS;
 					goto modify_ctrl;
 				}
 			break;
 			}
 		}
 	} else {
-		if (imx678_is_binning_mode(s_data)) {
+		if (imx838_is_binning_mode(s_data)) {
 			switch (current_data_rate) {
-			case IMX678_2079_MBPS:
-			case IMX678_1782_MBPS:
-			case IMX678_1188_MBPS:
-			case IMX678_891_MBPS:
-				data_rate = IMX678_2376_MBPS;
+			case IMX838_2079_MBPS:
+			case IMX838_1782_MBPS:
+			case IMX838_1188_MBPS:
+			case IMX838_891_MBPS:
+				data_rate = IMX838_2376_MBPS;
 				goto modify_ctrl;
 			default:
 				return 0;
 			}
 		} else {
 			switch (current_data_rate) {
-			case IMX678_2376_MBPS:
+			case IMX838_2376_MBPS:
 				dev_warn(dev,
 					"%s: Selected data rate is not supported with 4 lane mode, switching to default!\n",
 					__func__);
 				if (s_data->colorfmt->code ==
 						MEDIA_BUS_FMT_SRGGB10_1X10)
-					data_rate = IMX678_2079_MBPS;
+					data_rate = IMX838_2079_MBPS;
 				else
-					data_rate = IMX678_1782_MBPS;
+					data_rate = IMX838_1782_MBPS;
 				goto modify_ctrl;
-			case IMX678_2079_MBPS:
-			case IMX678_720_MBPS:
+			case IMX838_2079_MBPS:
+			case IMX838_720_MBPS:
 				if (s_data->colorfmt->code ==
 						MEDIA_BUS_FMT_SRGGB12_1X12) {
-					data_rate = IMX678_1782_MBPS;
+					data_rate = IMX838_1782_MBPS;
 					goto modify_ctrl;
 				}
 				break;
-			case IMX678_1782_MBPS:
+			case IMX838_1782_MBPS:
 			if (s_data->colorfmt->code ==
 						MEDIA_BUS_FMT_SRGGB10_1X10) {
-				data_rate = IMX678_2079_MBPS;
+				data_rate = IMX838_2079_MBPS;
 				goto modify_ctrl;
 			}
 			break;
@@ -1416,7 +1265,7 @@ modify_ctrl:
 	return 0;
 }
 
-static int imx678_set_data_rate(struct tegracam_device *tc_dev, u32 val)
+static int imx838_set_data_rate(struct tegracam_device *tc_dev, u32 val)
 {
 	struct camera_common_data *s_data = tc_dev->s_data;
 	struct device *dev = tc_dev->dev;
@@ -1424,12 +1273,12 @@ static int imx678_set_data_rate(struct tegracam_device *tc_dev, u32 val)
 
 	dev_dbg(dev, "%s:++\n", __func__);
 
-	err = imx678_verify_data_rate(tc_dev);
+	err = imx838_verify_data_rate(tc_dev);
 	if (err)
 		goto fail;
 
 	if (s_data->power->state == SWITCH_ON) {
-		err = imx678_write_reg(s_data, DATARATE_SEL,
+		err = imx838_write_reg(s_data, DATARATE_SEL,
 				fr_get_v4l2_ctrl_value(tc_dev,
 					TEGRA_CAMERA_CID_DATA_RATE, CURRENT));
 		if (err)
@@ -1450,7 +1299,7 @@ fail:
 	return err;
 }
 
-static int imx678_set_sync_mode(struct tegracam_device *tc_dev, u32 val)
+static int imx838_set_sync_mode(struct tegracam_device *tc_dev, u32 val)
 {
 	struct camera_common_data *s_data = tc_dev->s_data;
 	struct device *dev = tc_dev->dev;
@@ -1463,7 +1312,7 @@ static int imx678_set_sync_mode(struct tegracam_device *tc_dev, u32 val)
 		extmode = 0;
 
 	if (s_data->power->state == SWITCH_ON) {
-		err = imx678_write_reg(s_data, EXTMODE, extmode);
+		err = imx838_write_reg(s_data, EXTMODE, extmode);
 		if (err)
 			dev_err(dev, "%s: error setting sync mode\n", __func__);
 	}
@@ -1471,7 +1320,7 @@ static int imx678_set_sync_mode(struct tegracam_device *tc_dev, u32 val)
 	return err;
 }
 
-static int imx678_configure_triggering_pins(struct tegracam_device *tc_dev)
+static int imx838_configure_triggering_pins(struct tegracam_device *tc_dev)
 {
 	struct camera_common_data *s_data = tc_dev->s_data;
 	struct device *dev = tc_dev->dev;
@@ -1510,7 +1359,7 @@ static int imx678_configure_triggering_pins(struct tegracam_device *tc_dev)
 		return -EINVAL;
 	}
 
-	err = imx678_write_reg(s_data, XVS_XHS_DRV, xvs_xhs_drv);
+	err = imx838_write_reg(s_data, XVS_XHS_DRV, xvs_xhs_drv);
 	if (err) {
 		dev_err(dev, "%s: error setting Slave mode\n", __func__);
 		return err;
@@ -1526,7 +1375,7 @@ static int imx678_configure_triggering_pins(struct tegracam_device *tc_dev)
  * invalid settings are detected.
  * It should apply the settings closest to the ones that the user has requested.
  */
-static int imx678_check_unsupported_mode(struct camera_common_data *s_data,
+static int imx838_check_unsupported_mode(struct camera_common_data *s_data,
 					struct v4l2_mbus_framefmt *mf)
 {
 	struct device *dev = s_data->dev;
@@ -1535,7 +1384,7 @@ static int imx678_check_unsupported_mode(struct camera_common_data *s_data,
 	dev_dbg(dev, "%s++\n", __func__);
 
 	if (mf->code == MEDIA_BUS_FMT_SRGGB10_1X10
-				&& imx678_is_binning_mode(s_data)) {
+				&& imx838_is_binning_mode(s_data)) {
 		unsupported_mode = true;
 		dev_warn(dev,
 			"%s: selected mode is not supported with RAW10, switching to default\n",
@@ -1550,11 +1399,11 @@ static int imx678_check_unsupported_mode(struct camera_common_data *s_data,
 	return 0;
 }
 
-static int imx678_after_set_pixel_format(struct camera_common_data *s_data)
+static int imx838_after_set_pixel_format(struct camera_common_data *s_data)
 {
 	struct device *dev = s_data->dev;
 	struct tegracam_device *tc_dev = to_tegracam_device(s_data);
-	struct imx678 *priv = (struct imx678 *)tc_dev->priv;
+	struct imx838 *priv = (struct imx838 *)tc_dev->priv;
 	struct v4l2_ctrl *ctrl;
 	int err;
 
@@ -1565,17 +1414,17 @@ static int imx678_after_set_pixel_format(struct camera_common_data *s_data)
 		ctrl = fr_find_v4l2_ctrl(tc_dev, TEGRA_CAMERA_CID_BLACK_LEVEL);
 		switch (s_data->colorfmt->code) {
 		case MEDIA_BUS_FMT_SRGGB10_1X10:
-			err = imx678_update_ctrl(tc_dev, TEGRA_CAMERA_CID_BLACK_LEVEL,
+			err = imx838_update_ctrl(tc_dev, TEGRA_CAMERA_CID_BLACK_LEVEL,
 						(*ctrl->p_cur.p_s64 >> 2),
-						IMX678_DEFAULT_BLACK_LEVEL_10BPP,
-						0, IMX678_MAX_BLACK_LEVEL_10BPP);
+						IMX838_DEFAULT_BLACK_LEVEL_10BPP,
+						0, IMX838_MAX_BLACK_LEVEL_10BPP);
 			priv->current_pixel_format = MEDIA_BUS_FMT_SRGGB10_1X10;
 			break;
 		case MEDIA_BUS_FMT_SRGGB12_1X12:
-			err = imx678_update_ctrl(tc_dev, TEGRA_CAMERA_CID_BLACK_LEVEL,
+			err = imx838_update_ctrl(tc_dev, TEGRA_CAMERA_CID_BLACK_LEVEL,
 						(*ctrl->p_cur.p_s64 << 2),
-						IMX678_DEFAULT_BLACK_LEVEL_12BPP,
-						0, IMX678_MAX_BLACK_LEVEL_12BPP);
+						IMX838_DEFAULT_BLACK_LEVEL_12BPP,
+						0, IMX838_MAX_BLACK_LEVEL_12BPP);
 			priv->current_pixel_format = MEDIA_BUS_FMT_SRGGB12_1X12;
 			break;
 		default:
@@ -1589,36 +1438,36 @@ static int imx678_after_set_pixel_format(struct camera_common_data *s_data)
 	return 0;
 }
 
-static int imx678_set_mode(struct tegracam_device *tc_dev)
+static int imx838_set_mode(struct tegracam_device *tc_dev)
 {
-	struct imx678 *priv = (struct imx678 *)tegracam_get_privdata(tc_dev);
+	struct imx838 *priv = (struct imx838 *)tegracam_get_privdata(tc_dev);
 	struct camera_common_data *s_data = tc_dev->s_data;
 	struct device *dev = tc_dev->dev;
 	int err;
 
 	dev_dbg(dev, "%s: setting mode %u\n", __func__, s_data->mode);
 
-	err = imx678_write_table(priv, mode_table[IMX678_INIT_SETTINGS]);
+	err = imx838_write_table(priv, mode_table[IMX838_INIT_SETTINGS]);
 	if (err) {
 		dev_err(dev, "%s: unable to initialize sensor settings\n",
 								__func__);
 		return err;
 	}
 
-	err = imx678_set_csi_lane_mode(tc_dev);
+	err = imx838_set_csi_lane_mode(tc_dev);
 	if (err) {
 		dev_err(dev, "%s: error setting CSI lane mode\n", __func__);
 		return err;
 	}
 
-	err = imx678_set_pixel_format(tc_dev);
+	err = imx838_set_pixel_format(tc_dev);
 	if (err) {
 		dev_err(dev, "%s: unable to write format to image sensor\n",
 								__func__);
 		return err;
 	}
 
-	err = imx678_write_table(priv, mode_table[s_data->mode]);
+	err = imx838_write_table(priv, mode_table[s_data->mode]);
 
 	if (err) {
 		dev_err(dev, "%s: unable to write table for mode %u\n", __func__,
@@ -1626,41 +1475,41 @@ static int imx678_set_mode(struct tegracam_device *tc_dev)
 		return err;
 	}
 
-	err = imx678_set_operation_mode(tc_dev, fr_get_v4l2_ctrl_value(tc_dev,
+	err = imx838_set_operation_mode(tc_dev, fr_get_v4l2_ctrl_value(tc_dev,
 				TEGRA_CAMERA_CID_OPERATION_MODE, CURRENT));
 	if (err) {
 		dev_err(dev, "%s: unable to set operation mode\n", __func__);
 		return err;
 	}
 
-	err = imx678_set_sync_mode(tc_dev, fr_get_v4l2_ctrl_value(tc_dev,
+	err = imx838_set_sync_mode(tc_dev, fr_get_v4l2_ctrl_value(tc_dev,
 				TEGRA_CAMERA_CID_SYNC_MODE, CURRENT));
 	if (err) {
 		dev_err(dev, "%s: unable to set sync mode\n", __func__);
 		return err;
 	}
 
-	err = imx678_configure_triggering_pins(tc_dev);
+	err = imx838_configure_triggering_pins(tc_dev);
 	if (err) {
 		dev_err(dev, "%s: unable configure XVS/XHS pins\n", __func__);
 		return err;
 	}
 
-	err = imx678_set_data_rate(tc_dev, fr_get_v4l2_ctrl_value(tc_dev,
+	err = imx838_set_data_rate(tc_dev, fr_get_v4l2_ctrl_value(tc_dev,
 				TEGRA_CAMERA_CID_DATA_RATE, CURRENT));
 	if (err) {
 		dev_err(dev, "%s: unable to set data rate\n", __func__);
 		return err;
 	}
 
-	err = imx678_set_test_pattern(tc_dev, fr_get_v4l2_ctrl_value(tc_dev,
+	err = imx838_set_test_pattern(tc_dev, fr_get_v4l2_ctrl_value(tc_dev,
 				TEGRA_CAMERA_CID_TEST_PATTERN, CURRENT));
 	if (err) {
 		dev_err(dev, "%s: unable to set Test pattern\n", __func__);
 		return err;
 	}
 
-	err = imx678_adjust_hmax_register(tc_dev);
+	err = imx838_adjust_hmax_register(tc_dev);
 	if (err) {
 		dev_err(dev, "%s: unable to adjust hmax\n", __func__);
 		return err;
@@ -1669,13 +1518,13 @@ static int imx678_set_mode(struct tegracam_device *tc_dev)
 	/* Override V4L GAIN, EXPOSURE and FRAME RATE controls */
 	s_data->override_enable = true;
 
-	err = imx678_calculate_line_time(tc_dev);
+	err = imx838_calculate_line_time(tc_dev);
 	if (err) {
 		dev_err(dev, "%s: unable to calculate line time\n", __func__);
 		return err;
 	}
 
-	err = imx678_update_framerate_range(tc_dev);
+	err = imx838_update_framerate_range(tc_dev);
 	if (err) {
 		dev_err(dev, "%s: unable to update frame range\n", __func__);
 		return err;
@@ -1685,9 +1534,9 @@ static int imx678_set_mode(struct tegracam_device *tc_dev)
 	return 0;
 }
 
-static int imx678_start_streaming(struct tegracam_device *tc_dev)
+static int imx838_start_streaming(struct tegracam_device *tc_dev)
 {
-	struct imx678 *priv = (struct imx678 *)tegracam_get_privdata(tc_dev);
+	struct imx838 *priv = (struct imx838 *)tegracam_get_privdata(tc_dev);
 	struct device *dev = tc_dev->dev;
 	struct camera_common_data *s_data = tc_dev->s_data;
 	int err;
@@ -1705,7 +1554,7 @@ static int imx678_start_streaming(struct tegracam_device *tc_dev)
 			goto exit;
 	}
 
-	err = imx678_write_table(priv, mode_table[IMX678_MODE_START_STREAM]);
+	err = imx838_write_table(priv, mode_table[IMX838_MODE_START_STREAM]);
 	if (err)
 		goto exit;
 
@@ -1715,7 +1564,7 @@ static int imx678_start_streaming(struct tegracam_device *tc_dev)
 	else
 		xmsta = 0x01;
 
-	err = imx678_write_reg(s_data, XMSTA, xmsta);
+	err = imx838_write_reg(s_data, XMSTA, xmsta);
 	if (err)
 		goto exit;
 
@@ -1727,9 +1576,9 @@ exit:
 	return err;
 }
 
-static int imx678_stop_streaming(struct tegracam_device *tc_dev)
+static int imx838_stop_streaming(struct tegracam_device *tc_dev)
 {
-	struct imx678 *priv = (struct imx678 *)tegracam_get_privdata(tc_dev);
+	struct imx838 *priv = (struct imx838 *)tegracam_get_privdata(tc_dev);
 	struct camera_common_data *s_data = tc_dev->s_data;
 	struct device *dev = tc_dev->dev;
 	int err;
@@ -1739,33 +1588,33 @@ static int imx678_stop_streaming(struct tegracam_device *tc_dev)
 		max96792_stop_streaming(priv->s_data->dser_dev, dev);
 	}
 
-	err = imx678_write_table(priv, mode_table[IMX678_MODE_STOP_STREAM]);
+	err = imx838_write_table(priv, mode_table[IMX838_MODE_STOP_STREAM]);
 	if (err)
 		return err;
-	usleep_range(priv->frame_length * priv->line_time / IMX678_K_FACTOR,
-		priv->frame_length * priv->line_time / IMX678_K_FACTOR + 1000);
+	usleep_range(priv->frame_length * priv->line_time / IMX838_K_FACTOR,
+		priv->frame_length * priv->line_time / IMX838_K_FACTOR + 1000);
 
 	return 0;
 }
 
-static struct camera_common_sensor_ops imx678_common_ops = {
-	.numfrmfmts = ARRAY_SIZE(imx678_frmfmt),
-	.frmfmt_table = imx678_frmfmt,
-	.power_on = imx678_power_on,
-	.power_off = imx678_power_off,
-	.write_reg = imx678_write_reg,
-	.read_reg = imx678_read_reg,
-	.parse_dt = imx678_parse_dt,
-	.power_get = imx678_power_get,
-	.power_put = imx678_power_put,
-	.set_mode = imx678_set_mode,
-	.start_streaming = imx678_start_streaming,
-	.stop_streaming = imx678_stop_streaming,
-	.check_unsupported_mode = imx678_check_unsupported_mode,
-	.after_set_pixel_format = imx678_after_set_pixel_format,
+static struct camera_common_sensor_ops imx838_common_ops = {
+	.numfrmfmts = ARRAY_SIZE(imx838_frmfmt),
+	.frmfmt_table = imx838_frmfmt,
+	.power_on = imx838_power_on,
+	.power_off = imx838_power_off,
+	.write_reg = imx838_write_reg,
+	.read_reg = imx838_read_reg,
+	.parse_dt = imx838_parse_dt,
+	.power_get = imx838_power_get,
+	.power_put = imx838_power_put,
+	.set_mode = imx838_set_mode,
+	.start_streaming = imx838_start_streaming,
+	.stop_streaming = imx838_stop_streaming,
+	.check_unsupported_mode = imx838_check_unsupported_mode,
+	.after_set_pixel_format = imx838_after_set_pixel_format,
 };
 
-static int imx678_gmsl_serdes_setup(struct imx678 *priv)
+static int imx838_gmsl_serdes_setup(struct imx838 *priv)
 {
 	int err = 0;
 	int des_err = 0;
@@ -1827,7 +1676,7 @@ error:
 	return err;
 }
 
-static void imx678_gmsl_serdes_reset(struct imx678 *priv)
+static void imx838_gmsl_serdes_reset(struct imx838 *priv)
 {
 	mutex_lock(&serdes_lock__);
 
@@ -1839,7 +1688,7 @@ static void imx678_gmsl_serdes_reset(struct imx678 *priv)
 	mutex_unlock(&serdes_lock__);
 }
 
-static int imx678_board_setup(struct imx678 *priv)
+static int imx838_board_setup(struct imx838 *priv)
 {
 	struct camera_common_data *s_data = priv->s_data;
 	struct device *dev = s_data->dev;
@@ -2030,7 +1879,7 @@ static int imx678_board_setup(struct imx678 *priv)
 			return err;
 		}
 
-		err = imx678_gmsl_serdes_setup(priv);
+		err = imx838_gmsl_serdes_setup(priv);
 		if (err) {
 			dev_err(dev, "%s gmsl serdes setup failed\n", __func__);
 			return err;
@@ -2045,37 +1894,37 @@ static int imx678_board_setup(struct imx678 *priv)
 		return err;
 	}
 
-	err = imx678_power_on(s_data);
+	err = imx838_power_on(s_data);
 	if (err) {
 		dev_err(dev,
 		"Error %d during power on sensor\n", err);
 		return err;
 	}
 
-	err = imx678_communication_verify(priv->tc_dev);
+	err = imx838_communication_verify(priv->tc_dev);
 	if (err) {
 		dev_err(dev, "%s: unable to communicate with sensor\n",
 								__func__);
 		goto error2;
 	}
 
-	err = imx678_calculate_line_time(priv->tc_dev);
+	err = imx838_calculate_line_time(priv->tc_dev);
 	if (err) {
 		dev_err(dev, "%s: unable to calculate line time\n", __func__);
 		goto error2;
 	}
 
-	priv->min_frame_length = IMX678_DEFAULT_HEIGHT +
-						IMX678_MIN_FRAME_LENGTH_DELTA;
+	priv->min_frame_length = IMX838_DEFAULT_HEIGHT +
+						IMX838_MIN_FRAME_LENGTH_DELTA;
 
 error2:
-	imx678_power_off(s_data);
+	imx838_power_off(s_data);
 	camera_common_mclk_disable(s_data);
 
 	return err;
 }
 
-static int imx678_open(struct v4l2_subdev *sd, struct v4l2_subdev_fh *fh)
+static int imx838_open(struct v4l2_subdev *sd, struct v4l2_subdev_fh *fh)
 {
 	struct i2c_client *client = v4l2_get_subdevdata(sd);
 
@@ -2084,37 +1933,36 @@ static int imx678_open(struct v4l2_subdev *sd, struct v4l2_subdev_fh *fh)
 	return 0;
 }
 
-static const struct v4l2_subdev_internal_ops imx678_subdev_internal_ops = {
-	.open = imx678_open,
+static const struct v4l2_subdev_internal_ops imx838_subdev_internal_ops = {
+	.open = imx838_open,
 };
 
-static struct tegracam_ctrl_ops imx678_ctrl_ops = {
+static struct tegracam_ctrl_ops imx838_ctrl_ops = {
 	.numctrls = ARRAY_SIZE(ctrl_cid_list),
 	.ctrl_cid_list = ctrl_cid_list,
-	.set_gain = imx678_set_gain,
-	.set_conversion_gain = imx678_set_conversion_gain,
-	.set_exposure = imx678_set_exposure,
-	.set_frame_rate = imx678_set_frame_rate,
-	.set_group_hold = imx678_set_group_hold,
-	.set_test_pattern = imx678_set_test_pattern,
-	.set_data_rate = imx678_set_data_rate,
-	.set_operation_mode = imx678_set_operation_mode,
-	.set_sync_mode = imx678_set_sync_mode,
-	.set_broadcast_ctrl = imx678_set_broadcast_ctrl,
-	.set_black_level = imx678_set_black_level,
-	.set_exposure_short = imx678_set_exposure_short,
+	.set_gain = imx838_set_gain,
+	.set_conversion_gain = imx838_set_conversion_gain,
+	.set_exposure = imx838_set_exposure,
+	.set_frame_rate = imx838_set_frame_rate,
+	.set_group_hold = imx838_set_group_hold,
+	.set_test_pattern = imx838_set_test_pattern,
+	.set_data_rate = imx838_set_data_rate,
+	.set_operation_mode = imx838_set_operation_mode,
+	.set_sync_mode = imx838_set_sync_mode,
+	.set_broadcast_ctrl = imx838_set_broadcast_ctrl,
+	.set_black_level = imx838_set_black_level,
 };
 
 #if defined(NV_I2C_DRIVER_STRUCT_PROBE_WITHOUT_I2C_DEVICE_ID_ARG) /* Linux 6.3 */
-static int imx678_probe(struct i2c_client *client)
+static int imx838_probe(struct i2c_client *client)
 #else
-static int imx678_probe(struct i2c_client *client,
+static int imx838_probe(struct i2c_client *client,
 	const struct i2c_device_id *id)
 #endif
 {
 	struct device *dev = &client->dev;
 	struct tegracam_device *tc_dev;
-	struct imx678 *priv;
+	struct imx838 *priv;
 	struct sensor_control_properties *ctrlprops = NULL;
 	int err;
 
@@ -2124,7 +1972,7 @@ static int imx678_probe(struct i2c_client *client,
 		return -EINVAL;
 
 	priv = devm_kzalloc(dev,
-			sizeof(struct imx678), GFP_KERNEL);
+			sizeof(struct imx838), GFP_KERNEL);
 	if (!priv)
 		return -ENOMEM;
 
@@ -2136,11 +1984,11 @@ static int imx678_probe(struct i2c_client *client,
 	mutex_init(&priv->pw_mutex);
 	priv->i2c_client = tc_dev->client = client;
 	tc_dev->dev = dev;
-	strncpy(tc_dev->name, "imx678", sizeof(tc_dev->name));
+	strncpy(tc_dev->name, "imx838", sizeof(tc_dev->name));
 	tc_dev->dev_regmap_config = &sensor_regmap_config;
-	tc_dev->sensor_ops = &imx678_common_ops;
-	tc_dev->v4l2sd_internal_ops = &imx678_subdev_internal_ops;
-	tc_dev->tcctrl_ops = &imx678_ctrl_ops;
+	tc_dev->sensor_ops = &imx838_common_ops;
+	tc_dev->v4l2sd_internal_ops = &imx838_subdev_internal_ops;
+	tc_dev->tcctrl_ops = &imx838_ctrl_ops;
 
 	err = tegracam_device_register(tc_dev);
 	if (err) {
@@ -2164,7 +2012,7 @@ static int imx678_probe(struct i2c_client *client,
 
 	INIT_LIST_HEAD(&priv->entry);
 
-	err = imx678_board_setup(priv);
+	err = imx838_board_setup(priv);
 	if (err) {
 		dev_err(dev, "board setup failed\n");
 		return err;
@@ -2176,38 +2024,38 @@ static int imx678_probe(struct i2c_client *client,
 		return err;
 	}
 
-	err = imx678_update_ctrl(tc_dev, TEGRA_CAMERA_CID_BLACK_LEVEL,
-					IMX678_DEFAULT_BLACK_LEVEL_12BPP,
-					IMX678_DEFAULT_BLACK_LEVEL_12BPP, 0,
-					IMX678_MAX_BLACK_LEVEL_12BPP);
+	err = imx838_update_ctrl(tc_dev, TEGRA_CAMERA_CID_BLACK_LEVEL,
+					IMX838_DEFAULT_BLACK_LEVEL_12BPP,
+					IMX838_DEFAULT_BLACK_LEVEL_12BPP, 0,
+					IMX838_MAX_BLACK_LEVEL_12BPP);
 	if (err)
 		return err;
 
-	err = imx678_update_ctrl(tc_dev, TEGRA_CAMERA_CID_TEST_PATTERN, 0, 0, 0,
-				(ARRAY_SIZE(imx678_test_pattern_menu)-1));
+	err = imx838_update_ctrl(tc_dev, TEGRA_CAMERA_CID_TEST_PATTERN, 0, 0, 0,
+				(ARRAY_SIZE(imx838_test_pattern_menu)-1));
 	if (err)
 		return err;
 
-	err = imx678_update_ctrl(tc_dev, TEGRA_CAMERA_CID_DATA_RATE, 0, 0, 0,
-				(ARRAY_SIZE(imx678_data_rate_menu)-1));
+	err = imx838_update_ctrl(tc_dev, TEGRA_CAMERA_CID_DATA_RATE, 0, 0, 0,
+				(ARRAY_SIZE(imx838_data_rate_menu)-1));
 	if (err)
 		return err;
 
-	list_add_tail(&priv->entry, &imx678_sensor_list);
+	list_add_tail(&priv->entry, &imx838_sensor_list);
 
-	dev_info(dev, "Detected imx678 sensor\n");
+	dev_info(dev, "Detected imx838 sensor\n");
 
 	return 0;
 }
 
 #if defined(NV_I2C_DRIVER_STRUCT_REMOVE_RETURN_TYPE_INT) /* Linux 6.1 */
-static int imx678_remove(struct i2c_client *client)
+static int imx838_remove(struct i2c_client *client)
 #else
-static void imx678_remove(struct i2c_client *client)
+static void imx838_remove(struct i2c_client *client)
 #endif
 {
 	struct camera_common_data *s_data = to_camera_common_data(&client->dev);
-	struct imx678 *priv;
+	struct imx838 *priv;
 
 	if (!s_data) {
 		dev_err(&client->dev, "camera common data is NULL\n");
@@ -2218,10 +2066,10 @@ static void imx678_remove(struct i2c_client *client)
 #endif
 	}
 
-	priv = (struct imx678 *)s_data->priv;
+	priv = (struct imx838 *)s_data->priv;
 
 	if (!(strcmp(s_data->pdata->gmsl, "gmsl")))
-		imx678_gmsl_serdes_reset(priv);
+		imx838_gmsl_serdes_reset(priv);
 
 	tegracam_v4l2subdev_unregister(priv->tc_dev);
 	tegracam_device_unregister(priv->tc_dev);
@@ -2235,26 +2083,26 @@ static void imx678_remove(struct i2c_client *client)
 #endif
 }
 
-static const struct i2c_device_id imx678_id[] = {
-	{ "imx678", 0 },
+static const struct i2c_device_id imx838_id[] = {
+	{ "imx838", 0 },
 	{ }
 };
 
-MODULE_DEVICE_TABLE(i2c, imx678_id);
+MODULE_DEVICE_TABLE(i2c, imx838_id);
 
-static struct i2c_driver imx678_i2c_driver = {
+static struct i2c_driver imx838_i2c_driver = {
 	.driver = {
-		.name = "imx678",
+		.name = "imx838",
 		.owner = THIS_MODULE,
-		.of_match_table = of_match_ptr(imx678_of_match),
+		.of_match_table = of_match_ptr(imx838_of_match),
 	},
-	.probe = imx678_probe,
-	.remove = imx678_remove,
-	.id_table = imx678_id,
+	.probe = imx838_probe,
+	.remove = imx838_remove,
+	.id_table = imx838_id,
 };
 
-module_i2c_driver(imx678_i2c_driver);
+module_i2c_driver(imx838_i2c_driver);
 
-MODULE_DESCRIPTION("Media Controller driver for Sony IMX678");
+MODULE_DESCRIPTION("Media Controller driver for Sony IMX838");
 MODULE_AUTHOR("FRAMOS GmbH");
 MODULE_LICENSE("GPL v2");

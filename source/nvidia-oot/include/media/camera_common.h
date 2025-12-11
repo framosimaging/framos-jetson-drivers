@@ -218,6 +218,7 @@ struct tegracam_ctrl_ops {
 				struct v4l2_ctrl *ctrl);
 	int (*set_test_pattern)(struct tegracam_device *tc_dev, u32 val);
 	int (*set_data_rate)(struct tegracam_device *tc_dev, u32 val);
+	int (*set_conversion_gain)(struct tegracam_device *tc_dev, bool val);
 	int (*set_adc_mode)(struct tegracam_device *tc_dev, u32 val);
 	int (*set_gain_offset)(struct tegracam_device *tc_dev, u32 val);
 	int (*set_exposure_threshold)(struct tegracam_device *tc_dev, u32 val);

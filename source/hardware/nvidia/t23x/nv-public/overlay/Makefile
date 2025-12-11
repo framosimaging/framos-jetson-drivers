@@ -202,6 +202,15 @@ dtbo-y += tegra234-p3737-camera-fr_imx715-j7-4lane-overlay.dtbo
 dtbo-y += tegra234-p3737-camera-fr_imx715-j8-2lane-overlay.dtbo
 dtbo-y += tegra234-p3737-camera-fr_imx715-j8-4lane-overlay.dtbo
 
+dtbo-y += tegra234-p3737-camera-fr_imx838-j5-2lane-overlay.dtbo
+dtbo-y += tegra234-p3737-camera-fr_imx838-j5-4lane-overlay.dtbo
+dtbo-y += tegra234-p3737-camera-fr_imx838-j6-2lane-overlay.dtbo
+dtbo-y += tegra234-p3737-camera-fr_imx838-j6-4lane-overlay.dtbo
+dtbo-y += tegra234-p3737-camera-fr_imx838-j7-2lane-overlay.dtbo
+dtbo-y += tegra234-p3737-camera-fr_imx838-j7-4lane-overlay.dtbo
+dtbo-y += tegra234-p3737-camera-fr_imx838-j8-2lane-overlay.dtbo
+dtbo-y += tegra234-p3737-camera-fr_imx838-j8-4lane-overlay.dtbo
+
 dtbo-y += tegra234-p3737-camera-fr_imx900-j5-1lane-overlay.dtbo
 dtbo-y += tegra234-p3737-camera-fr_imx900-j5-2lane-overlay.dtbo
 dtbo-y += tegra234-p3737-camera-fr_imx900-j5-4lane-overlay.dtbo
@@ -274,6 +283,10 @@ dtbo-y += tegra234-p3767-camera-p3768-fr_imx678-cam1-4lane-overlay.dtbo
 dtbo-y += tegra234-p3767-camera-p3768-fr_imx715-cam0-2lane-overlay.dtbo
 dtbo-y += tegra234-p3767-camera-p3768-fr_imx715-cam1-2lane-overlay.dtbo
 dtbo-y += tegra234-p3767-camera-p3768-fr_imx715-cam1-4lane-overlay.dtbo
+
+dtbo-y += tegra234-p3767-camera-p3768-fr_imx838-cam0-2lane-overlay.dtbo
+dtbo-y += tegra234-p3767-camera-p3768-fr_imx838-cam1-2lane-overlay.dtbo
+dtbo-y += tegra234-p3767-camera-p3768-fr_imx838-cam1-4lane-overlay.dtbo
 
 dtbo-y += tegra234-p3767-camera-p3768-fr_imx900-cam0-1lane-overlay.dtbo
 dtbo-y += tegra234-p3767-camera-p3768-fr_imx900-cam0-2lane-overlay.dtbo

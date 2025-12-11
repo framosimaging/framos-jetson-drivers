@@ -42,6 +42,7 @@ static const u32 tegracam_def_cids[] = {
  * which must be overriden
  */
 static const u32 tegracam_override_cids[] = {
+	TEGRA_CAMERA_CID_CONVERSION_GAIN, // it has to be before gain to define range
 	TEGRA_CAMERA_CID_GAIN,
 	TEGRA_CAMERA_CID_EXPOSURE,
 	TEGRA_CAMERA_CID_FRAME_RATE,
@@ -325,6 +326,17 @@ static struct v4l2_ctrl_config ctrl_cfg_list[] = {
 		.def = 0,
 		.qmenu = is_data_rate_menu,
 	},
+	{
+		.ops = &tegracam_ctrl_ops,
+		.id = TEGRA_CAMERA_CID_CONVERSION_GAIN,
+		.name = "Conversion Gain",
+		.type = V4L2_CTRL_TYPE_BOOLEAN,
+		.flags = V4L2_CTRL_FLAG_UPDATE,
+		.min = 0,
+		.max = 1,
+		.def = 0,
+		.step = 1,
+	},
 };
 
 static int tegracam_get_ctrl_index(u32 cid)
@@ -487,6 +499,9 @@ static int tegracam_set_ctrls(struct tegracam_ctrl_handler *handler,
 		break;
 	case TEGRA_CAMERA_CID_FRAME_RATE:
 		err = ops->set_frame_rate(tc_dev, *ctrl->p_new.p_s64);
+		break;
+	case TEGRA_CAMERA_CID_CONVERSION_GAIN:
+		err = ops->set_conversion_gain(tc_dev, ctrl->val);
 		break;
 	case TEGRA_CAMERA_CID_EXPOSURE:
 		//if (*ctrl->p_new.p_s64 == ctrlprops->max_exp_time.val + 1)
@@ -709,6 +724,9 @@ int tegracam_ctrl_set_overrides(struct tegracam_ctrl_handler *hdl)
 								blob, val);
 				else
 					err = ops->set_gain(tc_dev, val);
+				break;
+			case TEGRA_CAMERA_CID_CONVERSION_GAIN:
+				err = ops->set_conversion_gain(tc_dev, control.value);
 				break;
 			case TEGRA_CAMERA_CID_EXPOSURE:
 				if (is_blob_supported)
@@ -980,6 +998,13 @@ static int tegracam_check_ctrl_ops(
 			if (ops->set_frame_rate_ex != NULL)
 				sensor_ex_ops++;
 			break;
+		case TEGRA_CAMERA_CID_CONVERSION_GAIN:
+			if (ops->set_conversion_gain == NULL)
+				dev_err(dev,
+					"Missing TEGRA_CAMERA_CID_CONVERSION_GAIN implementation\n");
+			else
+				sensor_ops++;
+			break;
 		case TEGRA_CAMERA_CID_GROUP_HOLD:
 			dev_err(dev,
 				"TEGRA_CAMERA_CID_GROUP_HOLD contorl is enabled in framework by default, no need to add it in driver\n");
@@ -1169,6 +1194,15 @@ static int tegracam_check_ctrl_cids(struct tegracam_ctrl_handler *handler)
 			ops->numctrls,
 			TEGRA_CAMERA_CID_FRAME_RATE)) {
 			dev_err(dev, "Missing TEGRA_CAMERA_CID_FRAME_RATE registration\n");
+			errors_found++;
+		}
+	}
+
+	if (ops->set_conversion_gain != NULL ) {
+		if (!find_matching_cid(ops->ctrl_cid_list,
+			ops->numctrls,
+			TEGRA_CAMERA_CID_CONVERSION_GAIN)) {
+			dev_err(dev, "Missing TEGRA_CAMERA_CID_CONVERSION_GAIN registration\n");
 			errors_found++;
 		}
 	}
