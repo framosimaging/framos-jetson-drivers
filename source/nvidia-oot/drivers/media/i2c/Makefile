@@ -46,6 +46,7 @@ obj-m += fr_imx675.o
 obj-m += fr_imx676.o
 obj-m += fr_imx678.o
 obj-m += fr_imx715.o
+obj-m += fr_imx838.o
 obj-m += fr_imx900.o
 endif
 
