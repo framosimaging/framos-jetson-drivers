@@ -2,9 +2,13 @@ v4.3.0.0 (2025-07-31)
 ==========================
     - Support for L4T-36.4.4
 
-v4.3.0.1 (2025-11-12)
+v4.3.1.0 (2025-12-18)
 ==========================
     - add imx838
     - add conversion gain
-	- FSM:GO sensors
-	- imx464, imx585, imx675 
+        - FSM:GO sensors
+        - imx464, imx585, imx675
+    - add script write_eeprom.sh to configure write_eeprom
+    - add fix for streaming gmsl on low fps
+    - add basic ISP files for imx838, imx676, imx900
+

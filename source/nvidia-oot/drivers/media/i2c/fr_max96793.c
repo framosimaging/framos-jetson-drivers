@@ -248,8 +248,17 @@ int max96793_setup_streaming(struct device *dev, struct camera_common_data *s_da
 	}
 
 	max96793_write_reg(dev, 0x312, 0x04);
-	max96793_write_reg(dev, 0x110, 0x28);
-	max96793_write_reg(dev, 0x112, 0x0A);
+
+	// toogling CLKDET_BYP register - without this change low fps on gmsl does not work
+	err = max96793_write_reg(dev, 0x110, 0x28);
+	usleep_range(1000, 1100);
+	err |= max96793_write_reg(dev, 0x110, 0x2C);
+	
+	if (err < 0) {
+	    dev_err(dev, "%s: toogling disable PCLCK clock failed\n", __func__);
+	}
+	
+	max96793_write_reg(dev, 0x112, 0x0A); // enable heartbeat
 
 	if (g_ctx->dst_vc == 1)
 		max96793_write_reg(dev, 0x5B, 0x02);
@@ -326,6 +335,9 @@ int max96793_setup_control(struct device *dev)
 	dev_dbg(dev, "%s: PW_EN0/TENABLE config done\n", __func__);
 
 	g_ctx->serdev_found = true;
+	
+		
+
 
 error:
 	mutex_unlock(&priv->lock);
