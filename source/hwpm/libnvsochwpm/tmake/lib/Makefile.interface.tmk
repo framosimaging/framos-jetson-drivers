@@ -1,0 +1,31 @@
+################################### tell Emacs this is a -*- makefile-gmake -*-
+#
+# SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: GPL-2.0-only
+#
+# This program is free software; you can redistribute it and/or modify it
+# under the terms and conditions of the GNU General Public License,
+# version 2, as published by the Free Software Foundation.
+#
+# This program is distributed in the hope it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+# more details.
+#
+# tmake for SW Mobile component makefile
+#
+# libnvsochwpm: shared and static library interface
+#
+###############################################################################
+
+ifdef NV_INTERFACE_FLAG_SHARED_LIBRARY_SECTION
+NV_INTERFACE_NAME            := nvsochwpm
+NV_INTERFACE_EXPORTS         := ../../os/lnx/libnvsochwpm
+NV_INTERFACE_PUBLIC_INCLUDES := ../../include
+NV_INTERFACE_COMPONENT_DIR   := .
+endif
+
+ifdef NV_INTERFACE_FLAG_STATIC_LIBRARY_SECTION
+NV_INTERFACE_NAME            := nvsochwpm_static
+NV_INTERFACE_COMPONENT_DIR   := .
+endif

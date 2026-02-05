@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: GPL-2.0-only
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+
+
+package(
+    default_visibility = [
+        "//visibility:public",
+    ],
+)
+
+filegroup(
+    name = "hwpm_headers",
+    srcs = glob([
+        "include/**/*.h",                                                                                                                   ]),
+)

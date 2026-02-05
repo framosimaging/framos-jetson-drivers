@@ -1,0 +1,101 @@
+# -*- mode: makefile -*-
+#
+# Copyright (c) 2023-2024, NVIDIA CORPORATION & AFFILIATES.  All rights reserved.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+#
+# Tegra SOC HWPM TH500 SOC sources
+#
+
+ifeq ($(CONFIG_TEGRA_HWPM_TH500),y)
+nvhwpm-th500-soc-objs += hal/th500/soc/th500_soc_aperture.o
+nvhwpm-th500-soc-objs += hal/th500/soc/th500_soc_mem_mgmt.o
+nvhwpm-th500-soc-objs += hal/th500/soc/th500_soc_regops_allowlist.o
+nvhwpm-th500-soc-objs += hal/th500/soc/th500_soc_resource.o
+
+#
+# Control IP config
+# To disable an IP config in compilation, add condition for both
+# IP config flag and IP specific .o file.
+#
+
+#
+# RTR/PMA are HWPM IPs and can be enabled by default
+#
+nvhwpm-th500-soc-objs += hal/th500/soc/ip/rtr/th500_rtr.o
+nvhwpm-th500-soc-objs += hal/th500/soc/ip/pma/th500_pma.o
+
+#
+# One of the HWPM components is a perfmux. Perfmux registers belong to the
+# IP domain. There are 2 ways of accessing perfmux registers
+# - option 1: implement HWPM <-> IP interface. IP drivers register with HWPM
+#             driver and share required function pointers
+# - option 2: map perfmux register address in HWPM driver
+# Option 1 is the preferred solution. However, IP drivers have yet to
+# implement the interface. HWPM driver implements option 2 for validation of suc IPs.
+# If an IP is forced to available status from HWPM driver perspective, it is user's
+# responsibility to ensure that the IP is infact present on the SOC config and
+# unpowergated before running any HWPM experiments.
+#
+# Enable CONFIG_HWPM_TH500_ALLOW_FORCE_ENABLE for internal builds.
+# Note: We should work towards removing force enabling IP.
+#
+
+ifeq ($(CONFIG_HWPM_BUILD_INTERNAL),y)
+ccflags-y += -DCONFIG_TH500_HWPM_ALLOW_FORCE_ENABLE
+
+ccflags-y += -DCONFIG_TH500_HWPM_IP_MSS_CHANNEL
+nvhwpm-th500-soc-objs += hal/th500/soc/ip/mss_channel/th500_mss_channel.o
+
+ccflags-y += -DCONFIG_TH500_HWPM_IP_C2C
+nvhwpm-th500-soc-objs += hal/th500/soc/ip/c2c/th500_c2c.o
+
+ccflags-y += -DCONFIG_TH500_HWPM_IP_SMMU
+nvhwpm-th500-soc-objs += hal/th500/soc/ip/smmu/th500_smmu.o
+
+ccflags-y += -DCONFIG_TH500_HWPM_IP_CL2
+nvhwpm-th500-soc-objs += hal/th500/soc/ip/cl2/th500_cl2.o
+
+ccflags-y += -DCONFIG_TH500_HWPM_IP_C_NVLINK
+nvhwpm-th500-soc-objs += hal/th500/soc/ip/c_nvlink/th500_nvlrx.o
+nvhwpm-th500-soc-objs += hal/th500/soc/ip/c_nvlink/th500_nvltx.o
+nvhwpm-th500-soc-objs += hal/th500/soc/ip/c_nvlink/th500_nvlctrl.o
+
+ccflags-y += -DCONFIG_TH500_HWPM_IP_MSS_HUB
+nvhwpm-th500-soc-objs += hal/th500/soc/ip/mss_hub/th500_mss_hub.o
+
+ccflags-y += -DCONFIG_TH500_HWPM_IP_MCF_SOC
+nvhwpm-th500-soc-objs += hal/th500/soc/ip/mcf_soc/th500_mcf_soc.o
+
+ccflags-y += -DCONFIG_TH500_HWPM_IP_MCF_C2C
+nvhwpm-th500-soc-objs += hal/th500/soc/ip/mcf_c2c/th500_mcf_c2c.o
+
+ccflags-y += -DCONFIG_TH500_HWPM_IP_MCF_CLINK
+nvhwpm-th500-soc-objs += hal/th500/soc/ip/mcf_clink/th500_mcf_clink.o
+
+ccflags-y += -DCONFIG_TH500_HWPM_IP_MCF_CORE
+nvhwpm-th500-soc-objs += hal/th500/soc/ip/mcf_core/th500_mcf_core.o
+
+ccflags-y += -DCONFIG_TH500_HWPM_IP_PCIE
+nvhwpm-th500-soc-objs += hal/th500/soc/ip/pcie/th500_pcie_xalrc.o
+nvhwpm-th500-soc-objs += hal/th500/soc/ip/pcie/th500_pcie_xtlrc.o
+nvhwpm-th500-soc-objs += hal/th500/soc/ip/pcie/th500_pcie_xtlq.o
+
+endif # CONFIG_HWPM_BUILD_INTERNAL=y
+endif

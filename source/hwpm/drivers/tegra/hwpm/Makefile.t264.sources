@@ -1,0 +1,97 @@
+# -*- mode: makefile -*-
+#
+# Copyright (c) 2023-2025, NVIDIA CORPORATION & AFFILIATES.  All rights reserved.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+#
+# Tegra SOC HWPM T264 sources
+#
+
+ifeq ($(CONFIG_TEGRA_HWPM_T234),y)
+nvhwpm-t264-objs += hal/t264/t264_aperture.o
+nvhwpm-t264-objs += hal/t264/t264_interface.o
+nvhwpm-t264-objs += hal/t264/t264_ip.o
+nvhwpm-t264-objs += hal/t264/t264_mem_mgmt.o
+nvhwpm-t264-objs += hal/t264/t264_resource.o
+nvhwpm-t264-objs += hal/t264/t264_regops_allowlist.o
+
+#
+# RTR/PMA are HWPM IPs and can be enabled by default
+#
+nvhwpm-t264-objs += hal/t264/ip/pma/t264_pma.o
+nvhwpm-t264-objs += hal/t264/ip/rtr/t264_rtr.o
+
+#
+# One of the HWPM components is a perfmux. Perfmux registers belong to the
+# IP domain. There are 2 ways of accessing perfmux registers
+# - option 1: implement HWPM <-> IP interface. IP drivers register with HWPM
+#             driver and share required function pointers
+# - option 2: map perfmux register address in HWPM driver
+# Option 1 is the preferred solution. However, IP drivers have yet to
+# implement the interface. HWPM driver implements option 2 for validation of suc IPs.
+# If an IP is forced to available status from HWPM driver perspective, it is user's
+# responsibility to ensure that the IP is infact present on the SOC config and
+# unpowergated before running any HWPM experiments.
+#
+# Enable CONFIG_T264_HWPM_ALLOW_FORCE_ENABLE for internal builds.
+# Note: We should work towards removing force enabling IP.
+#
+ifeq ($(CONFIG_HWPM_BUILD_INTERNAL),y)
+ccflags-y += -DCONFIG_T264_HWPM_ALLOW_FORCE_ENABLE
+endif
+
+# Below IPs are enabled for all builds
+
+ccflags-y += -DCONFIG_T264_HWPM_IP_PVA
+nvhwpm-t264-objs += hal/t264/ip/pva/t264_pva.o
+
+ccflags-y += -DCONFIG_T264_HWPM_IP_MSS_CHANNEL
+nvhwpm-t264-objs += hal/t264/ip/mss_channel/t264_mss_channel.o
+
+ccflags-y += -DCONFIG_T264_HWPM_IP_VIC
+nvhwpm-t264-objs += hal/t264/ip/vic/t264_vic.o
+
+ccflags-y += -DCONFIG_T264_HWPM_IP_MSS_HUBS
+nvhwpm-t264-objs += hal/t264/ip/mss_hubs/t264_mss_hubs.o
+
+ccflags-y += -DCONFIG_T264_HWPM_IP_OCU
+nvhwpm-t264-objs += hal/t264/ip/ocu/t264_ocu.o
+
+ccflags-y += -DCONFIG_T264_HWPM_IP_SMMU
+nvhwpm-t264-objs += hal/t264/ip/smmu/t264_smmu.o
+
+ccflags-y += -DCONFIG_T264_HWPM_IP_UCF_MSW
+nvhwpm-t264-objs += hal/t264/ip/ucf_msw/t264_ucf_msw.o
+
+ccflags-y += -DCONFIG_T264_HWPM_IP_UCF_PSW
+nvhwpm-t264-objs += hal/t264/ip/ucf_psw/t264_ucf_psw.o
+
+ccflags-y += -DCONFIG_T264_HWPM_IP_UCF_CSW
+nvhwpm-t264-objs += hal/t264/ip/ucf_csw/t264_ucf_csw.o
+
+ccflags-y += -DCONFIG_T264_HWPM_IP_CPU
+nvhwpm-t264-objs += hal/t264/ip/cpu/t264_cpu.o
+
+ccflags-y += -DCONFIG_T264_HWPM_IP_VI
+nvhwpm-t264-objs += hal/t264/ip/vi/t264_vi.o
+
+ccflags-y += -DCONFIG_T264_HWPM_IP_ISP
+nvhwpm-t264-objs += hal/t264/ip/isp/t264_isp.o
+
+endif

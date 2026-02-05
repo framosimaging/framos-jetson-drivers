@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: GPL-2.0-only
+# SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+
+load("//build/kernel/kleaf:kernel.bzl", "kernel_module")
+
+package(
+    default_visibility = [
+        "//visibility:public",
+    ],
+)
+
+filegroup(
+    name = "headers",
+    srcs = glob([
+    ] + [
+        "Makefile.hwpm.sources",
+        "Makefile.t234.sources",
+        "Makefile.t264.sources",
+        "Makefile.th500.sources",
+        "Makefile.common.sources",
+        "Makefile.linux.sources",
+        "Makefile.th500.soc.sources",
+    ]),
+)
+
+kernel_module(
+    name = "hwpm",
+    srcs = glob([
+        "**/*.c",
+        "**/*.h",
+    ]) + [
+        ":headers",
+        "//hwpm:hwpm_headers",
+        "//nvidia-oot/scripts/conftest:conftest_headers",
+    ],
+
+    outs = [
+        "nvhwpm.ko",
+    ],
+    kernel_build = "//nvidia-build/kleaf:tegra_android",
+)
