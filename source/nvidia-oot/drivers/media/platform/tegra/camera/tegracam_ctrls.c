@@ -43,11 +43,64 @@ static const u32 tegracam_def_cids[] = {
  * which must be overriden
  */
 static const u32 tegracam_override_cids[] = {
+	TEGRA_CAMERA_CID_CONVERSION_GAIN, // it has to be before gain to define range
 	TEGRA_CAMERA_CID_GAIN,
 	TEGRA_CAMERA_CID_EXPOSURE,
 	TEGRA_CAMERA_CID_FRAME_RATE,
+	TEGRA_CAMERA_CID_BLACK_LEVEL,
+	TEGRA_CAMERA_CID_GAIN_OFFSET,
+	TEGRA_CAMERA_CID_EXPOSURE_THRESHOLD,
+	TEGRA_CAMERA_CID_EXPOSURE_THRESHOLD_HIGH,
+	TEGRA_CAMERA_CID_GC_START_POINT_FIRST,
+	TEGRA_CAMERA_CID_GC_START_POINT_SECOND,
+	TEGRA_CAMERA_CID_GC_GAIN_POINT_FIRST,
+	TEGRA_CAMERA_CID_GC_GAIN_POINT_SECOND,
 };
 #define NUM_OVERRIDE_CTRLS ARRAY_SIZE(tegracam_override_cids)
+
+static const char * const is_common_stream_mode[] = {
+	[0] = "Standalone",
+	[1] = "Sync Mode",
+	[2] = "External HW Sync Mode",
+};
+
+static const char * const is_common_operation_mode[] = {
+	[0] = "Master Mode",
+	[1] = "Slave Mode",
+};
+
+static const char * const is_common_sync_function[] = {
+	[0] = "No Sync",
+	[1] = "Internal Sync",
+	[2] = "External Sync",
+};
+
+static const char * const is_common_i2c_broadcast[] = {
+	[0] = "Unicast",
+	[1] = "Broadcast",
+};
+
+static const char * const is_common_flip_mirror[] = {
+	[0]   = "No Flip/Mirror",
+	[1]   = "Vertical Flip",
+	[2]   = "Horizontal Mirror",
+	[3]   = "Vertical + Horizontal Flip/Mirror",
+};
+
+static const char * const is_global_shutter_mode[] = {
+	[0] = "Normal Mode",
+	[1] = "Sequential Trigger Mode",
+	[2] = "Fast Trigger Mode",
+};
+
+static const char * const is_test_pattern_menu[] = {
+	[0] = "Dummy",
+};
+
+const char * const is_data_rate_menu[] = {
+	[0] = "Dummy",
+};
+
 
 static const u32 tegracam_sync_cids[] = {
 	TEGRA_CAMERA_CID_ALTERNATING_EXPOSURE,
@@ -72,7 +125,7 @@ static struct v4l2_ctrl_config ctrl_cfg_list[] = {
 		.id = TEGRA_CAMERA_CID_EXPOSURE,
 		.name = "Exposure",
 		.type = V4L2_CTRL_TYPE_INTEGER64,
-		.flags = V4L2_CTRL_FLAG_SLIDER,
+		.flags = V4L2_CTRL_FLAG_SLIDER | V4L2_CTRL_FLAG_UPDATE,
 		.min = CTRL_U64_MIN,
 		.max = CTRL_U64_MAX,
 		.def = CTRL_U64_MIN,
@@ -94,7 +147,7 @@ static struct v4l2_ctrl_config ctrl_cfg_list[] = {
 		.id = TEGRA_CAMERA_CID_FRAME_RATE,
 		.name = "Frame Rate",
 		.type = V4L2_CTRL_TYPE_INTEGER64,
-		.flags = V4L2_CTRL_FLAG_SLIDER,
+		.flags = V4L2_CTRL_FLAG_SLIDER | V4L2_CTRL_FLAG_UPDATE,
 		.min = CTRL_U64_MIN,
 		.max = CTRL_U64_MAX,
 		.def = CTRL_U64_MIN,
@@ -181,6 +234,109 @@ static struct v4l2_ctrl_config ctrl_cfg_list[] = {
 		.flags = V4L2_CTRL_FLAG_HAS_PAYLOAD,
 		.min = CTRL_U8_MIN,
 		.max = CTRL_U8_MAX,
+		.step = 1,
+	},
+	{
+		.ops = &tegracam_ctrl_ops,
+		.id = TEGRA_CAMERA_CID_OPERATION_MODE,
+		.name = "Operation Mode",
+		.type = V4L2_CTRL_TYPE_MENU,
+		.min = 0,
+		.max = ARRAY_SIZE(is_common_operation_mode) - 1,
+		.def = 0,
+		.qmenu = is_common_operation_mode,
+	},
+	{
+		.ops = &tegracam_ctrl_ops,
+		.id = TEGRA_CAMERA_CID_SYNC_MODE,
+		.name = "Synchronizing Function",
+		.type = V4L2_CTRL_TYPE_MENU,
+		.min = 0,
+		.max = ARRAY_SIZE(is_common_sync_function) - 1,
+		.def = 0,
+		.qmenu = is_common_sync_function,
+	},
+	{
+		.ops = &tegracam_ctrl_ops,
+		.id = TEGRA_CAMERA_CID_BROADCAST,
+		.name = "I2C Broadcast controls",
+		.type = V4L2_CTRL_TYPE_MENU,
+		.min = 0,
+		.max = ARRAY_SIZE(is_common_i2c_broadcast) - 1,
+		.def = 0,
+		.qmenu = is_common_i2c_broadcast,
+	},
+	{
+		.ops = &tegracam_ctrl_ops,
+		.id = TEGRA_CAMERA_CID_BLACK_LEVEL,
+		.name = "Black Level",
+		.type = V4L2_CTRL_TYPE_INTEGER64,
+		.flags = V4L2_CTRL_FLAG_SLIDER | V4L2_CTRL_FLAG_EXECUTE_ON_WRITE,
+		.min = CTRL_U64_MIN,
+		.max = CTRL_U64_MAX,
+		.def = CTRL_U64_MIN,
+		.step = 1,
+	},
+	{
+		.ops = &tegracam_ctrl_ops,
+		.id = TEGRA_CAMERA_CID_DIGITAL_GAIN,
+		.name = "Digital gain",
+		.type = V4L2_CTRL_TYPE_INTEGER64,
+		.flags = V4L2_CTRL_FLAG_SLIDER,
+		.min = CTRL_U64_MIN,
+		.max = CTRL_U64_MAX,
+		.def = CTRL_U64_MIN,
+		.step = 1,
+	},
+	{
+		.ops = &tegracam_ctrl_ops,
+		.id = TEGRA_CAMERA_CID_FLIP_MIRROR,
+		.name = "Flip/Mirror",
+		.type = V4L2_CTRL_TYPE_MENU,
+		.min = 0,
+		.max = ARRAY_SIZE(is_common_flip_mirror) - 1,
+		.def = 0,
+		.qmenu = is_common_flip_mirror,
+	},
+	{
+		.ops = &tegracam_ctrl_ops,
+		.id = TEGRA_CAMERA_CID_SHUTTER_MODE,
+		.name = "Global Shutter Mode",
+		.type = V4L2_CTRL_TYPE_MENU,
+		.min = 0,
+		.max = ARRAY_SIZE(is_global_shutter_mode) - 1,
+		.def = 0,
+		.qmenu = is_global_shutter_mode,
+	},
+	{
+		.ops = &tegracam_ctrl_ops,
+		.id = TEGRA_CAMERA_CID_TEST_PATTERN,
+		.name = "Test Pattern",
+		.type = V4L2_CTRL_TYPE_MENU,
+		.min = 0,
+		.max = ARRAY_SIZE(is_test_pattern_menu) - 1,
+		.def = 0,
+		.qmenu = is_test_pattern_menu,
+	},
+	{
+		.ops = &tegracam_ctrl_ops,
+		.id = TEGRA_CAMERA_CID_DATA_RATE,
+		.name = "Data Rate",
+		.type = V4L2_CTRL_TYPE_MENU,
+		.min = 0,
+		.max = ARRAY_SIZE(is_data_rate_menu) - 1,
+		.def = 0,
+		.qmenu = is_data_rate_menu,
+	},
+	{
+		.ops = &tegracam_ctrl_ops,
+		.id = TEGRA_CAMERA_CID_CONVERSION_GAIN,
+		.name = "Conversion Gain",
+		.type = V4L2_CTRL_TYPE_BOOLEAN,
+		.flags = V4L2_CTRL_FLAG_UPDATE,
+		.min = 0,
+		.max = 1,
+		.def = 0,
 		.step = 1,
 	},
 };
@@ -310,6 +466,18 @@ static int tegracam_set_ctrls(struct tegracam_ctrl_handler *handler,
 		return 0;
 	case TEGRA_CAMERA_CID_HDR_EN:
 		return 0;
+	case TEGRA_CAMERA_CID_DATA_RATE:
+		err = ops->set_data_rate(tc_dev, *ctrl->p_new.p_u32);
+		break;
+	case TEGRA_CAMERA_CID_OPERATION_MODE:
+		err = ops->set_operation_mode(tc_dev, *ctrl->p_new.p_u32);
+		break;
+	case TEGRA_CAMERA_CID_SYNC_MODE:
+		err = ops->set_sync_mode(tc_dev, *ctrl->p_new.p_u32);
+		break;
+	case TEGRA_CAMERA_CID_SHUTTER_MODE:
+		err = ops->set_shutter_mode(tc_dev, *ctrl->p_new.p_u32);
+		break;
 	}
 
 	if (v4l2_subdev_call(&s_data->subdev, video,
@@ -328,16 +496,19 @@ static int tegracam_set_ctrls(struct tegracam_ctrl_handler *handler,
 	/* For controls that require sensor to be on */
 	switch (ctrl->id) {
 	case TEGRA_CAMERA_CID_GAIN:
-		if (*ctrl->p_new.p_s64 == ctrlprops->max_gain_val + 1)
-			return 0;
+		//if (*ctrl->p_new.p_s64 == ctrlprops->max_gain_val + 1)
+		//	return 0;
 		err = ops->set_gain(tc_dev, *ctrl->p_new.p_s64);
 		break;
 	case TEGRA_CAMERA_CID_FRAME_RATE:
 		err = ops->set_frame_rate(tc_dev, *ctrl->p_new.p_s64);
 		break;
+	case TEGRA_CAMERA_CID_CONVERSION_GAIN:
+		err = ops->set_conversion_gain(tc_dev, ctrl->val);
+		break;
 	case TEGRA_CAMERA_CID_EXPOSURE:
-		if (check_add_overflow(ctrlprops->max_exp_time.val, 1ULL, &max_exp_time))
-			return -EOVERFLOW;
+		//if (check_add_overflow(ctrlprops->max_exp_time.val, 1ULL, &max_exp_time))
+		//	return -EOVERFLOW;
 
 		if (*ctrl->p_new.p_s64 == max_exp_time)
 			return 0;
@@ -352,6 +523,21 @@ static int tegracam_set_ctrls(struct tegracam_ctrl_handler *handler,
 	case TEGRA_CAMERA_CID_ALTERNATING_EXPOSURE:
 		err = ops->set_alternating_exposure(tc_dev,
 			(struct alternating_exposure_cfg *)ctrl->p_new.p);
+		break;
+	case TEGRA_CAMERA_CID_BROADCAST:
+		err = ops->set_broadcast_ctrl(tc_dev, ctrl);
+		break;
+	case TEGRA_CAMERA_CID_BLACK_LEVEL:
+		err = ops->set_black_level(tc_dev, *ctrl->p_new.p_s64);
+		break;
+	case TEGRA_CAMERA_CID_DIGITAL_GAIN:
+		err = ops->set_digital_gain(tc_dev, *ctrl->p_new.p_s64);
+		break;
+	case TEGRA_CAMERA_CID_FLIP_MIRROR:
+		err = ops->set_orientation(tc_dev, *ctrl->p_new.p_u32);
+		break;
+	case TEGRA_CAMERA_CID_TEST_PATTERN:
+		err = ops->set_test_pattern(tc_dev, *ctrl->p_new.p_u32);
 		break;
 	default:
 		pr_err("%s: unknown ctrl id.\n", __func__);
@@ -545,6 +731,9 @@ int tegracam_ctrl_set_overrides(struct tegracam_ctrl_handler *hdl)
 				else
 					err = ops->set_gain(tc_dev, val);
 				break;
+			case TEGRA_CAMERA_CID_CONVERSION_GAIN:
+				err = ops->set_conversion_gain(tc_dev, control.value);
+				break;
 			case TEGRA_CAMERA_CID_EXPOSURE:
 				if (is_blob_supported)
 					err = ops->set_exposure_ex(tc_dev,
@@ -558,6 +747,30 @@ int tegracam_ctrl_set_overrides(struct tegracam_ctrl_handler *hdl)
 								blob, val);
 				else
 					err = ops->set_frame_rate(tc_dev, val);
+				break;
+			case TEGRA_CAMERA_CID_BLACK_LEVEL:
+				err = ops->set_black_level(tc_dev, val);
+				break;
+			case TEGRA_CAMERA_CID_GC_START_POINT_FIRST:
+				err = ops->set_gc_point_first(tc_dev, val);
+				break;
+			case TEGRA_CAMERA_CID_GC_START_POINT_SECOND:
+				err = ops->set_gc_point_second(tc_dev, val);
+				break;
+			case TEGRA_CAMERA_CID_GC_GAIN_POINT_FIRST:
+				err = ops->set_gc_gain_point_first(tc_dev, val);
+				break;
+			case TEGRA_CAMERA_CID_GC_GAIN_POINT_SECOND:
+				err = ops->set_gc_gain_point_second(tc_dev, val);
+				break;
+			case TEGRA_CAMERA_CID_GAIN_OFFSET:
+				err = ops->set_gain_offset(tc_dev, val);
+				break;
+			case TEGRA_CAMERA_CID_EXPOSURE_THRESHOLD:
+				err = ops->set_exposure_threshold(tc_dev, val);
+				break;
+			case TEGRA_CAMERA_CID_EXPOSURE_THRESHOLD_HIGH:
+				err = ops->set_exposure_threshold_high(tc_dev, val);
 				break;
 			default:
 				dev_err(dev, "%s: unsupported override %x\n",
@@ -587,7 +800,7 @@ int tegracam_init_ctrl_ranges_by_mode(
 	s64 max_short_exp_time = 0;
 	s64 default_short_exp_time = 0;
 	int i;
-	u64 max_exp_time = 0;
+	//u64 max_exp_time = 0;
 
 	if (handler->numctrls == 0)
 		return 0;
@@ -614,7 +827,8 @@ int tegracam_init_ctrl_ranges_by_mode(
 		case TEGRA_CAMERA_CID_GAIN:
 			err = v4l2_ctrl_modify_range(ctrl,
 				ctrlprops->min_gain_val,
-				ctrlprops->max_gain_val + 1,
+				//ctrlprops->max_gain_val + 1,
+				ctrlprops->max_gain_val,
 				ctrlprops->step_gain_val,
 				ctrlprops->default_gain);
 			break;
@@ -626,12 +840,13 @@ int tegracam_init_ctrl_ranges_by_mode(
 				ctrlprops->default_framerate);
 			break;
 		case TEGRA_CAMERA_CID_EXPOSURE:
-			if (check_add_overflow(ctrlprops->max_exp_time.val, 1ULL, &max_exp_time))
-				return -EOVERFLOW;
+			//if (check_add_overflow(ctrlprops->max_exp_time.val, 1ULL, &max_exp_time))
+			//	return -EOVERFLOW;
 
 			err = v4l2_ctrl_modify_range(ctrl,
 				ctrlprops->min_exp_time.val,
-				max_exp_time,
+				//max_exp_time,
+				ctrlprops->max_exp_time.val,
 				ctrlprops->step_exp_time.val,
 				ctrlprops->default_exp_time.val);
 			break;
@@ -661,6 +876,21 @@ int tegracam_init_ctrl_ranges_by_mode(
 				min_short_exp_time,
 				max_short_exp_time,
 				default_short_exp_time);
+			break;
+		case TEGRA_CAMERA_CID_BLACK_LEVEL:
+			err = v4l2_ctrl_modify_range(ctrl,
+					ctrl->minimum,
+					s_data->blklvl_max_range,
+					ctrl->step, ctrl->default_value);
+			break;
+		case TEGRA_CAMERA_CID_DIGITAL_GAIN:
+			ctrl->default_value = clamp_val(s_data->dig_gain_def_value,
+							s_data->dig_gain_min_range,
+							s_data->dig_gain_max_range);
+			err = v4l2_ctrl_modify_range(ctrl,
+						s_data->dig_gain_min_range,
+						s_data->dig_gain_max_range,
+						ctrl->step, ctrl->default_value);
 			break;
 		default:
 			/* Not required to modify these control ranges */
@@ -791,6 +1021,13 @@ static int tegracam_check_ctrl_ops(
 					return -EOVERFLOW;
 			}
 			break;
+		case TEGRA_CAMERA_CID_CONVERSION_GAIN:
+			if (ops->set_conversion_gain == NULL)
+				dev_err(dev,
+					"Missing TEGRA_CAMERA_CID_CONVERSION_GAIN implementation\n");
+			else
+				sensor_ops++;
+			break;
 		case TEGRA_CAMERA_CID_GROUP_HOLD:
 			dev_err(dev,
 				"TEGRA_CAMERA_CID_GROUP_HOLD contorl is enabled in framework by default, no need to add it in driver\n");
@@ -846,6 +1083,22 @@ static int tegracam_check_ctrl_ops(
 		/* The below controls are handled by framework */
 		case TEGRA_CAMERA_CID_SENSOR_MODE_ID:
 		case TEGRA_CAMERA_CID_HDR_EN:
+		case TEGRA_CAMERA_CID_DATA_RATE:
+		case TEGRA_CAMERA_CID_TEST_PATTERN:
+		case TEGRA_CAMERA_CID_HDR_CONTROL:
+		case TEGRA_CAMERA_CID_HDR_LIN_KNEE1:
+		case TEGRA_CAMERA_CID_HDR_LIN_KNEE2:
+		case TEGRA_CAMERA_CID_XVS_XHS_STATE:
+		case TEGRA_CAMERA_CID_PWL_LUT_CONTROL:
+		case TEGRA_CAMERA_CID_DIGITAL_GAIN_SHORT:
+		case TEGRA_CAMERA_CID_BLACK_LEVEL_SHORT:
+		case TEGRA_CAMERA_CID_OPERATION_MODE:
+		case TEGRA_CAMERA_CID_SYNC_MODE:
+		case TEGRA_CAMERA_CID_BROADCAST:
+		case TEGRA_CAMERA_CID_BLACK_LEVEL:
+		case TEGRA_CAMERA_CID_DIGITAL_GAIN:
+		case TEGRA_CAMERA_CID_FLIP_MIRROR:
+		case TEGRA_CAMERA_CID_SHUTTER_MODE:
 			if (check_add_overflow(mode_ops, 1, &mode_ops))
 				return -EOVERFLOW;
 			break;
@@ -1001,6 +1254,15 @@ static int tegracam_check_ctrl_cids(struct tegracam_ctrl_handler *handler)
 			ops->numctrls,
 			TEGRA_CAMERA_CID_FRAME_RATE)) {
 			dev_err(dev, "Missing TEGRA_CAMERA_CID_FRAME_RATE registration\n");
+			errors_found++;
+		}
+	}
+
+	if (ops->set_conversion_gain != NULL ) {
+		if (!find_matching_cid(ops->ctrl_cid_list,
+			ops->numctrls,
+			TEGRA_CAMERA_CID_CONVERSION_GAIN)) {
+			dev_err(dev, "Missing TEGRA_CAMERA_CID_CONVERSION_GAIN registration\n");
 			errors_found++;
 		}
 	}

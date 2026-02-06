@@ -60,6 +60,32 @@
 #define NUM_VI_WATCHDOG					2
 #endif
 
+/*
+XXX Beware, these defines are part of a patch that is (hopefully) a temporary implementation of accessing embedded data on jetson tx2.
+It relies on a custom patch in the VI4 driver on Jetson TX2.
+Most likely we will be able to implement a similar patch for Xavier and Nano platforms (VI2 and VI5).
+
+The patch works by allocating some extra memory after each buffer, and the VI is modified to put the embedded data there.
+The buffer zone is used to store the width and height of embedded data (2 bytes each),
+but it has to be 0x100 bytes because that is the smallest increment by which the dma target addresses can be adjusted.
+The embedded data is stored after the buffer "buffer zone".
+
+buffer
++---------------------------------+
+|pixel data                       |
+|                                 |
++---------------------------------+
+|buffer zone of 0x100 bytes       |
++---------------------------------+
+|embedded data                    |
++---------------------------------+
+
+ ASCII art generated using https://asciiflow.com/
+ */
+
+#define EMBEDDED_DATA_MAX_SIZE ((8*64*1024))
+#define EMBEDDED_DATA_BUFFER_ZONE_SIZE ((0x100))
+
 typedef void (*callback)(void *);
 
 struct tegra_vi_stats {

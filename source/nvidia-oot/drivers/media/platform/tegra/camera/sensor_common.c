@@ -68,6 +68,8 @@ static int sensor_common_parse_signal_props(
 	u64 lane_rate;
 	u64 symbol_rate;
 	int len = 0;
+	struct device_node *sensor_node;
+
 
 	err = of_property_read_string(node, "phy_mode", &temp_str);
 	if (err) {
@@ -109,29 +111,67 @@ static int sensor_common_parse_signal_props(
 	}
 	signal->num_lanes = value;
 
-	err = read_property_u64(node, "pix_clk_hz", &val64);
-	if (err) {
-		dev_err(dev, "%s:pix_clk_hz property missing\n", __func__);
-		return err;
-	}
-	signal->pixel_clock.val = val64;
-
-	err = read_property_u64(node, "serdes_pix_clk_hz", &val64);
+	/* Check if Framos */
+	sensor_node = of_get_parent(node);
+	err = of_property_read_string(sensor_node, "compatible", &temp_str);
 	if (err)
-		signal->serdes_pixel_clock.val = 0;
-	else
-		signal->serdes_pixel_clock.val = val64;
-
-	if (signal->serdes_pixel_clock.val != 0ULL) {
-		if (signal->serdes_pixel_clock.val < signal->pixel_clock.val) {
-			dev_err(dev,
-				"%s: serdes_pix_clk_hz is lower than pix_clk_hz!\n",
-				__func__);
-			return -EINVAL;
+		return -ENODATA;
+	if (!strncmp(temp_str, "framos", sizeof("framos")-1)) {
+		/* Framos */
+		if (of_get_child_by_name(sensor_node, "gmsl-link") == NULL) {
+			/* Framos without GMSL*/
+			if (of_property_read_bool(node, "serdes_pix_clk_hz")) {
+				err = of_remove_property(node, of_find_property(node, "serdes_pix_clk_hz", NULL));
+				if (err) {
+					dev_warn(dev, "%s:failed to remove serdes_pix_clk_hz\n", __func__);
+				}
+			}
+			err = read_property_u64(node, "pix_clk_hz", &val64);
+			if (err) {
+				dev_err(dev, "%s:pix_clk_hz property missing\n", __func__);
+				return err;
+			}
+			signal->pixel_clock.val = val64;
+			rate = signal->pixel_clock.val;
 		}
-		rate = signal->serdes_pixel_clock.val;
-	} else {
-		rate = signal->pixel_clock.val;
+		else {
+			/* Framos with GMSL*/
+			err = read_property_u64(node, "serdes_pix_clk_hz", &val64);
+			if (err) {
+				dev_err(dev, "%s:serdes_pix_clk_hz property missing\n", __func__);
+				return err;
+			}
+			signal->serdes_pixel_clock.val = val64;
+			rate = signal->serdes_pixel_clock.val;
+		}
+	}
+
+	else {
+		/* Not Framos */
+		err = read_property_u64(node, "pix_clk_hz", &val64);
+		if (err) {
+			dev_err(dev, "%s:pix_clk_hz property missing\n", __func__);
+			return err;
+		}
+		signal->pixel_clock.val = val64;
+
+		err = read_property_u64(node, "serdes_pix_clk_hz", &val64);
+		if (err)
+			signal->serdes_pixel_clock.val = 0;
+		else
+			signal->serdes_pixel_clock.val = val64;
+
+		if (signal->serdes_pixel_clock.val != 0ULL) {
+			if (signal->serdes_pixel_clock.val < signal->pixel_clock.val) {
+				dev_err(dev,
+					"%s: serdes_pix_clk_hz is lower than pix_clk_hz!\n",
+					__func__);
+				return -EINVAL;
+			}
+			rate = signal->serdes_pixel_clock.val;
+		} else {
+			rate = signal->pixel_clock.val;
+		}
 	}
 
 	err = read_property_u32(node, "csi_pixel_bit_depth", &depth);
@@ -315,6 +355,12 @@ static int extract_pixel_format(
 		*format = V4L2_PIX_FMT_SGBRG12;
 	else if (strncmp(pixel_t, "bayer_grbg12", size) == 0)
 		*format = V4L2_PIX_FMT_SGRBG12;
+	else if (strncmp(pixel_t, "bayer_gbrg8", size) == 0)
+		*format = V4L2_PIX_FMT_SGBRG8;
+	else if (strncmp(pixel_t, "bayer_rggb8", size) == 0)
+		*format = V4L2_PIX_FMT_SRGGB8;
+	else if (strncmp(pixel_t, "bayer_grbg8", size) == 0)
+		*format = V4L2_PIX_FMT_SGRBG8;
 	else if (strncmp(pixel_t, "bayer_bggr14", size) == 0)
 		*format = V4L2_PIX_FMT_SBGGR14;
 	else if (strncmp(pixel_t, "bayer_rggb14", size) == 0)
@@ -331,6 +377,12 @@ static int extract_pixel_format(
 		*format = V4L2_PIX_FMT_SGBRG12;
 	else if (strncmp(pixel_t, "bayer_wdr_pwl_grbg12", size) == 0)
 		*format = V4L2_PIX_FMT_SGRBG12;
+	else if (strncmp(pixel_t, "bayer_wdr_pwl_rggb10", size) == 0)
+		*format = V4L2_PIX_FMT_SRGGB10;
+	else if (strncmp(pixel_t, "bayer_wdr_pwl_gbrg10", size) == 0)
+		*format = V4L2_PIX_FMT_SGBRG10;
+	else if (strncmp(pixel_t, "bayer_wdr_pwl_grbg10", size) == 0)
+		*format = V4L2_PIX_FMT_SGRBG10;
 	else if (strncmp(pixel_t, "bayer_wdr_dol_rggb10", size) == 0)
 		*format = V4L2_PIX_FMT_SRGGB10;
 	else if (strncmp(pixel_t, "bayer_wdr_dol_gbrg10", size) == 0)
@@ -343,6 +395,8 @@ static int extract_pixel_format(
 		*format = V4L2_PIX_FMT_SGBRG12;
 	else if (strncmp(pixel_t, "bayer_wdr_dol_grbg12", size) == 0)
 		*format = V4L2_PIX_FMT_SGRBG12;
+	else if (strncmp(pixel_t, "bayer_wdr_dol_rggb12", size) == 0)
+		*format = V4L2_PIX_FMT_SRGGB12;
 #if 0 /* disable for Canonical kenrel */
 	else if (strncmp(pixel_t, "bayer_xbggr10p", size) == 0)
 		*format = V4L2_PIX_FMT_XBGGR10P;

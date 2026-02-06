@@ -1,0 +1,834 @@
+/* SPDX-License-Identifier: GPL-2.0
+ *
+ * Copyright (c) 2024 Framos. All rights reserved.
+ *
+ * fr_imx530_mode_tbls.h - imx662 sensor mode tables
+ */
+
+#ifndef __fr_IMX530_TABLES__
+#define __fr_IMX530_TABLES__
+
+
+#define STANDBY					0x3000
+#define XMSTA					0x3010
+
+#define INCKSEL_ST0				0x3014
+#define INCKSEL_ST1				0x3015
+#define INCKSEL_ST2				0x3016
+#define INCKSEL_ST3				0x3018
+#define INCKSEL_ST4				0x3019
+#define INCKSEL_ST5				0x301B
+#define REGHOLD					0x3034
+#define HVMODE					0x303C
+#define VOPB_VBLK_HWID_LOW			0x30D0
+#define VOPB_VBLK_HWID_HIGH			0x30D1
+#define FINFO_HWIDTH_LOW			0x30D2
+#define FINFO_HWIDTH_HIGH			0x30D3
+
+#define VMAX_LOW				0x30D4
+#define VMAX_MID				0x30D5
+#define VMAX_HIGH				0x30D6
+#define HMAX_LOW				0x30D8
+#define HMAX_HIGH				0x30D9
+#define FREQ					0x30DC
+#define VNDMY					0x30E0
+#define VNDMY_TRIG				0x30E1
+#define GMRWT					0x30E2
+#define GMTWT					0x30E3
+#define GAINDLY					0x30E5
+#define GSDLY					0x30E6
+
+#define ROI_MODE				0x3100
+
+#define ADBIT_HADD_ON_SEL			0x3200
+#define HREVERSE_VREVERSE			0x3204
+
+#define INCKSEL_N0				0x321C
+#define INCKSEL_N1				0x321D
+#define INCKSEL_N2				0x321E
+#define INCKSEL_N3				0x321F
+
+#define INCKSEL_S0				0x3220
+#define INCKSEL_S1				0x3221
+#define INCKSEL_S2				0x3222
+#define INCKSEL_S3				0x3223
+
+#define INCKSEL_D0				0x3224
+#define INCKSEL_D1				0x3225
+#define INCKSEL_D2				0x3226
+#define INCKSEL_D3				0x3227
+
+#define SLVS_EN					0x322B
+#define LLBLANK_LOW				0x323C
+#define LLBLANK_HIGH				0x323D
+#define VINT_EN					0x323E
+
+#define SHS_LOW					0x3240
+#define SHS_MID					0x3241
+#define SHS_HIGH				0x3242
+
+#define TRIGMODE				0x3400
+#define ODBIT					0x3430
+#define SYNCSEL					0x343C
+#define STBSLVS					0x3444
+
+#define GAIN_RTS				0x3502
+#define GAIN_LOW				0x3514
+#define GAIN_HIGH				0x3515
+#define BLKLEVEL_LOW				0x35B4
+#define BLKLEVEL_HIGH				0x35B5
+
+#define LANESEL					0x3904
+#define INIT_LENGTH				0x3922
+#define CRC_ECC_MODE				0x3A00
+
+#define FID0_ROI				0x3104
+#define FID0_ROIPH1_LOW				0x3120
+#define FID0_ROIPH1_HIGH			0x3121
+#define FID0_ROIPV1_LOW				0x3122
+#define FID0_ROIPV1_HIGH			0x3123
+#define FID0_ROIWH1_LOW				0x3124
+#define FID0_ROIWH1_HIGH			0x3125
+#define FID0_ROIWV1_LOW				0x3126
+#define FID0_ROIWV1_HIGH			0x3127
+
+#define IMX530_DEFAULT_WIDTH			5328
+#define IMX530_DEFAULT_HEIGHT			4608
+
+#define HSST_EN1			0x35A5
+#define HSST_EN2			0x35A9
+#define HSST_EN3			0x35ED
+
+/* Resolutions of implemented frame modes */
+#define IMX530_ROI_MODE_WIDTH			3840
+#define IMX530_ROI_MODE_HEIGHT			2160
+
+#define IMX530_ROI_MODE_2_WIDTH			4512
+#define IMX530_ROI_MODE_2_HEIGHT		4512
+
+#define IMX530_ROI_MODE_3_WIDTH			5328
+#define IMX530_ROI_MODE_3_HEIGHT		3040
+
+#define IMX530_ROI_MODE_4_WIDTH			4064
+#define IMX530_ROI_MODE_4_HEIGHT		3008
+
+#define IMX530_BINNING_MODE_WIDTH		2656
+#define IMX530_BINNING_MODE_HEIGHT		2304
+
+/* Special values for the write table function */
+#define IMX530_TABLE_WAIT_MS			0
+#define IMX530_TABLE_END			1
+#define IMX530_WAIT_MS				10
+
+#define IMX530_MIN_FRAME_DELTA			152
+#define IMX530_MIN_FRAME_DELTA_10BIT		174
+
+#define IMX530_TO_LOW_BYTE(x)			(x & 0xFF)
+#define IMX530_TO_MID_BYTE(x)			(x >> 8)
+
+typedef struct reg_8 imx530_reg;
+typedef struct reg_8 crosslink_reg;
+
+/* Tables for the write table function */
+static const imx530_reg imx530_stop[] = {
+	{STANDBY, 0x01},
+	{IMX530_TABLE_WAIT_MS, IMX530_WAIT_MS},
+	{XMSTA, 0x01},
+
+	{IMX530_TABLE_WAIT_MS, 30},
+	{IMX530_TABLE_END, 0x00}
+};
+
+static const imx530_reg imx530_10bit_mode[] = {
+	{0x35A4, 0x95},
+	{0x35A8, 0x95},
+	{0x35CA, 0x1E},
+	{0x35CE, 0x1E},
+	{0x35EC, 0x95},
+
+	{0x3640, 0xCC},
+	{0x3642, 0xFA},
+	{0x3643, 0x1F},
+	{0x3644, 0xF5},
+	{0x3646, 0xF5},
+	{0x3647, 0x1F},
+	{0x3648, 0x33},
+	{0x3649, 0x02},
+	{0x364A, 0xF5},
+	{0x364B, 0x1F},
+
+	{0x364C, 0x73},
+	{0x364E, 0x6A},
+	{0x364F, 0x03},
+
+	{0x3668, 0x00},
+	{0x366A, 0x00},
+	{0x366B, 0x00},
+	{0x366C, 0x00},
+	{0x366E, 0x00},
+	{0x366F, 0x00},
+	{0x3670, 0x00},
+	{0x3671, 0x00},
+	{0x3672, 0x00},
+	{0x3673, 0x00},
+
+	{0x3674, 0x73},
+	{0x3676, 0x6A},
+	{0x3677, 0x03},
+	{0x369C, 0x73},
+	{0x369E, 0x6A},
+	{0x369F, 0x03},
+	{0x36F0, 0x4A},
+
+	{HMAX_LOW, IMX530_TO_LOW_BYTE(892)},
+	{HMAX_HIGH, IMX530_TO_MID_BYTE(892)},
+
+	{ADBIT_HADD_ON_SEL, 0x04},
+	{ODBIT, 0x00},
+
+	{IMX530_TABLE_WAIT_MS, IMX530_WAIT_MS},
+	{IMX530_TABLE_END, 0x00}
+};
+
+static const imx530_reg imx530_12bit_mode[] = {
+	{0x35A4, 0x96},
+	{0x35A8, 0x96},
+	{0x35CA, 0x24},
+	{0x35CE, 0x24},
+	{0x35EC, 0x96},
+
+	{0x3640, 0x00},
+	{0x3642, 0x00},
+	{0x3643, 0x00},
+	{0x3644, 0x00},
+	{0x3646, 0x00},
+	{0x3647, 0x00},
+	{0x3648, 0x00},
+	{0x3649, 0x00},
+	{0x364A, 0x00},
+	{0x364B, 0x00},
+
+	{0x364C, 0x73},
+	{0x364E, 0x7B},
+	{0x364F, 0x07},
+
+	{0x3668, 0xCC},
+	{0x366A, 0xFA},
+	{0x366B, 0x1F},
+	{0x366C, 0xF5},
+	{0x366E, 0xF5},
+	{0x366F, 0x1F},
+	{0x3670, 0x33},
+	{0x3671, 0x02},
+	{0x3672, 0xF5},
+	{0x3673, 0x1F},
+
+	{0x3674, 0x73},
+	{0x3676, 0x7B},
+	{0x3677, 0x07},
+	{0x369C, 0x73},
+	{0x369E, 0x7B},
+	{0x369F, 0x07},
+	{0x36F0, 0x18},
+	{0x36F1, 0x01},
+
+	{HMAX_LOW, IMX530_TO_LOW_BYTE(1067)},
+	{HMAX_HIGH, IMX530_TO_MID_BYTE(1067)},
+
+	{ADBIT_HADD_ON_SEL, 0x14},
+	{ODBIT, 0x01},
+
+	{IMX530_TABLE_WAIT_MS, IMX530_WAIT_MS},
+	{IMX530_TABLE_END, 0x00}
+};
+
+static const imx530_reg imx530_init_settings[] = {
+	{FREQ, 0x00},
+	{INCKSEL_ST0, 0x05},
+	{INCKSEL_ST1, 0x91},
+	{INCKSEL_ST2, 0x60},
+	{INCKSEL_ST3, 0x1F},
+	{INCKSEL_ST4, 0x02},
+	{INCKSEL_ST5, 0x1D},
+
+	{INCKSEL_N0, 0x40},
+	{INCKSEL_N1, 0x05},
+	{INCKSEL_N2, 0xE0},
+	{INCKSEL_N3, 0x00},
+
+	{INCKSEL_S0, 0x40},
+	{INCKSEL_S1, 0x05},
+	{INCKSEL_S2, 0xE0},
+	{INCKSEL_S3, 0x00},
+
+	{INCKSEL_D0, 0x40},
+	{INCKSEL_D1, 0x14},
+	{INCKSEL_D2, 0x80},
+	{INCKSEL_D3, 0x90},
+
+	{SLVS_EN, 0x06},
+	{LLBLANK_LOW, 0x31},
+	{LLBLANK_HIGH, 0x00},
+
+	{HVMODE, 0x00},
+	{VNDMY, 0x04},
+	{VNDMY_TRIG, 0x04},
+	{STBSLVS, 0x01},
+	{LANESEL, 0x00},
+
+	{GAIN_RTS, 0x09},
+	{SYNCSEL, 0xC0},
+
+	{0x322B, 0x06},
+	{0x3233, 0x50},
+	{0x32AC, 0x4B},
+
+	{0x3308, 0x4A},
+	{0x3344, 0x0F},
+	{0x3345, 0x00},
+	{0x3346, 0x14},
+	{0x3348, 0x0F},
+	{0x3349, 0x00},
+	{0x334A, 0x14},
+	{0x334C, 0x0F},
+	{0x334D, 0x00},
+	{0x334E, 0x14},
+	{0x3364, 0x0F},
+	{0x3365, 0x00},
+	{0x3366, 0x14},
+	{0x3368, 0x0F},
+	{0x3369, 0x00},
+	{0x336A, 0x14},
+	{0x336C, 0x0F},
+	{0x336D, 0x00},
+	{0x336E, 0x14},
+
+	{0x3535, 0x00},
+	{0x3542, 0x27},
+	{0x354A, 0x20},
+	{0x359C, 0x00},
+	{0x35AC, 0x42},
+	{0x35BE, 0x62},
+	{0x35F0, 0xFB},
+	{0x35F1, 0x0B},
+	{0x35F2, 0xFB},
+	{0x35F3, 0x0B},
+
+	{0x3600, 0x55},
+	{0x360C, 0x0D},
+	{0x360D, 0x04},
+	{0x3612, 0x00},
+	{0x3630, 0x5E},
+	{0x3632, 0x17},
+	{0x3634, 0xE0},
+	{0x3635, 0x01},
+	{0x3636, 0xDC},
+	{0x3637, 0x1F},
+	{0x3638, 0x76},
+	{0x3639, 0x02},
+	{0x363C, 0x1C},
+	{0x363E, 0xEB},
+	{0x363F, 0x1F},
+	{0x3658, 0x5E},
+	{0x365A, 0x17},
+	{0x365C, 0xE0},
+	{0x365D, 0x01},
+	{0x365E, 0xEE},
+	{0x365F, 0x1F},
+	{0x3660, 0x4F},
+	{0x3661, 0x02},
+	{0x3662, 0x8F},
+	{0x3664, 0x1C},
+	{0x3666, 0xEB},
+	{0x3667, 0x1F},
+	{0x3680, 0x5E},
+	{0x3682, 0x17},
+	{0x3684, 0xE0},
+	{0x3685, 0x01},
+	{0x3686, 0xDC},
+	{0x3688, 0x50},
+	{0x3689, 0x02},
+	{0x368A, 0xE5},
+	{0x368B, 0x1F},
+	{0x368C, 0x1C},
+	{0x368E, 0xEB},
+	{0x368F, 0x1F},
+	{0x36E4, 0x00},
+	{0x36E8, 0x17},
+
+	{0x3952, 0x08},
+	{0x3953, 0x08},
+
+	{0x3E2E, 0x3B},
+	{0x3E30, 0x85},
+	{0x3E6E, 0x3B},
+	{0x3E70, 0x6E},
+	{0x3E8E, 0xA3},
+	{0x3E90, 0xDB},
+	{0x3E96, 0x01},
+	{0x3E98, 0x37},
+	{0x3E9E, 0x71},
+	{0x3EA0, 0x82},
+	{0x3EBE, 0xDC},
+
+	{0x3F3C, 0x2E},
+	{0x3F44, 0xC8},
+	{0x3F84, 0xC5},
+	{0x3FA2, 0x1C},
+	{0x3FA4, 0x5B},
+	{0x3FA6, 0xA3},
+
+	{0x4046, 0xA3},
+	{0x4098, 0x39},
+	{0x40B6, 0x1C},
+	{0x40B8, 0x6F},
+	{0x40C8, 0x2C},
+	{0x40C9, 0x01},
+	{0x40CA, 0xC8},
+	{0x40CB, 0x01},
+	{0x40D8, 0x2C},
+	{0x40D9, 0x01},
+	{0x40DA, 0xC8},
+	{0x40DB, 0x01},
+
+	{0x417A, 0xA2},
+	{0x4182, 0x00},
+	{0x4184, 0x38},
+	{0x41A4, 0x2F},
+	{0x41BA, 0x1B},
+	{0x41BC, 0x5C},
+	{0x41BE, 0xA2},
+	{0x41EA, 0xA2},
+
+	{0x420E, 0x1B},
+	{0x4210, 0x70},
+	{0x4232, 0x0C},
+	{0x4235, 0x21},
+	{0x4237, 0x0C},
+	{0x42E4, 0xFF},
+	{0x42E5, 0x0F},
+	{0x42E6, 0x00},
+	{0x42E7, 0x00},
+	{0x42F6, 0x89},
+	{0x42F7, 0x02},
+
+	{0x4306, 0x00},
+	{0x4307, 0x00},
+	{0x4308, 0x00},
+	{0x4309, 0x00},
+	{0x4310, 0x04},
+	{0x4311, 0x04},
+	{0x4312, 0x04},
+	{0x4313, 0x04},
+	{0x431E, 0x14},
+	{0x431F, 0x14},
+	{0x433C, 0x8A},
+	{0x433D, 0x02},
+	{0x433E, 0xE8},
+	{0x433F, 0x05},
+	{0x4340, 0x9E},
+	{0x4341, 0x0C},
+	{0x4370, 0x2C},
+	{0x4371, 0x01},
+	{0x4372, 0xC8},
+	{0x4373, 0x01},
+	{0x4380, 0x2C},
+	{0x4381, 0x01},
+	{0x4382, 0xC8},
+	{0x4383, 0x01},
+
+	{0x445E, 0x2C},
+	{0x445F, 0x01},
+	{0x4460, 0xC8},
+	{0x4461, 0x01},
+	{0x4467, 0x83},
+	{0x4468, 0xCC},
+	{0x4469, 0x02},
+	{0x446A, 0x58},
+	{0x446E, 0x5F},
+	{0x4472, 0x64},
+	{0x4476, 0xC6},
+	{0x447A, 0xC6},
+	{0x447E, 0xC6},
+	{0x4482, 0xC6},
+	{0x4486, 0xC6},
+	{0x448A, 0x58},
+	{0x448E, 0x5F},
+	{0x4492, 0x64},
+	{0x4496, 0xC6},
+	{0x449A, 0xC6},
+	{0x449E, 0xC6},
+	{0x44A2, 0xC6},
+	{0x44A6, 0xC6},
+	{0x44EC, 0x4B},
+	{0x44F0, 0x52},
+	{0x44F4, 0x57},
+	{0x44F8, 0xB9},
+
+	{0x4500, 0xB9},
+	{0x4504, 0xB9},
+	{0x4508, 0xB9},
+	{0x450C, 0xB9},
+	{0x4510, 0x4B},
+	{0x4514, 0x52},
+	{0x4518, 0x57},
+	{0x451C, 0xB9},
+	{0x4520, 0xB9},
+	{0x4524, 0xB9},
+	{0x4528, 0xB9},
+	{0x452C, 0xB9},
+	{0x4576, 0xF2},
+	{0x4578, 0xDE},
+	{0x457A, 0x30},
+	{0x457C, 0x1C},
+	{0x457D, 0x02},
+	{0x457E, 0xE0},
+	{0x4580, 0xF0},
+	{0x4582, 0x1E},
+	{0x4584, 0x2E},
+	{0x4588, 0xF4},
+	{0x458C, 0x32},
+	{0x4598, 0xE3},
+	{0x45AE, 0x0E},
+	{0x45AF, 0x00},
+	{0x45B0, 0x8D},
+	{0x45B1, 0x02},
+	{0x45B6, 0x0E},
+	{0x45B7, 0x00},
+	{0x45B8, 0x8D},
+	{0x45B9, 0x02},
+	{0x45CE, 0x18},
+	{0x45CF, 0x00},
+	{0x45D0, 0x8D},
+	{0x45D1, 0x02},
+	{0x45D6, 0x18},
+	{0x45D7, 0x00},
+	{0x45D8, 0x8D},
+	{0x45D9, 0x02},
+	{0x45CE, 0x18},
+	{0x45CF, 0x00},
+	{0x45D0, 0x8D},
+	{0x45D1, 0x02},
+	{0x45D6, 0x18},
+	{0x45D7, 0x00},
+	{0x45D8, 0x8D},
+	{0x45D9, 0x02},
+	{0x45E6, 0x53},
+	{0x45F0, 0x90},
+	{0x45F2, 0x8A},
+	{0x45F8, 0x8E},
+	{0x45FA, 0x90},
+
+	{0x4604, 0x8E},
+	{0x4606, 0x90},
+	{0x460C, 0x8A},
+	{0x460E, 0xBB},
+	{0x4614, 0x90},
+	{0x4616, 0x8A},
+	{0x4634, 0x4A},
+	{0x4636, 0x90},
+	{0x463C, 0x4C},
+	{0x463E, 0x92},
+	{0x4644, 0x4E},
+	{0x4646, 0x94},
+	{0x464C, 0x47},
+	{0x464E, 0x4D},
+	{0x4654, 0x49},
+	{0x4656, 0x50},
+	{0x465C, 0x4B},
+	{0x465E, 0x52},
+	{0x466A, 0x9E},
+	{0x4670, 0x98},
+	{0x4676, 0x96},
+	{0x4678, 0xBA},
+	{0x4698, 0x93},
+	{0x469A, 0xB9},
+	{0x46A0, 0x67},
+	{0x46A2, 0x8D},
+	{0x46F6, 0xE1},
+
+	{0x4708, 0xE5},
+	{0x470A, 0xE1},
+	{0x4710, 0x23},
+	{0x4712, 0x1F},
+	{0x4718, 0x6D},
+	{0x4722, 0x6D},
+	{0x4728, 0x34},
+	{0x4729, 0x0E},
+	{0x472A, 0x8A},
+	{0x472B, 0x0E},
+	{0x472C, 0xE1},
+	{0x472D, 0x0E},
+	{0x472E, 0x06},
+	{0x4730, 0x04},
+	{0x4731, 0x04},
+	{0x473C, 0x06},
+	{0x473E, 0x04},
+	{0x473F, 0x04},
+	{0x4744, 0x20},
+	{0x4745, 0x0A},
+	{0x4746, 0xF4},
+	{0x4747, 0x0C},
+	{0x4748, 0x3A},
+	{0x4749, 0x9E},
+	{0x474A, 0xCA},
+	{0x474B, 0x0E},
+	{0x4753, 0x90},
+	{0x4754, 0xCA},
+	{0x4755, 0x0E},
+	{0x475A, 0x53},
+	{0x475B, 0x0A},
+	{0x475C, 0xFB},
+	{0x475D, 0xFB},
+	{0x4764, 0xDC},
+	{0x4765, 0xFE},
+	{0x4768, 0xDC},
+	{0x4769, 0xFE},
+	{0x4770, 0x6D},
+	{0x4776, 0x6D},
+	{0x4780, 0x1F},
+	{0x4787, 0x8F},
+	{0x4788, 0x04},
+	{0x47A3, 0x0C},
+	{0x47A4, 0x80},
+	{0x47D5, 0x3F},
+	{0x47F7, 0xF2},
+
+	{0x4864, 0x20},
+	{0x4868, 0x21},
+	{0x486C, 0x22},
+	{0x4874, 0x20},
+	{0x4878, 0x21},
+	{0x487C, 0x22},
+	{0x48A4, 0x83},
+	{0x48A8, 0x84},
+	{0x48AC, 0x85},
+	{0x48B4, 0x83},
+	{0x48B8, 0x84},
+	{0x48BC, 0x85},
+
+	{HSST_EN1, 0x00},
+	{HSST_EN2, 0x00},
+	{HSST_EN3, 0x00},
+
+	{IMX530_TABLE_WAIT_MS, IMX530_WAIT_MS},
+	{IMX530_TABLE_END, 0x0000}
+};
+
+static const imx530_reg mode_5328x4608[] = {
+	{VOPB_VBLK_HWID_LOW, IMX530_TO_LOW_BYTE(5328)},
+	{VOPB_VBLK_HWID_HIGH, IMX530_TO_MID_BYTE(5328)},
+	{FINFO_HWIDTH_LOW, IMX530_TO_LOW_BYTE(5328)},
+	{FINFO_HWIDTH_HIGH, IMX530_TO_MID_BYTE(5328)},
+
+	{FID0_ROI, 0x00},
+
+	{IMX530_TABLE_WAIT_MS, IMX530_WAIT_MS},
+	{IMX530_TABLE_END, 0x0000}
+};
+
+static const imx530_reg mode_3840x2160[] = {
+	{VOPB_VBLK_HWID_LOW, IMX530_TO_LOW_BYTE(5328)},
+	{VOPB_VBLK_HWID_HIGH, IMX530_TO_MID_BYTE(5328)},
+	{FINFO_HWIDTH_LOW, IMX530_TO_LOW_BYTE(5328)},
+	{FINFO_HWIDTH_HIGH, IMX530_TO_MID_BYTE(5328)},
+
+	{FID0_ROI, 0x03},
+
+	{FID0_ROIPH1_LOW, IMX530_TO_LOW_BYTE(752)},
+	{FID0_ROIPH1_HIGH, IMX530_TO_MID_BYTE(752)},
+	{FID0_ROIPV1_LOW, IMX530_TO_LOW_BYTE(1232)},
+	{FID0_ROIPV1_HIGH, IMX530_TO_MID_BYTE(1232)},
+
+	{FID0_ROIWH1_LOW, IMX530_TO_LOW_BYTE(IMX530_ROI_MODE_WIDTH)},
+	{FID0_ROIWH1_HIGH, IMX530_TO_MID_BYTE(IMX530_ROI_MODE_WIDTH)},
+
+	{FID0_ROIWV1_LOW, IMX530_TO_LOW_BYTE(IMX530_ROI_MODE_HEIGHT)},
+	{FID0_ROIWV1_HIGH, IMX530_TO_MID_BYTE(IMX530_ROI_MODE_HEIGHT)},
+
+	{IMX530_TABLE_WAIT_MS, IMX530_WAIT_MS},
+	{IMX530_TABLE_END, 0x0000}
+};
+
+static const imx530_reg mode_4512x4512[] = {
+	{VOPB_VBLK_HWID_LOW, IMX530_TO_LOW_BYTE(5328)},
+	{VOPB_VBLK_HWID_HIGH, IMX530_TO_MID_BYTE(5328)},
+	{FINFO_HWIDTH_LOW, IMX530_TO_LOW_BYTE(5328)},
+	{FINFO_HWIDTH_HIGH, IMX530_TO_MID_BYTE(5328)},
+
+	{FID0_ROI, 0x03},
+
+	{FID0_ROIPH1_LOW, IMX530_TO_LOW_BYTE(408)},
+	{FID0_ROIPH1_HIGH, IMX530_TO_MID_BYTE(408)},
+	{FID0_ROIPV1_LOW, IMX530_TO_LOW_BYTE(48)},
+	{FID0_ROIPV1_HIGH, IMX530_TO_MID_BYTE(48)},
+
+	{FID0_ROIWH1_LOW, IMX530_TO_LOW_BYTE(IMX530_ROI_MODE_2_WIDTH)},
+	{FID0_ROIWH1_HIGH, IMX530_TO_MID_BYTE(IMX530_ROI_MODE_2_WIDTH)},
+
+	{FID0_ROIWV1_LOW, IMX530_TO_LOW_BYTE(IMX530_ROI_MODE_2_HEIGHT)},
+	{FID0_ROIWV1_HIGH, IMX530_TO_MID_BYTE(IMX530_ROI_MODE_2_HEIGHT)},
+
+	{IMX530_TABLE_WAIT_MS, IMX530_WAIT_MS},
+	{IMX530_TABLE_END, 0x0000}
+};
+
+static const imx530_reg mode_5328x3040[] = {
+	{VOPB_VBLK_HWID_LOW, IMX530_TO_LOW_BYTE(5328)},
+	{VOPB_VBLK_HWID_HIGH, IMX530_TO_MID_BYTE(5328)},
+	{FINFO_HWIDTH_LOW, IMX530_TO_LOW_BYTE(5328)},
+	{FINFO_HWIDTH_HIGH, IMX530_TO_MID_BYTE(5328)},
+
+	{FID0_ROI, 0x02},
+
+	{FID0_ROIPV1_LOW, IMX530_TO_LOW_BYTE(784)},
+	{FID0_ROIPV1_HIGH, IMX530_TO_MID_BYTE(784)},
+
+	{FID0_ROIWV1_LOW, IMX530_TO_LOW_BYTE(IMX530_ROI_MODE_2_HEIGHT)},
+	{FID0_ROIWV1_HIGH, IMX530_TO_MID_BYTE(IMX530_ROI_MODE_2_HEIGHT)},
+
+	{IMX530_TABLE_WAIT_MS, IMX530_WAIT_MS},
+	{IMX530_TABLE_END, 0x0000}
+};
+
+static const imx530_reg mode_2656x2304[] = {
+	{HVMODE, 0x10},
+
+	{VNDMY, 0x08},
+	{VNDMY_TRIG, 0x08},
+
+	{HMAX_LOW, IMX530_TO_LOW_BYTE(573)},
+	{HMAX_HIGH, IMX530_TO_MID_BYTE(573)},
+
+	{FID0_ROI, 0x01},
+
+	{FID0_ROIPH1_LOW, 0x08},
+	{FID0_ROIPH1_HIGH, 0x00},
+
+	{FID0_ROIWH1_LOW, IMX530_TO_LOW_BYTE(5312)},
+	{FID0_ROIWH1_HIGH, IMX530_TO_MID_BYTE(5312)},
+
+	{IMX530_TABLE_WAIT_MS, IMX530_WAIT_MS},
+	{IMX530_TABLE_END, 0x0000}
+};
+
+static const imx530_reg mode_4064x3008[] = {
+	{VOPB_VBLK_HWID_LOW, IMX530_TO_LOW_BYTE(5328)},
+	{VOPB_VBLK_HWID_HIGH, IMX530_TO_MID_BYTE(5328)},
+	{FINFO_HWIDTH_LOW, IMX530_TO_LOW_BYTE(5328)},
+	{FINFO_HWIDTH_HIGH, IMX530_TO_MID_BYTE(5328)},
+
+	{FID0_ROI, 0x03},
+
+	{FID0_ROIPH1_LOW, IMX530_TO_LOW_BYTE(608)},
+	{FID0_ROIPH1_HIGH, IMX530_TO_MID_BYTE(608)},
+	{FID0_ROIPV1_LOW, IMX530_TO_LOW_BYTE(800)},
+	{FID0_ROIPV1_HIGH, IMX530_TO_MID_BYTE(800)},
+
+	{FID0_ROIWH1_LOW, IMX530_TO_LOW_BYTE(IMX530_ROI_MODE_4_WIDTH)},
+	{FID0_ROIWH1_HIGH, IMX530_TO_MID_BYTE(IMX530_ROI_MODE_4_WIDTH)},
+
+	{FID0_ROIWV1_LOW, IMX530_TO_LOW_BYTE(IMX530_ROI_MODE_4_HEIGHT)},
+	{FID0_ROIWV1_HIGH, IMX530_TO_MID_BYTE(IMX530_ROI_MODE_4_HEIGHT)},
+
+	{IMX530_TABLE_WAIT_MS, IMX530_WAIT_MS},
+	{IMX530_TABLE_END, 0x0000}
+};
+
+/* Enum of available frame modes */
+enum {
+	IMX530_MODE_5328x4608,
+	IMX530_MODE_ROI_3840x2160,
+	IMX530_MODE_ROI_4512x4512,
+	IMX530_MODE_ROI_5328x3040,
+	IMX530_MODE_ROI_4064x3008,
+	IMX530_MODE_BINNING_2656x2304,
+
+	IMX530_INIT_SETTINGS,
+	IMX530_MODE_STOP_STREAM,
+
+	IMX530_10BIT_MODE,
+	IMX530_12BIT_MODE,
+};
+
+/* Connecting frame modes to mode tables */
+static const imx530_reg *mode_table[] = {
+	[IMX530_MODE_5328x4608] = mode_5328x4608,
+	[IMX530_MODE_ROI_3840x2160] = mode_3840x2160,
+	[IMX530_MODE_ROI_4512x4512] = mode_4512x4512,
+	[IMX530_MODE_ROI_5328x3040] = mode_5328x3040,
+	[IMX530_MODE_ROI_4064x3008] = mode_4064x3008,
+	[IMX530_MODE_BINNING_2656x2304] = mode_2656x2304,
+
+	[IMX530_INIT_SETTINGS] = imx530_init_settings,
+
+	[IMX530_10BIT_MODE] = imx530_10bit_mode,
+	[IMX530_12BIT_MODE] = imx530_12bit_mode,
+
+	[IMX530_MODE_STOP_STREAM] = imx530_stop,
+};
+
+/* Framerates of available frame modes */
+static const int imx530_14fps[] = {
+	14,
+};
+
+static const int imx530_18fps[] = {
+	18,
+};
+
+static const int imx530_22fps[] = {
+	22,
+};
+
+static const int imx530_26fps[] = {
+	26,
+};
+
+static const int imx530_30fps[] = {
+	30,
+};
+
+static const int imx530_36fps[] = {
+	36,
+};
+
+static const int imx530_53fps[] = {
+	53,
+};
+
+/* Connecting resolutions, framerates and mode tables */
+static const struct camera_common_frmfmt imx530_frmfmt[] = {
+	{.size = {IMX530_DEFAULT_WIDTH, IMX530_DEFAULT_HEIGHT},
+	 .framerates = imx530_14fps,
+	 .num_framerates = 1,
+	 .hdr_en = false,
+	 .mode = IMX530_MODE_5328x4608},
+	{.size = {IMX530_ROI_MODE_WIDTH, IMX530_ROI_MODE_HEIGHT},
+	 .framerates = imx530_36fps,
+	 .num_framerates = 1,
+	 .hdr_en = false,
+	 .mode = IMX530_MODE_ROI_3840x2160},
+	{.size = {IMX530_ROI_MODE_2_WIDTH, IMX530_ROI_MODE_2_HEIGHT},
+	 .framerates = imx530_18fps,
+	 .num_framerates = 1,
+	 .hdr_en = false,
+	 .mode = IMX530_MODE_ROI_4512x4512},
+	{.size = {IMX530_ROI_MODE_3_WIDTH, IMX530_ROI_MODE_3_HEIGHT},
+	 .framerates = imx530_22fps,
+	 .num_framerates = 1,
+	 .hdr_en = false,
+	 .mode = IMX530_MODE_ROI_5328x3040},
+	{.size = {IMX530_ROI_MODE_4_WIDTH, IMX530_ROI_MODE_4_HEIGHT},
+	 .framerates = imx530_26fps,
+	 .num_framerates = 1,
+	 .hdr_en = false,
+	 .mode = IMX530_MODE_ROI_4064x3008},
+	{.size = {IMX530_BINNING_MODE_WIDTH, IMX530_BINNING_MODE_HEIGHT},
+	 .framerates = imx530_53fps,
+	 .num_framerates = 1,
+	 .hdr_en = false,
+	 .mode = IMX530_MODE_BINNING_2656x2304},
+};
+
+#endif
