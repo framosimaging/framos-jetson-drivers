@@ -45,8 +45,8 @@ fi
 
 
 # export env
-export CROSS_COMPILE=${TOOLCHAIN_DIR}/bin/aarch64-buildroot-linux-gnu-
-export KERNEL_HEADERS=${L4T_SOURCE}/kernel/kernel-jammy-src
+export CROSS_COMPILE=${TOOLCHAIN_DIR}/bin/aarch64-none-linux-gnu-
+export KERNEL_HEADERS=${L4T_SOURCE}/kernel/kernel-noble
 export INSTALL_MOD_PATH=${L4T_DIR}/rootfs/
 
 
@@ -88,7 +88,7 @@ function install_kernel() {(
     pushd ${L4T_SOURCE} &> /dev/null
     echo ; echo; echo -e "${yel}kernel Image & in-tree kernel modules install ... ${normal}"
     sudo -E make install -C kernel
-    cp kernel/kernel-jammy-src/arch/arm64/boot/Image ${L4T_DIR}/kernel/Image
+    cp kernel/kernel-noble/arch/arm64/boot/Image ${L4T_DIR}/kernel/Image
     popd &> /dev/null
 )}
 
