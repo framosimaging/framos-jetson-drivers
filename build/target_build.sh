@@ -1,7 +1,9 @@
 #!/bin/bash
 
 # This script builds and install: out-of-tree kernel modules & DTBs
-
+export NV_OOT_IVC_EXT_SKIP_BUILD=y
+export NV_OOT_TEGRA_HV_SKIP_BUILD=y
+export NV_OOT_TEGRA_BPMP_SKIP_BUILD=y
 
 # color output
 red=$'\e[31m'
