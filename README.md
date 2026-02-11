@@ -1,5 +1,5 @@
-&nbsp; TODO: update
-[Release Notes l4t‐r36.4.4](https://github.com/framosimaging/framos-jetson-drivers/wiki/Release-Notes-l4t%E2%80%90r36.4.4)
+&nbsp;
+[Release Notes l4t‐r36.4.4](https://github.com/framosimaging/framos-jetson-drivers/wiki/Release-Notes-l4t%E2%80%90r38.4)
 
 
 # Short procedure
@@ -22,7 +22,7 @@ If using cross-compilation, the "Nvidia tag" is used to checkout to correct tag 
 
 ## 1. Get & Install Framos drivers
 Two methods:
-* [Using Framos source code on host system(Ubuntu 22.04)](https://github.com/framosimaging/framos-jetson-drivers/wiki/Clone,-Cross%E2%80%90Compile,-Install-and-flash-on-host-system(Ubuntu-22.04))
+* [Using Framos source code on a host system (Ubuntu 22.04)](https://github.com/framosimaging/framos-jetson-drivers/wiki/Clone,-Cross%E2%80%90Compile,-Install-and-flash-on-host-system(Ubuntu-22.04))
 
 ## 2. Configuration of Image Sensors on the Jetson platform (Target System)
 Two methods:
