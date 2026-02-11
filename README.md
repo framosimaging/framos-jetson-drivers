@@ -1,5 +1,5 @@
 &nbsp;
-[Release Notes l4t‐r36.4.4](https://github.com/framosimaging/framos-jetson-drivers/wiki/Release-Notes-l4t%E2%80%90r38.4)
+[Release Notes l4t‐r38.4](https://github.com/framosimaging/framos-jetson-drivers/wiki/Release-Notes-l4t%E2%80%90r38.4)
 
 
 # Short procedure
