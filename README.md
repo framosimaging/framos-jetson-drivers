@@ -22,7 +22,12 @@ If using cross-compilation, the "Nvidia tag" is used to checkout to correct tag 
 
 ## 1. Get & Install Framos drivers
 Two methods:
-* [Using Framos source code on a host system (Ubuntu 22.04)](https://github.com/framosimaging/framos-jetson-drivers/wiki/Clone,-Cross%E2%80%90Compile,-Install-and-flash-on-host-system(Ubuntu-22.04))
+
+* [Using Framos source code on host system(Ubuntu 22.04) -official](https://github.com/framosimaging/framos-jetson-drivers/wiki/Clone,-Cross%E2%80%90Compile,-Install-and-flash-on-host-system(Ubuntu-22.04))
+
+  or
+
+* [Using Framos source code on target system(Jetson platform) - for prototyping](https://github.com/framosimaging/framos-jetson-drivers/wiki/Clone,-Compile-and-Install-on-target-system(Jetson-platform))
 
 ## 2. Configuration of Image Sensors on the Jetson platform (Target System)
 Two methods:
