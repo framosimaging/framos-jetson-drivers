@@ -1,23 +1,13 @@
 // SPDX-License-Identifier: GPL-2.0-only
-/* SPDX-FileCopyrightText: Copyright (c) 2017-2024 NVIDIA CORPORATION & AFFILIATES.
- * All rights reserved.
- *
- *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms and conditions of the GNU General Public License,
- * version 2, as published by the Free Software Foundation.
- *
- * This program is distributed in the hope it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
- * more details.
- */
+// SPDX-FileCopyrightText: Copyright (c) 2017-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 
 /**
  * @file drivers/media/platform/tegra/camera/fusa-capture/capture-vi.c
  *
  * @brief VI channel operations for the T234 Camera RTCPU platform.
  */
+
+#include <nvidia/conftest.h>
 
 #include <linux/completion.h>
 #include <linux/nospec.h>
@@ -1726,9 +1716,21 @@ static const struct of_device_id capture_vi_of_match[] = {
 };
 MODULE_DEVICE_TABLE(of, capture_vi_of_match);
 
+#if defined(NV_PLATFORM_DRIVER_STRUCT_REMOVE_RETURNS_VOID) /* Linux v6.11 */
+static void capture_vi_remove_wrapper(struct platform_device *pdev)
+{
+	capture_vi_remove(pdev);
+}
+#else
+static int capture_vi_remove_wrapper(struct platform_device *pdev)
+{
+	return capture_vi_remove(pdev);
+}
+#endif
+
 static struct platform_driver capture_vi_driver = {
 	.probe = capture_vi_probe,
-	.remove = capture_vi_remove,
+	.remove = capture_vi_remove_wrapper,
 	.driver = {
 		.owner = THIS_MODULE,
 		.name = "tegra-camrtc-capture-vi",
@@ -1760,6 +1762,10 @@ static void __exit capture_vi_exit(void)
 module_init(capture_vi_init);
 module_exit(capture_vi_exit);
 
+#if defined(NV_MODULE_IMPORT_NS_CALLS_STRINGIFY)
 MODULE_IMPORT_NS(DMA_BUF);
+#else
+MODULE_IMPORT_NS("DMA_BUF");
+#endif
 MODULE_DESCRIPTION("tegra fusa-capture driver");
 MODULE_LICENSE("GPL");

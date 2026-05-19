@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023, NVIDIA CORPORATION. All rights reserved.
+ * Copyright (c) 2021-2025, NVIDIA CORPORATION. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -229,9 +229,11 @@ struct core_ops {
 	/** Interface function called to initialize HSI */
 	nve32_t (*core_hsi_configure)(struct osi_core_priv_data *const osi_core,
 				   const nveu32_t enable);
+#ifdef NV_VLTEST_BUILD
 	/** Interface function called to inject error */
 	nve32_t (*core_hsi_inject_err)(struct osi_core_priv_data *const osi_core,
 				       const nveu32_t error_code);
+#endif
 #endif
 };
 

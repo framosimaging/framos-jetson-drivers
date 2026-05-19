@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023, NVIDIA CORPORATION. All rights reserved.
+ * Copyright (c) 2022-2025, NVIDIA CORPORATION. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -198,8 +198,10 @@ void prepare_l3l4_registers(const struct osi_core_priv_data *const osi_core,
 			    nveu32_t *l3_addr1_reg,
 			    nveu32_t *ctr_reg);
 #ifdef HSI_SUPPORT
+#ifdef NV_VLTEST_BUILD
 nve32_t hsi_common_error_inject(struct osi_core_priv_data *osi_core,
 				nveu32_t error_code);
+#endif
 void hsi_read_err(struct osi_core_priv_data *const osi_core);
 #endif
 nve32_t hw_validate_avb_input(struct osi_core_priv_data *const osi_core,

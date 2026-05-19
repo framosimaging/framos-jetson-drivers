@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0-only
+// SPDX-FileCopyrightText: Copyright (c) 2019-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 /*
- * Copyright (c) 2019-2024, NVIDIA Corporation. All Rights Reserved.
- *
  * Cryptographic API.
  */
+
+#include <nvidia/conftest.h>
 
 #include <linux/module.h>
 #include <linux/init.h>
@@ -5209,9 +5210,21 @@ static const struct dev_pm_ops tegra_hv_pm_ops = {
 };
 #endif /* CONFIG_PM */
 
+#if defined(NV_PLATFORM_DRIVER_STRUCT_REMOVE_RETURNS_VOID) /* Linux v6.11 */
+static void tegra_hv_vse_safety_remove_wrapper(struct platform_device *pdev)
+{
+	tegra_hv_vse_safety_remove(pdev);
+}
+#else
+static int tegra_hv_vse_safety_remove_wrapper(struct platform_device *pdev)
+{
+	return tegra_hv_vse_safety_remove(pdev);
+}
+#endif
+
 static struct platform_driver tegra_hv_vse_safety_driver = {
 	.probe = tegra_hv_vse_safety_probe,
-	.remove = tegra_hv_vse_safety_remove,
+	.remove = tegra_hv_vse_safety_remove_wrapper,
 	.shutdown = tegra_hv_vse_safety_shutdown,
 	.driver = {
 		.name = "tegra_hv_vse_safety",

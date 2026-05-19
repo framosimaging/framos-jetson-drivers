@@ -1,4 +1,4 @@
-# copyright (c) 2022-2023, NVIDIA CORPORATION. All rights reserved.
+# copyright (c) 2022-2025, NVIDIA CORPORATION. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -37,6 +37,10 @@ endif
 NV_COMPONENT_CFLAGS += -DHSI_SUPPORT
 NV_COMPONENT_CFLAGS += -DMACSEC_SUPPORT
 NV_COMPONENT_CFLAGS += -DLOG_OSI
+
+ifeq ($(NV_BUILD_CONFIGURATION_IS_VLTEST),1)
+NV_COMPONENT_CFLAGS                += -DNV_VLTEST_BUILD
+endif
 
 #NV_COMPONENT_CFLAGS += -DMACSEC_KEY_PROGRAM
 HSI_SUPPORT := 1

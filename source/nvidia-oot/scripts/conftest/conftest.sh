@@ -1,6 +1,6 @@
 #!/bin/sh
 # SPDX-License-Identifier: MIT
-# SPDX-FileCopyrightText: Copyright (c) 2023-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2023-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 
 PATH="${PATH}:/bin:/sbin:/usr/bin"
 
@@ -943,6 +943,22 @@ compile_test() {
             }"
 
             compile_check_conftest "$CODE" "NV_MDEV_GET_TYPE_GROUP_ID_PRESENT" "" "functions"
+        ;;
+
+        media_entity_remote_pad)
+            #
+            # Determine if media_entity_remote_pad() function is present or not
+            #
+            # Removed by commit b2e44430b634 ("media: mc-entity: Rename
+            # media_entity_remote_pad() to media_pad_remote_pad_first()") in Linux 6.0
+            #
+            CODE="
+            #include <media/media-entity.h>
+            void conftest_media_entity_remote_pad(void) {
+                media_entity_remote_pad();
+            }"
+
+            compile_check_conftest "$CODE" "NV_MEDIA_ENTITY_REMOTE_PAD_PRESENT" "" "functions"
         ;;
 
         vfio_device_mig_state)
@@ -6502,6 +6518,68 @@ compile_test() {
             compile_check_conftest "$CODE" "NV___ALLOC_DISK_NODE_HAS_LKCLASS_ARG" "" "types"
         ;;
 
+        __alloc_pages_bulk_has_no_page_list_arg)
+            #
+            # Determine if the function __alloc_pages_bulk() has an 'page_list'
+            # argument.
+            #
+            # In Linux v6.14, commit c8b979530f27 ("mm: alloc_pages_bulk_noprof:
+            # drop page_list argument") removes the 'page_list' argument from
+            # __alloc_pages_bulk().
+            #
+            CODE="
+            #include <linux/gfp.h>
+            unsigned long confest_alloc_pages_bulk(gfp_t gfp, int nid, int nr_pages,
+                                                   struct page **page_array) {
+                return __alloc_pages_bulk(gfp, nid, NULL, nr_pages, page_array);
+            }"
+
+            compile_check_conftest "$CODE" "NV__ALLOC_PAGES_BULK_HAS_NO_PAGE_LIST_ARG" "" "types" $1.log
+        ;;
+
+        aperture_remove_all_conflicting_devices)
+            #
+            # Determine if the function aperture_remove_all_conflicting_devices()
+            # is present.
+            #
+            # In Linux v6.0, commit 7283f862bd99 ("drm: Implement DRM aperture
+            # helpers under video/") added the function
+            # aperture_remove_all_conflicting_devices().
+            #
+            CODE="
+            #if defined(NV_LINUX_APERTURE_H_PRESENT)
+            #include <linux/aperture.h>
+            #else
+            #error \"linux/aperture.h not found!\"
+            #endif
+            void conftest_aperture_remove_all_conflicting_devices(const char *name) {
+                aperture_remove_all_conflicting_devices(name);
+            }"
+
+            compile_check_conftest "$CODE" "NV_APERTURE_REMOVE_ALL_CONFLICTING_DEVICES_PRESENT" "" "types"
+        ;;
+
+        bin_attribute_struct_mmap_has_const_bin_attribute_arg)
+            #
+            # Determine if the 'bin_attribute' structure 'mmap' function pointer
+            # has const 'struct bin_attribute' argument.
+            #
+            # Commit 94a20fb9af16 ("sysfs: treewide: constify attribute callback
+            # of bin_attribute::mmap()") updated the 'mmap' function pointer to
+            # take a const 'bin_attribute' structure in Linux v6.13.
+            #
+            CODE="
+            #include <linux/sysfs.h>
+            void conftest(struct bin_attribute *attr) {
+                    int (*fn)(struct file *, struct kobject *,
+                              const struct bin_attribute *,
+                              struct vm_area_struct *) = attr->mmap;
+            }"
+
+            compile_check_conftest "$CODE" \
+                    "NV_BIN_ATTRIBUTE_STRUCT_MMAP_HAS_CONST_BIN_ATTRIBUTE_ARG" "" "types"
+        ;;
+
         blk_execute_rq_has_no_gendisk_arg)
             #
             # Determine if the function blk_execute_rq() has an argument of
@@ -6628,6 +6706,25 @@ compile_test() {
 
             compile_check_conftest "$CODE" \
                     "NV_BLOCK_DEVICE_OPERATIONS_RELEASE_HAS_NO_MODE_ARG" "" "types"
+        ;;
+
+        blk_rq_map_sg_has_no_queue_arg)
+            #
+            # Determine if blk_rq_map_sg() no longer takes a request_queue parameter.
+            #
+            # Commit 75618ac6e98f ("block: remove unused parameter 'q' parameter
+            # in __blk_rq_map_sg()") removed the 'request_queue' parameter from the
+            # function blk_rq_map_sg() in Linux v6.15.
+            #
+            CODE="
+            #include <linux/blk-mq.h>
+
+            int conftest_blk_rq_map_sg_has_no_queue_arg(struct request *rq,
+                                                        struct scatterlist *sg) {
+                return blk_rq_map_sg(rq, sg);
+            }"
+
+            compile_check_conftest "$CODE" "NV_BLK_RQ_MAP_SG_HAS_NO_QUEUE_ARG" "" "types"
         ;;
 
         bus_type_struct_match_has_const_drv_arg)
@@ -6763,6 +6860,39 @@ compile_test() {
             compile_check_conftest "$CODE" "NV_DEFINE_SEMAPHORE_HAS_NUMBER_ARG" "" "types"
         ;;
 
+        devfreq_dev_profile_has_is_cooling_device)
+            #
+            # Determine if the 'devfreq_dev_profile' structure has 'is_cooling_device'.
+            #
+            # Commit 1224451bb6f93 ("PM / devfreq: Register devfreq as a cooling device
+            # on demand") updated the devfreq_dev_profile and add the is_cooling_device
+            # field in v5.12.
+            #
+            CODE="
+            #include <linux/devfreq.h>
+            bool conftest_devfreq_dev_profile_has_is_cooling_device(struct devfreq_dev_profile *profile) {
+                    return profile->is_cooling_device;
+            }"
+
+            compile_check_conftest "$CODE" "NV_DEVFREQ_DEV_PROFILE_HAS_IS_COOLING_DEVICE" "" "types"
+        ;;
+
+        devfreq_has_freq_table)
+            #
+            # Determine if the 'devfreq' structure has 'freq_table'.
+            #
+            # Commit b5d281f6c16d ("PM / devfreq: Rework freq_table to be local to devfreq
+            # struct") updated the devfreq and add the freq_table field in v5.19.
+            #
+            CODE="
+            #include <linux/devfreq.h>
+            unsigned long *conftest_devfreq_has_freq_table(struct devfreq *devfreq) {
+                    return devfreq->freq_table;
+            }"
+
+            compile_check_conftest "$CODE" "NV_DEVFREQ_HAS_FREQ_TABLE" "" "types"
+        ;;
+
         device_add_disk_has_int_return_type)
             #
             # Determine if the function device_add_disk() returns an integer.
@@ -6800,6 +6930,36 @@ compile_test() {
             }"
 
             compile_check_conftest "$CODE" "NV_PWM_CHIP_STRUCT_HAS_STRUCT_DEVICE" "" "types"
+        ;;
+
+        devm_pm_domain_attach_list)
+            #
+            # Determine whether devm_pm_domain_attach_list is present.
+            #
+            CODE="
+            #include <linux/pm_domain.h>
+            void conftest_devm_pm_domain_attach_list(void) {
+                devm_pm_domain_attach_list();
+            }"
+
+            compile_check_conftest "$CODE" "NV_DEVM_PM_DOMAIN_ATTACH_LIST_PRESENT" "" "functions"
+        ;;
+
+        devm_spi_alloc_host)
+            #
+            # Determine whether devm_spi_alloc_host() is present.
+            #
+            # Commit b8d3b056a78d ("spi: introduce new helpers with using modern
+            # naming") added devm_spi_alloc_host() in Linux v6.2.
+            #
+            CODE="
+            #undef CONFIG_ACPI
+            #include <linux/spi/spi.h>
+            void conftest_devm_spi_alloc_host(void) {
+                devm_spi_alloc_host();
+            }"
+
+            compile_check_conftest "$CODE" "NV_DEVM_SPI_ALLOC_HOST_PRESENT" "" "functions"
         ;;
 
         devm_tegra_core_dev_init_opp_table_common)
@@ -6923,6 +7083,62 @@ compile_test() {
             compile_check_conftest "$CODE" "NV_DRM_DEBUGFS_REMOVE_FILES_HAS_ROOT_ARG" "" "types"
         ;;
 
+        drm_driver_has_fbdev_probe)
+            #
+            # Determine if the 'drm_driver' structure has an 'fbdev_probe'
+            # function pointer.
+            #
+            # In Linux v6.13, commit 5d08c44e47b9 ("drm/fbdev: Add
+            # memory-agnostic fbdev client") added an 'fbdev_probe' callback
+            # to the drm_driver structure.
+            #
+            CODE="
+            #include <drm/drm_drv.h>
+
+            int conftest_drm_driver_has_fbdev_probe(void) {
+                return offsetof(struct drm_driver, fbdev_probe);
+            }"
+
+            compile_check_conftest "$CODE" "NV_DRM_DRIVER_HAS_FBDEV_PROBE" "" "types"
+        ;;
+
+        drm_connector_helper_funcs_struct_mode_valid_has_const_arg)
+            #
+            # Determine if the 'mode_valid' function pointer of the
+            # drm_connector_helper_funcs structure has a const mode argument.
+            #
+            # In Linux v6.15, commit 26d6fd81916e ("drm/connector: make
+            # mode_valid take a const struct drm_display_mode") updated the
+            # 'mode_valid' function pointer of the drm_connector_helper_funcs
+            # structure to make the mode argument const.
+            #
+            CODE="
+            #include <drm/drm_modeset_helper_vtables.h>
+            void conftest(struct drm_connector_helper_funcs *f) {
+                    enum drm_mode_status (*fn)(struct drm_connector *connector,
+                                               const struct drm_display_mode *mode) = f->mode_valid;
+            }"
+
+            compile_check_conftest "$CODE" "NV_DRM_CONNECTOR_HELPER_FUNCS_STRUCT_MODE_VALID_HAS_CONST_ARG" "" "types"
+        ;;
+
+        drm_driver_struct_has_date)
+            #
+            # Determine if the 'drm_driver' structure has a 'date' field.
+            #
+            # Commit cb2e1c2136f7 ("drm: remove driver date from struct drm_driver and all
+            # drivers") removed the 'date' field from the 'drm_driver' structure in Linux
+            # v6.14.
+            #
+            CODE="
+            #include <drm/drm_drv.h>
+            int conftest_drm_driver_struct_has_date(void) {
+                return offsetof(struct drm_driver, date);
+            }"
+
+            compile_check_conftest "$CODE" "NV_DRM_DRIVER_STRUCT_HAS_DATE" "" "types"
+        ;;
+
         drm_driver_struct_has_irq_enabled_arg)
             #
             # Determine if the 'drm_driver' structure
@@ -7000,6 +7216,25 @@ compile_test() {
             compile_check_conftest "$CODE" "NV_DRM_FB_HELPER_STRUCT_HAS_INFO_ARG" "" "types"
         ;;
 
+        drm_fb_helper_unprepare)
+            #
+            # Determine if function drm_fb_helper_unprepare is present.
+            #
+            # Commit 4825797c36da ("drm/fb-helper: Introduce drm_fb_helper_unprepare()")
+            # added the function drm_fb_helper_unprepare() in Linux v6.2.
+            #
+            CODE="
+            #undef CONFIG_ACPI
+            #include <drm/drm_fb_helper.h>
+            void conftest_drm_fb_helper_unprepare(void)
+            {
+                    drm_fb_helper_unprepare();
+            }
+            "
+
+            compile_check_conftest "$CODE" "NV_DRM_FB_HELPER_UNPREPARE_PRESENT" "" "functions"
+        ;;
+
         drm_fb_helper_unregister_info)
             #
             # Determine if function drm_fb_helper_unregister_info is present.
@@ -7035,6 +7270,25 @@ compile_test() {
             }"
 
             compile_check_conftest "$CODE" "NV_DRM_MODE_CONFIG_STRUCT_HAS_FB_BASE_ARG" "" "types"
+        ;;
+
+        drm_plane_helper_funcs_struct_atomic_async_check_has_bool_arg)
+            #
+            # Determine if the 'atomic_async_check' function pointer has a bool argument.
+            #
+            # In Linux v6.15, commit fd40a63c63a1 ("drm/atomic: Let drivers decide
+            # which planes to async flip") updated the 'atomic_async_check' function
+            # pointer of the drm_plane_helper_funcs structure adding a boolean
+            # argument.
+            #
+            CODE="
+            #include <drm/drm_modeset_helper_vtables.h>
+            void conftest(struct drm_plane_helper_funcs *f) {
+                    int (*fn)(struct drm_plane *plane,
+                              struct drm_atomic_state *state, bool flip) = f->atomic_async_check;
+            }"
+
+            compile_check_conftest "$CODE" "NV_DRM_PLANE_HELPER_FUNCS_STRUCT_ATOMIC_ASYNC_CHECK_HAS_BOOL_ARG" "" "types"
         ;;
 
         drm_scdc_get_set_has_struct_drm_connector_arg)
@@ -7164,6 +7418,40 @@ compile_test() {
                     "NV_ETHTOOL_OPS_GET_SET_RXFH_HAS_RXFH_PARAM_ARGS" "" "types"
         ;;
 
+        fd_empty)
+            #
+            # Determine if macro fd_empty() is present.
+            #
+            # Added by commit 88a2f6468d01 ("struct fd: representation change")
+            # in Linux v6.12.
+            #
+            CODE="
+            #include <linux/file.h>
+            void conftest(void)
+            {
+                fd_empty();
+            }"
+
+            compile_check_conftest "$CODE" "NV_FD_EMPTY_PRESENT" "" "functions"
+        ;;
+
+        fd_file)
+            #
+            # Determine if macro fd_file() is present.
+            #
+            # Added by commit 88a2f6468d01 ("struct fd: representation change")
+            # in Linux v6.12.
+            #
+            CODE="
+            #include <linux/file.h>
+            void conftest(void)
+            {
+                fd_file();
+            }"
+
+            compile_check_conftest "$CODE" "NV_FD_FILE_PRESENT" "" "functions"
+        ;;
+
         folio_entire_mapcount)
             #
             # Determine if function folio_entire_mapcount() is present.
@@ -7181,6 +7469,24 @@ compile_test() {
 
             compile_check_conftest "$CODE" "NV_FOLIO_ENTIRE_MAPCOUNT_PRESENT" "" "functions"
         ;;
+
+        fop_unsigned_offset)
+            #
+            # Determine if definition FOP_UNSIGNED_OFFSET is present.
+            #
+            # Commit 641bb4394f40 ("fs: move FMODE_UNSIGNED_OFFSET to fop_flags")
+            # added the definition FOP_UNSIGNED_OFFSET in Linux v6.12.
+            #
+            CODE="
+            #include <linux/fs.h>
+            int conftest(void)
+            {
+                return FOP_UNSIGNED_OFFSET;
+            }"
+
+            compile_check_conftest "$CODE" "NV_FOP_UNSIGNED_OFFSET_PRESENT" "" "types"
+        ;;
+
 
         genpd_xlate_t_has_const_of_phandle_args)
             #
@@ -7267,6 +7573,22 @@ compile_test() {
             compile_check_conftest "$CODE" "NV_GPIO_DEVICE_GET_CHIP_PRESENT" "" "functions"
         ;;
 
+        hrtimer_setup)
+            #
+            # Determine if the function hrtimer_setup() is present.
+            #
+            # This change was made in Linux v6.13 by commit 908a1d775422
+            # ("hrtimers: Introduce hrtimer_setup() to replace hrtimer_init()").
+            #
+            CODE="
+            #include <linux/hrtimer.h>
+            void conftest_hrtimer_setup(void) {
+                hrtimer_setup();
+            }"
+
+            compile_check_conftest "$CODE" "NV_HRTIMER_SETUP_PRESENT" "" "functions"
+        ;;
+
         netif_set_tso_max_size)
             #
             # Determine if netif_set_tso_max_size() function is present
@@ -7302,6 +7624,23 @@ compile_test() {
             compile_check_conftest "$CODE" "NV_NETIF_NAPI_ADD_WEIGHT_PRESENT" "" "functions"
         ;;
 
+        iommu_paging_domain_alloc)
+            #
+            # Determine if iommu_paging_domain_alloc() function is present
+            #
+            # Added by commit a27bf2743cb8 ("iommu: Add iommu_paging_domain_alloc()
+            # interface") in Linux v6.11.
+            #
+            CODE="
+            #include <linux/iommu.h>
+            void conftest_iommu_paging_domain_alloc(void)
+            {
+                    iommu_paging_domain_alloc();
+            }
+            "
+            compile_check_conftest "$CODE" "NV_IOMMU_PAGING_DOMAIN_ALLOC_PRESENT" "" "functions"
+        ;;
+
         iommu_map_has_gfp_arg)
             #
             # Determine if iommu_map() has 'gfp' argument.
@@ -7324,6 +7663,24 @@ compile_test() {
             compile_check_conftest "$CODE" "NV_IOMMU_MAP_HAS_GFP_ARG" "" "types"
         ;;
 
+        ioremap_prot_has_pgprot_t_arg)
+            #
+            # Determine if pgprot_t is passed to ioremap_prot()
+            #
+            # In Linux v6.15, commit 86758b504864 ("mm/ioremap: pass pgprot_t to
+            # ioremap_prot() instead of unsigned long") updated ioremap_prot() to
+            # pass pgprot_t.
+            #
+            CODE="
+            #include <linux/io.h>
+            void conftest_ioremap_prot_has_pgprot_t_arg(phys_addr_t phys_addr,
+                                                        size_t size, pgprot_t prot) {
+                ioremap_prot(phys_addr, size, prot);
+            }"
+
+            compile_check_conftest "$CODE" "NV_IOREMAP_PROT_HAS_PGPROT_T_ARG" "" "types" $1
+        ;;
+
         iio_dev_opaque_has_mlock)
             #
             # Determine if the 'iio_dev_opaque' structure has 'mlock' field.
@@ -7341,6 +7698,22 @@ compile_test() {
             }"
 
             compile_check_conftest "$CODE" "NV_IIO_DEV_OPAQUE_HAS_LOCK" "" "types"
+        ;;
+
+        irq_get_nr_irqs)
+            #
+            # Determine if the function irq_get_nr_irqs() is present.
+            #
+            # Commit 5280a14a6079 ("genirq: Introduce irq_get_nr_irqs() and
+            # irq_set_nr_irqs()") added irq_get_nr_irqs() in Linux v6.13.
+            #
+            CODE="
+            #include <linux/irqnr.h>
+            void conftest_irq_get_nr_irqs(void) {
+                irq_get_nr_irqs();
+            }"
+
+            compile_check_conftest "$CODE" "NV_IRQ_GET_NR_IRQS_PRESENT" "" "functions"
         ;;
 
         kthread_complete_and_exit)
@@ -7393,6 +7766,60 @@ compile_test() {
             }"
 
             compile_check_conftest "$CODE" "NV_MII_BUS_STRUCT_HAS_WRITE_C45" "" "types"
+        ;;
+
+        mm_struct_struct_has_percpu_counter_rss_stat)
+            #
+            # Determine if the 'rss_stat' member of the 'mm_struct' structure is
+            # defined with 'percpu_counter'.
+            #
+            # This change was made in Linux v6.2 by commit f1a7941243c1 ("mm:
+            # convert mm's rss stats into percpu_counter2").
+            #
+            CODE="
+            #include <linux/mm_types.h>
+            void conftest_mm_struct_struct_has_percpu_counter_rss_stat(struct mm_struct *mm) {
+                percpu_counter_add(&mm->rss_stat[0], 0);
+            }"
+
+            compile_check_conftest "$CODE" "NV_MM_STRUCT_STRUCT_HAS_PERCPU_COUNTER_RSS_STAT" "" "types"
+        ;;
+
+        module_import_ns_calls_stringify)
+           #
+           # Determine if the MODULE_IMPORT_NS macro takes a string literal as
+           # an argument.
+           #
+           # Commit cdd30ebb1b9f ("module: Convert symbol namespace to string
+           # literal") updated the symbol namespace macros to take a string
+           # literal as an argument and removes the call to __stringify from
+           # within the macro for Linux v6.13.
+           #
+           CODE="
+           #include <linux/module.h>
+           MODULE_IMPORT_NS(DMA_BUF);
+           "
+
+           compile_check_conftest "$CODE" "NV_MODULE_IMPORT_NS_CALLS_STRINGIFY" "" "types"
+        ;;
+
+        no_llseek)
+            #
+            # Determine if the function no_llseek() is present.
+            #
+            # Commit cb787f4ac0c2 ("[tree-wide] finally take no_llseek out")
+            # removed the definition for no_llseek() in Linux v6.12-rc1. Note
+            # that commit 868941b14441 ("fs: remove no_llseek") in Linux v6.0
+            # had previously redefined no_llseek as NULL in preparation for
+            # its removal.
+            #
+            CODE="
+            #include <linux/fs.h>
+            void conftest_no_llseek(void) {
+                no_llseek();
+            }"
+
+            compile_check_conftest "$CODE" "NV_NO_LLSEEK_PRESENT" "" "functions"
         ;;
 
         of_property_for_each_u32_removed_internal_args)
@@ -7552,6 +7979,74 @@ compile_test() {
             }"
 
             compile_check_conftest "$CODE" "NV_PCI_EPC_EVENT_OPS_STRUCT_HAS_CORE_DEINIT" "" "types"
+        ;;
+
+        pci_epc_event_ops_struct_has_epc_deinit)
+            #
+            # Determine if the pci_epc_event_ops struct has the epc_deinit function.
+            #
+            # Commit 473b2cf9c4d1 ("PCI: endpoint: Introduce 'epc_deinit' event and
+            # notify the EPF drivers) added 'epc_deinit' callback in Linux v6.11.
+            #
+            CODE="
+            #include <linux/pci-epf.h>
+            int conftest_pci_epc_event_ops_struct_has_epc_deinit(void) {
+                return offsetof(struct pci_epc_event_ops, epc_deinit);
+            }"
+
+            compile_check_conftest "$CODE" "NV_PCI_EPC_EVENT_OPS_STRUCT_HAS_EPC_DEINIT" "" "types"
+        ;;
+
+        pci_epc_event_ops_struct_has_epc_init)
+            #
+            # Determine if the pci_epc_event_ops struct has the epc_init function.
+            #
+            # Commit 4edd7dc82bd6 ("PCI: endpoint: Rename core_init() callback in
+            # 'struct pci_epc_event_ops' to epc_init()") renamed core_init()
+            # in Linux v6.11.
+            #
+            CODE="
+            #include <linux/pci-epf.h>
+            int conftest_pci_epc_event_ops_struct_has_epc_init(void) {
+                return offsetof(struct pci_epc_event_ops, epc_init);
+            }"
+
+            compile_check_conftest "$CODE" "NV_PCI_EPC_EVENT_OPS_STRUCT_HAS_EPC_INIT" "" "types"
+        ;;
+
+        phy_loopback_has_speed_arg)
+            #
+            # Determine if phy_loopback() has 'speed' argument.
+            #
+            # Commit 0d60fd50328a ("net: phy: Support speed selection for PHY
+            # loopback") add a 'speed' argument to phy_loopback() in Linux
+            # v6.15.
+            #
+            CODE="
+            #include <linux/phy.h>
+            int conftest_phy_loopback_has_speed_arg(struct phy_device *phydev) {
+                return phy_loopback(phydev, true, 0);
+            }"
+
+            compile_check_conftest "$CODE" "NV_PHY_LOOPBACK_HAS_SPEED_ARG" "" "types"
+        ;;
+
+        platform_driver_struct_remove_returns_void)
+            #
+            # Determine if the 'platform_driver' structure 'remove' function
+            # pointer returns void.
+            #
+            # Commit 0edb555a65d1 ("platform: Make platform_driver::remove()
+            # return void") update the platform_driver structure 'remove'
+            # callback to return void instead of int.
+            #
+            CODE="
+            #include <linux/platform_device.h>
+            void conftest_platform_driver_struct_remove_returns_void(struct platform_driver *driver) {
+                void (*fn)(struct platform_device *) = driver->remove;
+            }"
+
+            compile_check_conftest "$CODE" "NV_PLATFORM_DRIVER_STRUCT_REMOVE_RETURNS_VOID" "" "types"
         ;;
 
         register_shrinker_has_fmt_arg)
@@ -7866,6 +8361,23 @@ compile_test() {
             compile_check_conftest "$CODE" "NV_THERMAL_ZONE_DEVICE_PRIV_PRESENT" "" "functions"
         ;;
 
+        thermal_zone_for_each_trip)
+            #
+            # Determine if the function thermal_zone_for_each_trip is present.
+            #
+            # thermal_zone_for_each_trip was added in commit a56cc0a833852
+            # ("thermal: core: Add function to walk trips under zone lock")
+            # in v6.6-rc3 (2023-10-03)
+            #
+            CODE="
+            #include <linux/thermal.h>
+            int conftest_thermal_zone_for_each_trip(void) {
+				return thermal_zone_for_each_trip();
+            }"
+
+            compile_check_conftest "$CODE" "NV_THERMAL_ZONE_FOR_EACH_TRIP_PRESENT" "" "functions"
+        ;;
+
         tegra_dev_iommu_get_stream_id)
             #
             # Determine if the function tegra_dev_iommu_get_stream_id is present.
@@ -7881,6 +8393,22 @@ compile_test() {
             }"
 
             compile_check_conftest "$CODE" "NV_TEGRA_DEV_IOMMU_GET_STREAM_ID_PRESENT" "" "functions"
+        ;;
+
+        timer_delete)
+            #
+            # Determine if the function timer_delete() is present.
+            #
+            # This change was made in Linux v6.15 by commit 8fa7292fee5c
+            # ("treewide: Switch/rename to timer_delete[_sync]()").
+            #
+            CODE="
+            #include <linux/timer.h>
+            int conftest_timer_delete(void) {
+                return timer_delete();
+            }"
+
+            compile_check_conftest "$CODE" "NV_TIMER_DELETE_PRESENT" "" "functions"
         ;;
 
         tty_operations_struct_send_xchar_has_u8_arg)
@@ -7940,6 +8468,49 @@ compile_test() {
             };"
 
             compile_check_conftest "$CODE" "NV_TTY_OPERATIONS_STRUCT_SET_TERMIOS_HAS_CONST_KTERMIOS_ARG" "" "types"
+        ;;
+
+        ufs_hba_variant_ops_has_set_dma_mask)
+            #
+            # Determine if the 'struct ufs_hba_variant_ops' has a 'set_dma_mask'
+            # function pointer.
+            #
+            # In Linux v6.13, commit 78bc671bd150 ("scsi: ufs: core: Make DMA
+            # mask configuration more flexible)" add a 'set_dma_mask' function
+            # pointer to the 'ufs_hba_variant_ops' structure.
+            #
+            CODE="
+            #include <ufs/ufshcd.h>
+	    int conftest_ufs_hba_variant_ops_has_set_dma_mask(void) {
+                return offsetof(struct ufs_hba_variant_ops, set_dma_mask);
+            }"
+
+            compile_check_conftest "$CODE" "NV_UFS_HBA_VARIANT_OPS_HAS_SET_DMA_MASK" "" "types"
+        ;;
+
+        ufs_hba_variant_ops_pwr_change_notify_has_const_arg)
+            #
+            # Determine if the 3rd argument of pwr_change_notify() is const.
+            #
+            # In Linux v6.15, commit 3bcd901e4257 ("scsi: ufs: Constify the third
+            # pwr_change_notify() argument") updated the pwr_change_notify()
+            # function making the 3rd argument of type const.
+            #
+            CODE="
+            #if defined(NV_UFS_UFSHCD_H_PRESENT)
+            #include <ufs/ufshcd.h>
+            #else
+            #include \"../drivers/scsi/ufs/ufshcd.h\"
+            #endif
+            void conftest(struct ufs_hba_variant_ops *ops) {
+                    int (*fn)(struct ufs_hba *hba,
+                              enum ufs_notify_change_status status,
+                              const struct ufs_pa_layer_attr *desired_pwr_mode,
+                              struct ufs_pa_layer_attr *final_params) = ops->pwr_change_notify;
+            }"
+
+            compile_check_conftest "$CODE" \
+                "NV_UFS_HBA_VARIANT_OPS_PWR_CHANGE_NOTIFY_HAS_CONST_ARG" "" "types"
         ;;
 
         ufs_hba_variant_ops_suspend_has_status_arg)
@@ -8082,6 +8653,25 @@ compile_test() {
             compile_check_conftest "$CODE" "NV_V4L2_ASYNC_NF_ADD_SUBDEV_PRESENT" "" "functions"
         ;;
 
+        v4l2_fwnode_endpoint_struct_has_v4l2_mbus_config_mipi_csi2)
+            #
+            # Determine if struct 'v4l2_fwnode_endpoint' has a
+            # 'v4l2_mbus_config_mipi_csi2' member.
+            #
+            # Commit 94d964e58ad6 ("media: v4l2-fwnode: Move bus config
+            # structure to v4l2_mediabus.h") added this in Linux v5.18.
+            #
+            CODE="
+            #define _LINUX_EFI_H
+            #include <media/v4l2-fwnode.h>
+            struct v4l2_mbus_config_mipi_csi2 *conftest(struct v4l2_fwnode_endpoint *endpoint) {
+		return &endpoint->bus.mipi_csi2;
+            }
+            "
+            compile_check_conftest "$CODE" \
+                    "NV_V4L2_FWNODE_ENDPOINT_STRUCT_HAS_V4L2_MBUS_CONFIG_MIPI_CSI2" "" "types"
+        ;;
+
         v4l2_subdev_pad_ops_struct_has_get_set_frame_interval)
             #
             # Determine if struct v4l2_subdev_pad_ops has the 'get_frame_interval'
@@ -8124,23 +8714,6 @@ compile_test() {
             "
             compile_check_conftest "$CODE" \
                     "NV_V4L2_SUBDEV_PAD_OPS_STRUCT_HAS_DV_TIMINGS" "" "types"
-        ;;
-        crypto_engine_ctx_struct_removed_test)
-            #
-            # Determine if struct 'crypto_engine_ctx' is removed in linux kernel.
-            #
-            # Commit 5ce0bc68e0ee ("crypto: engine - Remove crypto_engine_ctx")
-            # Linux v6.6 removed struct crypto_engine_ctx
-            #
-            CODE="
-            #include <crypto/engine.h>
-            void conftest_crypto_engine_ctx_struct_removed_test(void) {
-                    struct crypto_engine_ctx *ptr = NULL;
-                    struct crypto_engine_ctx enginectx;
-                    ptr = &enginectx;
-            }"
-
-            compile_check_conftest "$CODE" "NV_CONFTEST_REMOVE_STRUCT_CRYPTO_ENGINE_CTX" "" "functions"
         ;;
 
         # When adding a new conftest entry, please use the correct format for

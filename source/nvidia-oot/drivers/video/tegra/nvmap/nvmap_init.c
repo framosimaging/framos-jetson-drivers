@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-only
-/*
- * Copyright (c) 2014-2024, NVIDIA CORPORATION. All rights reserved.
- */
+// SPDX-FileCopyrightText: Copyright (c) 2014-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 
 #define pr_fmt(fmt) "%s: " fmt, __func__
+
+#include <nvidia/conftest.h>
 
 #include <linux/module.h>
 #include <linux/of.h>
@@ -1009,9 +1009,21 @@ static bool nvmap_is_carveout_node_present(void)
 }
 #endif /* NVMAP_LOADABLE_MODULE */
 
+#if defined(NV_PLATFORM_DRIVER_STRUCT_REMOVE_RETURNS_VOID) /* Linux v6.11 */
+static void nvmap_remove_wrapper(struct platform_device *pdev)
+{
+	nvmap_remove(pdev);
+}
+#else
+static int nvmap_remove_wrapper(struct platform_device *pdev)
+{
+	return nvmap_remove(pdev);
+}
+#endif
+
 static struct platform_driver __refdata nvmap_driver = {
 	.probe		= nvmap_probe,
-	.remove		= nvmap_remove,
+	.remove	= nvmap_remove_wrapper,
 
 	.driver = {
 		.name	= "tegra-carveouts",
@@ -1056,7 +1068,11 @@ static void __exit nvmap_exit_driver(void)
 	nvmap_dev = NULL;
 }
 module_exit(nvmap_exit_driver);
+#if defined(NV_MODULE_IMPORT_NS_CALLS_STRINGIFY)
 MODULE_IMPORT_NS(DMA_BUF);
+#else
+MODULE_IMPORT_NS("DMA_BUF");
+#endif
 MODULE_DESCRIPTION("NvMap: Nvidia Tegra Memory Management Driver");
 MODULE_AUTHOR("Puneet Saxena <puneets@nvidia.com>");
 MODULE_LICENSE("GPL v2");

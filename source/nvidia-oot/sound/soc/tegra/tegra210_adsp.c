@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
+ * SPDX-FileCopyrightText: Copyright (c) 2014-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *
  * tegra210_adsp.c - Tegra ADSP audio driver
  *
  * Author: Sumit Bhattacharya <sumitb@nvidia.com>
- * Copyright (c) 2014-2022 NVIDIA CORPORATION.  All rights reserved.
- *
  */
+
+#include <nvidia/conftest.h>
 
 #include <linux/module.h>
 #include <linux/clk.h>
@@ -4806,6 +4808,18 @@ static const struct dev_pm_ops tegra210_adsp_pm_ops = {
 
 };
 
+#if defined(NV_PLATFORM_DRIVER_STRUCT_REMOVE_RETURNS_VOID) /* Linux v6.11 */
+static void tegra210_adsp_audio_remove_wrapper(struct platform_device *pdev)
+{
+	tegra210_adsp_audio_remove(pdev);
+}
+#else
+static int tegra210_adsp_audio_remove_wrapper(struct platform_device *pdev)
+{
+	return tegra210_adsp_audio_remove(pdev);
+}
+#endif
+
 static struct platform_driver tegra210_adsp_audio_driver = {
 	.driver = {
 		.name = DRV_NAME,
@@ -4815,7 +4829,7 @@ static struct platform_driver tegra210_adsp_audio_driver = {
 		.suppress_bind_attrs = true,
 	},
 	.probe = tegra210_adsp_audio_probe,
-	.remove = tegra210_adsp_audio_remove,
+	.remove = tegra210_adsp_audio_remove_wrapper,
 	.shutdown = tegra210_adsp_audio_platform_shutdown,
 };
 module_platform_driver(tegra210_adsp_audio_driver);

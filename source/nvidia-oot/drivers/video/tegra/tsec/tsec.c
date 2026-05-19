@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022-2024 NVIDIA CORPORATION & AFFILIATES.  All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  * Tegra TSEC Module Support
  */
+
+#include <nvidia/conftest.h>
 
 #include "tsec_linux.h"
 #include "tsec.h"
@@ -19,6 +21,8 @@ static struct tsec_device_data t23x_tsec_data = {
 	.riscv_desc_bin		= "tegra23x/nvhost_tsec_desc.fw",
 	.riscv_image_bin	= "tegra23x/nvhost_tsec_riscv.fw",
 };
+MODULE_FIRMWARE("tegra23x/nvhost_tsec_riscv.fw");
+MODULE_FIRMWARE("tegra23x/nvhost_tsec_desc.fw");
 
 static struct tsec_device_data t239_tsec_data = {
 	.rate = {192000000, 0, 204000000},
@@ -257,6 +261,19 @@ int tsec_poweron(struct device *dev)
 	}
 	tsec_clks_enabled = 1;
 
+	/**
+	 * Check if the tsec fw has already initialized.
+	 * This can happen if the tsec kmd is removed and inserted again.
+	 * In that case we need to take care that the initialization sequence
+	 * is not started again from kmd to avoid any false kernel side
+	 * warnings.
+	 */
+	if (tsec_readl(pdata, tsec_falcon_mailbox0_r()) == TSEC_RISCV_INIT_SUCCESS) {
+		dev_dbg(dev, "TSEC FW already initialized, skipping re-initialization\n");
+		pdata->power_on = true;
+		goto out;
+	}
+
 	tsec_deassert_reset(pdata);
 	tsec_set_cg_regs(pdata);
 	tsec_set_streamid_regs(dev, pdata);
@@ -460,9 +477,21 @@ static int tsec_remove(struct platform_device *dev)
 	return tsec_poweroff(&dev->dev);
 }
 
+#if defined(NV_PLATFORM_DRIVER_STRUCT_REMOVE_RETURNS_VOID) /* Linux v6.11 */
+static void tsec_remove_wrapper(struct platform_device *pdev)
+{
+	tsec_remove(pdev);
+}
+#else
+static int tsec_remove_wrapper(struct platform_device *pdev)
+{
+	return tsec_remove(pdev);
+}
+#endif
+
 static struct platform_driver tsec_driver = {
 	.probe = tsec_probe,
-	.remove = tsec_remove,
+	.remove = tsec_remove_wrapper,
 	.driver = {
 		.owner = THIS_MODULE,
 		.name = "tsec",

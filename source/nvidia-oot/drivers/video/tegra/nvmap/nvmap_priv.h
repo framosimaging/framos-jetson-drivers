@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 /*
- * Copyright (c) 2009-2023, NVIDIA CORPORATION. All rights reserved.
+ * Copyright (c) 2009-2025, NVIDIA CORPORATION. All rights reserved.
  *
  * GPU memory management driver for Tegra
  */
@@ -93,7 +93,7 @@ do {                                                    \
 	}                                               \
 } while (0)
 
-#define GFP_NVMAP       (GFP_KERNEL | __GFP_HIGHMEM | __GFP_NOWARN)
+#define GFP_NVMAP       (GFP_KERNEL | __GFP_HIGHMEM | __GFP_NOWARN | __GFP_ACCOUNT | __GFP_NORETRY)
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0)
 
@@ -271,6 +271,7 @@ struct nvmap_handle {
 	wait_queue_head_t waitq;
 	int numa_id;
 	u64 serial_id;
+	u64 anon_count;
 };
 
 struct nvmap_handle_info {
@@ -295,6 +296,8 @@ struct nvmap_handle_ref {
 	struct rb_node	node;
 	atomic_t	dupes;	/* number of times to free on file close */
 	bool is_ro;
+	struct mm_struct *mm;
+	u64 anon_count;
 };
 
 #if defined(NVMAP_CONFIG_PAGE_POOLS)
@@ -377,6 +380,9 @@ struct nvmap_vma_priv {
 	struct nvmap_handle *handle;
 	size_t		offs;
 	atomic_t	count;	/* number of processes cloning the VMA */
+	u64 map_rss_count;
+	struct mm_struct *mm;
+	struct mutex vma_lock;
 };
 
 struct nvmap_device {
@@ -913,6 +919,16 @@ static inline struct dma_buf *nvmap_id_array_id_release(struct xarray *xarr, u32
 	return NULL;
 }
 #endif
+
+static inline void nvmap_add_mm_counter(struct mm_struct *mm, int member, long value)
+{
+#if defined(NV_MM_STRUCT_STRUCT_HAS_PERCPU_COUNTER_RSS_STAT) /* Linux v6.2 */
+	percpu_counter_add(&mm->rss_stat[member], value);
+#else
+	atomic_long_add_return(value, &mm->rss_stat.count[member]);
+#endif
+}
+
 void *nvmap_dmabuf_get_drv_data(struct dma_buf *dmabuf,
 		struct device *dev);
 bool is_nvmap_memory_available(size_t size, uint32_t heap);
@@ -933,7 +949,8 @@ void nvmap_dma_mark_declared_memory_unoccupied(struct device *dev,
 					 dma_addr_t device_addr, size_t size);
 
 extern void __dma_flush_area(const void *cpu_va, size_t size);
-extern void __dma_map_area(const void *cpu_va, size_t size, int dir);
+void __dma_map_area_from_device(const void *cpu_va, size_t size);
+void __dma_map_area_to_device(const void *cpu_va, size_t size);
 
 int nvmap_assign_pages_to_handle(struct nvmap_client *client,
 		struct nvmap_handle **hs, struct nvmap_handle *h,

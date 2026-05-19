@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-only
-/* Copyright (c) 2019-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved */
+/* Copyright (c) 2019-2025, NVIDIA CORPORATION & AFFILIATES. All rights reserved */
 
 #include "ether_linux.h"
 #include "macsec.h"
@@ -2543,8 +2543,7 @@ static DEVICE_ATTR(nvgro_dump, 0644,
 		   ether_nvgro_dump_show, NULL);
 #endif
 
-#ifdef HSI_SUPPORT
-#if (IS_ENABLED(CONFIG_TEGRA_HSIERRRPTINJ))
+#if defined HSI_SUPPORT && defined(NV_VLTEST_BUILD) && (IS_ENABLED(CONFIG_TEGRA_HSIERRRPTINJ))
 static int hsi_inject_err_fsi(unsigned int inst_id,
 			      struct epl_error_report_frame error_report,
 			      void *data)
@@ -2562,7 +2561,6 @@ static int hsi_inject_err_fsi(unsigned int inst_id,
 
 	return ret;
 }
-#endif
 
 /**
  * @brief Shows HSI feature enabled status
@@ -2611,10 +2609,8 @@ static ssize_t hsi_enable_store(struct device *dev,
 	struct osi_core_priv_data *osi_core = pdata->osi_core;
 	struct osi_ioctl ioctl_data = {};
 	int ret = 0;
-#if (IS_ENABLED(CONFIG_TEGRA_HSIERRRPTINJ))
 	u32 inst_id = osi_core->instance_id;
 	u32 ip_type[2] = {IP_EQOS, IP_MGBE};
-#endif
 
 	if (osi_core->use_virtualization == OSI_ENABLE) {
 		dev_err(pdata->dev, "Not supported with Ethernet virtualization enabled\n");
@@ -2636,7 +2632,6 @@ static ssize_t hsi_enable_store(struct device *dev,
 		} else {
 			osi_core->hsi.enabled = OSI_ENABLE;
 			dev_info(pdata->dev, "HSI Enabled\n");
-#if (IS_ENABLED(CONFIG_TEGRA_HSIERRRPTINJ))
 			if (osi_core->instance_id == OSI_INSTANCE_ID_EQOS)
 				inst_id = 0;
 
@@ -2646,7 +2641,6 @@ static ssize_t hsi_enable_store(struct device *dev,
 				dev_err(pdata->dev, "Err inj callback registration failed: %d",
 					ret);
 			}
-#endif
 		}
 	} else if (strncmp(buf, "disable", 7) == OSI_NONE) {
 		ioctl_data.arg1_u32 = OSI_DISABLE;
@@ -2657,7 +2651,6 @@ static ssize_t hsi_enable_store(struct device *dev,
 		} else {
 			osi_core->hsi.enabled = OSI_DISABLE;
 			dev_info(pdata->dev, "HSI Disabled\n");
-#if (IS_ENABLED(CONFIG_TEGRA_HSIERRRPTINJ))
 			if (osi_core->instance_id == OSI_INSTANCE_ID_EQOS)
 				inst_id = 0;
 
@@ -2666,7 +2659,6 @@ static ssize_t hsi_enable_store(struct device *dev,
 				dev_err(pdata->dev, "Err inj callback deregistration failed: %d",
 					ret);
 			}
-#endif
 		}
 	} else {
 		dev_err(pdata->dev,
@@ -2728,10 +2720,37 @@ static struct attribute *ether_sysfs_attrs[] = {
 	&dev_attr_nvgro_stats.attr,
 	&dev_attr_nvgro_dump.attr,
 #endif
-#ifdef HSI_SUPPORT
+#if defined HSI_SUPPORT && defined(NV_VLTEST_BUILD) && (IS_ENABLED(CONFIG_TEGRA_HSIERRRPTINJ))
 	&dev_attr_hsi_enable.attr,
 #endif
 #endif /* OSI_STRIPPED_LIB */
+	NULL
+};
+
+/**
+ * @brief Attributes for nvethernet sysfs without MACSEC
+ */
+static struct attribute *ether_sysfs_attrs_without_macsec[] = {
+#ifndef OSI_STRIPPED_LIB
+#ifdef OSI_DEBUG
+	&dev_attr_desc_dump_enable.attr,
+#endif /* OSI_DEBUG */
+	&dev_attr_mac_loopback.attr,
+	&dev_attr_ptp_mode.attr,
+	&dev_attr_ptp_sync.attr,
+	&dev_attr_frp.attr,
+	&dev_attr_uphy_gbe_mode.attr,
+	&dev_attr_phy_iface_mode.attr,
+#ifdef ETHER_NVGRO
+	&dev_attr_nvgro_pkt_age_msec.attr,
+	&dev_attr_nvgro_timer_interval.attr,
+	&dev_attr_nvgro_stats.attr,
+	&dev_attr_nvgro_dump.attr,
+#endif
+#endif /* OSI_STRIPPED_LIB */
+#if defined HSI_SUPPORT && defined(NV_VLTEST_BUILD) && (IS_ENABLED(CONFIG_TEGRA_HSIERRRPTINJ))
+	&dev_attr_hsi_enable.attr,
+#endif
 	NULL
 };
 
@@ -2741,6 +2760,14 @@ static struct attribute *ether_sysfs_attrs[] = {
 static struct attribute_group ether_attribute_group = {
 	.name = "nvethernet",
 	.attrs = ether_sysfs_attrs,
+};
+
+/**
+ * @brief Ethernet sysfs attribute group without macsec
+ */
+static struct attribute_group ether_attribute_group_wo_macsec = {
+	.name = "nvethernet",
+	.attrs = ether_sysfs_attrs_without_macsec,
 };
 
 #ifndef OSI_STRIPPED_LIB
@@ -3331,7 +3358,10 @@ int ether_sysfs_register(struct ether_priv_data *pdata)
 #endif /* OSI_STRIPPED_LIB */
 
 	/* Create nvethernet sysfs group under /sys/devices/<ether_device>/ */
-	return sysfs_create_group(&dev->kobj, &ether_attribute_group);
+	if (pdata->macsec_pdata)
+		return sysfs_create_group(&dev->kobj, &ether_attribute_group);
+	else
+		return sysfs_create_group(&dev->kobj, &ether_attribute_group_wo_macsec);
 }
 
 void ether_sysfs_unregister(struct ether_priv_data *pdata)
@@ -3343,5 +3373,8 @@ void ether_sysfs_unregister(struct ether_priv_data *pdata)
 #endif
 #endif /* OSI_STRIPPED_LIB */
 	/* Remove nvethernet sysfs group under /sys/devices/<ether_device>/ */
-	sysfs_remove_group(&dev->kobj, &ether_attribute_group);
+	if (pdata->macsec_pdata)
+		sysfs_remove_group(&dev->kobj, &ether_attribute_group);
+	else
+		sysfs_remove_group(&dev->kobj, &ether_attribute_group_wo_macsec);
 }

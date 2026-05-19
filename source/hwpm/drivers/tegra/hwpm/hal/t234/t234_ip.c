@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 /*
- * Copyright (c) 2021-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -212,6 +212,7 @@ static int t234_hwpm_validate_emc_config(struct tegra_soc_hwpm *hwpm)
 	u32 emc_disable_fuse_val = 0U;
 	u32 emc_disable_fuse_val_mask = 0xFU;
 	u32 emc_element_floorsweep_mask = 0U;
+	u32 emc_disable_fuse_bit_idx = 0U;
 	u32 idx = 0U;
 	int err;
 
@@ -235,11 +236,11 @@ static int t234_hwpm_validate_emc_config(struct tegra_soc_hwpm *hwpm)
 	 * Convert floorsweep fuse value to available EMC elements.
 	 */
 	do {
-		if (emc_disable_fuse_val & 0x1U) {
-			emc_element_floorsweep_mask =
-				(emc_element_floorsweep_mask << 4U) | 0xFU;
+		if (!(emc_disable_fuse_val & (0x1U << emc_disable_fuse_bit_idx))) {
+			emc_element_floorsweep_mask |=
+				(0xFU << (emc_disable_fuse_bit_idx * 4U));
 		}
-		emc_disable_fuse_val = (emc_disable_fuse_val >> 1U);
+		emc_disable_fuse_bit_idx++;
 		emc_disable_fuse_val_mask = (emc_disable_fuse_val_mask >> 1U);
 	} while (emc_disable_fuse_val_mask != 0U);
 

@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: GPL-2.0-only
-// Copyright (c) 2015-2024 NVIDIA CORPORATION & AFFILIATES.  All rights reserved.
-
-#include <nvidia/conftest.h>
+// SPDX-FileCopyrightText: Copyright (c) 2015-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 
 #include <nvidia/conftest.h>
 
 #include <linux/clk.h>
 #include <linux/delay.h>
+#include <linux/dma-mapping.h>
 #include <linux/time.h>
 #include <linux/of.h>
 #include <linux/platform_device.h>
@@ -1159,10 +1158,17 @@ static void ufs_tegra_scramble_enable(struct ufs_hba *hba)
 	}
 }
 
+#if defined(NV_UFS_HBA_VARIANT_OPS_PWR_CHANGE_NOTIFY_HAS_CONST_ARG) /* Linux v6.15 */
+static int ufs_tegra_pwr_change_notify(struct ufs_hba *hba,
+		enum ufs_notify_change_status status,
+		const struct ufs_pa_layer_attr *dev_max_params,
+		struct ufs_pa_layer_attr *dev_req_params)
+#else
 static int ufs_tegra_pwr_change_notify(struct ufs_hba *hba,
 		enum ufs_notify_change_status status,
 		struct ufs_pa_layer_attr *dev_max_params,
 		struct ufs_pa_layer_attr *dev_req_params)
+#endif
 {
 	struct ufs_tegra_host *ufs_tegra = hba->priv;
 	u32 vs_save_config;
@@ -1430,6 +1436,7 @@ static int ufs_tegra_config_soc_data(struct ufs_tegra_host *ufs_tegra)
 	ufs_tegra->enable_scramble =
 		of_property_read_bool(np, "nvidia,enable-scramble");
 
+#if !defined(NV_UFS_HBA_VARIANT_OPS_HAS_SET_DMA_MASK) /* Linux v6.13 */
 	if (ufs_tegra->soc->chip_id >= TEGRA234) {
 #if defined(NV_UFSHCD_QUIRKS_ENUM_HAS_UFSHCD_QUIRK_BROKEN_64BIT_ADDRESS) /* Linux 6.0 */
 		ufs_tegra->hba->quirks |= UFSHCD_QUIRK_BROKEN_64BIT_ADDRESS;
@@ -1438,6 +1445,7 @@ static int ufs_tegra_config_soc_data(struct ufs_tegra_host *ufs_tegra)
 		return -ENOTSUPP;
 #endif
 	}
+#endif
 
 	return 0;
 }
@@ -1874,6 +1882,18 @@ static void ufs_tegra_exit(struct ufs_hba *hba)
 #endif
 }
 
+#if defined(NV_UFS_HBA_VARIANT_OPS_HAS_SET_DMA_MASK) /* Linux v6.13 */
+static int ufs_tegra_set_dma_mask(struct ufs_hba *hba)
+{
+	struct ufs_tegra_host *ufs_tegra = hba->priv;
+
+	if (ufs_tegra->soc->chip_id >= TEGRA234)
+		return dma_set_mask_and_coherent(hba->dev, DMA_BIT_MASK(32));
+
+	return 0;
+}
+#endif
+
 /**
  * struct ufs_hba_tegra_vops - UFS TEGRA specific variant operations
  *
@@ -1889,6 +1909,9 @@ struct ufs_hba_variant_ops ufs_hba_tegra_vops = {
 	.hce_enable_notify      = ufs_tegra_hce_enable_notify,
 	.link_startup_notify	= ufs_tegra_link_startup_notify,
 	.pwr_change_notify      = ufs_tegra_pwr_change_notify,
+#if defined(NV_UFS_HBA_VARIANT_OPS_HAS_SET_DMA_MASK) /* Linux v6.13 */
+	.set_dma_mask		= ufs_tegra_set_dma_mask,
+#endif
 };
 
 static int ufs_tegra_probe(struct platform_device *pdev)
@@ -1950,9 +1973,21 @@ static const struct dev_pm_ops ufs_tegra_pm_ops = {
 	SET_RUNTIME_PM_OPS(ufshcd_runtime_suspend, ufshcd_runtime_resume, NULL)
 };
 
+#if defined(NV_PLATFORM_DRIVER_STRUCT_REMOVE_RETURNS_VOID) /* Linux v6.11 */
+static void ufs_tegra_remove_wrapper(struct platform_device *pdev)
+{
+	ufs_tegra_remove(pdev);
+}
+#else
+static int ufs_tegra_remove_wrapper(struct platform_device *pdev)
+{
+	return ufs_tegra_remove(pdev);
+}
+#endif
+
 static struct platform_driver ufs_tegra_platform = {
 	.probe = ufs_tegra_probe,
-	.remove = ufs_tegra_remove,
+	.remove = ufs_tegra_remove_wrapper,
 	.driver = {
 		.name = "ufs_tegra",
 		.pm   = &ufs_tegra_pm_ops,

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-only
-// SPDX-FileCopyrightText: Copyright (C) 2023-2024 NVIDIA CORPORATION.  All rights reserved.
+// SPDX-FileCopyrightText: Copyright (c) 2023-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 
 #include <nvidia/conftest.h>
 
@@ -255,14 +255,14 @@ struct tegra_qspi {
 	dma_addr_t				tx_dma_phys;
 	struct dma_async_tx_descriptor		*tx_dma_desc;
 	const struct tegra_qspi_soc_data	*soc_data;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 16, 0)
+#if defined(CONFIG_TEGRA_PROD_NEXT_GEN)
 	struct tegra_prod_cfg_list *prod_list;
 #else
 	struct tegra_prod *prod_list;
 #endif
 };
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 16, 0)
+#if defined(CONFIG_TEGRA_PROD_NEXT_GEN)
 #define QSPI_PROD_FIELD(name, rindex, roffset, fname)  \
 {						\
 	.field_name = name,			\
@@ -967,7 +967,7 @@ static u32 tegra_qspi_setup_transfer_one(struct spi_device *spi, struct spi_tran
 	return command1;
 }
 
-#if LINUX_VERSION_CODE > KERNEL_VERSION(5, 16, 0)
+#if defined(CONFIG_TEGRA_PROD_NEXT_GEN)
 static void tegra_qspi_write_prod_settings(struct tegra_qspi *tqspi, const char *prod_name)
 {
 	struct tegra_prod_reg_info *reg_info;
@@ -991,7 +991,7 @@ static void tegra_qspi_write_prod_settings(struct tegra_qspi *tqspi, const char 
 
 static void tegra_qspi_set_gr_registers(struct tegra_qspi *tqspi)
 {
-#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 16, 0)
+#if !defined(CONFIG_TEGRA_PROD_NEXT_GEN)
 	int err;
 #endif
 
@@ -1001,7 +1001,7 @@ static void tegra_qspi_set_gr_registers(struct tegra_qspi *tqspi)
 	/* If available, initialise the config registers
 	 * for QSPI with the values mentioned in prod list.
 	 */
-#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 16, 0)
+#if !defined(CONFIG_TEGRA_PROD_NEXT_GEN)
 	err = tegra_prod_set_by_name(&tqspi->base, "prod", tqspi->prod_list);
 	if (err < 0)
 		dev_info_once(tqspi->dev,
@@ -1720,7 +1720,11 @@ static int tegra_qspi_probe(struct platform_device *pdev)
 	int bus_num;
 	u32 as_delay;
 
+#if defined(NV_DEVM_SPI_ALLOC_HOST_PRESENT) /* Linux v6.2 */
+	controller = devm_spi_alloc_host(&pdev->dev, sizeof(*tqspi));
+#else
 	controller = devm_spi_alloc_master(&pdev->dev, sizeof(*tqspi));
+#endif
 	if (!controller)
 		return -ENOMEM;
 
@@ -1741,7 +1745,7 @@ static int tegra_qspi_probe(struct platform_device *pdev)
 
 	tqspi->controller = controller;
 	tqspi->dev = &pdev->dev;
-#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 16, 0)
+#if !defined(CONFIG_TEGRA_PROD_NEXT_GEN)
 	tqspi->prod_list = devm_tegra_prod_get(&pdev->dev);
 #else
 	tqspi->prod_list = devm_tegra_prod_get_list(&pdev->dev, &qspi_prod_dev_info);
@@ -1924,6 +1928,18 @@ static const struct dev_pm_ops tegra_qspi_pm_ops = {
 	SET_SYSTEM_SLEEP_PM_OPS(tegra_qspi_suspend, tegra_qspi_resume)
 };
 
+#if defined(NV_PLATFORM_DRIVER_STRUCT_REMOVE_RETURNS_VOID) /* Linux v6.11 */
+static void tegra_qspi_remove_wrapper(struct platform_device *pdev)
+{
+	tegra_qspi_remove(pdev);
+}
+#else
+static int tegra_qspi_remove_wrapper(struct platform_device *pdev)
+{
+	return tegra_qspi_remove(pdev);
+}
+#endif
+
 static struct platform_driver tegra_qspi_driver = {
 	.driver = {
 		.name		= "tegra-qspi",
@@ -1932,7 +1948,7 @@ static struct platform_driver tegra_qspi_driver = {
 		.acpi_match_table = ACPI_PTR(tegra_qspi_acpi_match),
 	},
 	.probe =	tegra_qspi_probe,
-	.remove =	tegra_qspi_remove,
+	.remove =	tegra_qspi_remove_wrapper,
 };
 module_platform_driver(tegra_qspi_driver);
 

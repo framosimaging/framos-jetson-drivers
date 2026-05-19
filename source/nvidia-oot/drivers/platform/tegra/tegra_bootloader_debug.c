@@ -1,5 +1,7 @@
-// SPDX-License-Identifier: GPL-2.0
-// SPDX-FileCopyrightText: Copyright (c) 2022-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+// SPDX-License-Identifier: GPL-2.0-only
+// SPDX-FileCopyrightText: Copyright (c) 2022-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+
+#include <nvidia/conftest.h>
 
 #include <linux/init.h>
 #include <linux/module.h>
@@ -674,9 +676,21 @@ static const struct of_device_id tegra_bl_debug_of_match[] = {
 
 MODULE_DEVICE_TABLE(of, tegra_bl_debug_of_match);
 
+#if defined(NV_PLATFORM_DRIVER_STRUCT_REMOVE_RETURNS_VOID) /* Linux v6.11 */
+static void tegra_bl_debug_remove_wrapper(struct platform_device *pdev)
+{
+	tegra_bl_debug_remove(pdev);
+}
+#else
+static int tegra_bl_debug_remove_wrapper(struct platform_device *pdev)
+{
+	return tegra_bl_debug_remove(pdev);
+}
+#endif
+
 static struct platform_driver tegra_bl_debug_driver = {
 	.probe = tegra_bl_debug_probe,
-	.remove = tegra_bl_debug_remove,
+	.remove = tegra_bl_debug_remove_wrapper,
 	.driver = {
 		.name = "tegra_bl_debug",
 		.of_match_table = tegra_bl_debug_of_match,

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
- * Copyright (c) 2011-2023, NVIDIA CORPORATION. All rights reserved.
+ * Copyright (c) 2011-2025, NVIDIA CORPORATION. All rights reserved.
  */
 
 #define pr_fmt(fmt)	"%s: " fmt, __func__
@@ -147,6 +147,14 @@ static void nvmap_vma_close(struct vm_area_struct *vma)
 	BUG_ON(!vma_found);
 	nvmap_umaps_dec(h);
 
+	mutex_lock(&priv->vma_lock);
+	if (priv->mm != NULL && h->anon_count != 0) {
+		nvmap_add_mm_counter(priv->mm, MM_ANONPAGES, priv->map_rss_count);
+		priv->map_rss_count = 0;
+		priv->mm = NULL;
+	}
+	mutex_unlock(&priv->vma_lock);
+
 	if (__atomic_add_unless(&priv->count, -1, 0) == 1) {
 		if (h->heap_pgalloc) {
 			for (i = 0; i < nr_page; i++) {
@@ -232,6 +240,14 @@ static int nvmap_vma_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
 				if (vma->vm_flags & VM_SHARED)
 					return VM_FAULT_SIGSEGV;
 			}
+
+			mutex_lock(&priv->vma_lock);
+			if (priv->handle->anon_count != 0 && current->mm != NULL) {
+				nvmap_add_mm_counter(current->mm, MM_ANONPAGES, -1);
+				priv->map_rss_count++;
+				priv->mm = current->mm;
+			}
+			mutex_unlock(&priv->vma_lock);
 
 			if (!nvmap_handle_track_dirty(priv->handle))
 				goto finish;

@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: GPL-2.0-only
-//
-// tegra210_iqc.c - Tegra210 IQC driver
-//
-// Copyright (c) 2014-2021 NVIDIA CORPORATION.  All rights reserved.
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2014-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *
+ * tegra210_iqc.c - Tegra210 IQC driver
+ */
+
+#include <nvidia/conftest.h>
 
 #include <linux/clk.h>
 #include <linux/device.h>
@@ -346,6 +349,18 @@ static const struct dev_pm_ops tegra210_iqc_pm_ops = {
 				     pm_runtime_force_resume)
 };
 
+#if defined(NV_PLATFORM_DRIVER_STRUCT_REMOVE_RETURNS_VOID) /* Linux v6.11 */
+static void tegra210_iqc_platform_remove_wrapper(struct platform_device *pdev)
+{
+	tegra210_iqc_platform_remove(pdev);
+}
+#else
+static int tegra210_iqc_platform_remove_wrapper(struct platform_device *pdev)
+{
+	return tegra210_iqc_platform_remove(pdev);
+}
+#endif
+
 static struct platform_driver tegra210_iqc_driver = {
 	.driver = {
 		.name = "tegra210-iqc",
@@ -353,7 +368,7 @@ static struct platform_driver tegra210_iqc_driver = {
 		.pm = &tegra210_iqc_pm_ops,
 	},
 	.probe = tegra210_iqc_platform_probe,
-	.remove = tegra210_iqc_platform_remove,
+	.remove = tegra210_iqc_platform_remove_wrapper,
 };
 module_platform_driver(tegra210_iqc_driver)
 

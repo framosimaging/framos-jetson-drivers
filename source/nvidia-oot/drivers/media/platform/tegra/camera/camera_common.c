@@ -1,19 +1,8 @@
-// SPDX-License-Identifier: GPL-2.0 only
-/* SPDX-FileCopyrightText: Copyright (c) 2015-2024 NVIDIA CORPORATION & AFFILIATES.
- * All rights reserved.
- *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms and conditions of the GNU General Public License,
- * version 2, as published by the Free Software Foundation.
- *
- * This program is distributed in the hope it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
+// SPDX-License-Identifier: GPL-2.0-only
+// SPDX-FileCopyrightText: Copyright (c) 2015-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+
+#include <nvidia/conftest.h>
+
 #include <linux/types.h>
 #include <media/tegra-v4l2-camera.h>
 #include <media/camera_common.h>
@@ -39,6 +28,26 @@
 #define HDR_ENABLE		0x1
 
 static const struct camera_common_colorfmt camera_common_color_fmts[] = {
+	{
+		MEDIA_BUS_FMT_SBGGR14_1X14,
+		V4L2_COLORSPACE_SRGB,
+		V4L2_PIX_FMT_SBGGR14,
+	},
+	{
+		MEDIA_BUS_FMT_SRGGB14_1X14,
+		V4L2_COLORSPACE_SRGB,
+		V4L2_PIX_FMT_SRGGB14,
+	},
+	{
+		MEDIA_BUS_FMT_SGRBG14_1X14,
+		V4L2_COLORSPACE_SRGB,
+		V4L2_PIX_FMT_SGRBG14,
+	},
+	{
+		MEDIA_BUS_FMT_SGBRG14_1X14,
+		V4L2_COLORSPACE_SRGB,
+		V4L2_PIX_FMT_SGBRG14
+	},
 	{
 		MEDIA_BUS_FMT_SRGGB12_1X12,
 		V4L2_COLORSPACE_SRGB,
@@ -994,12 +1003,12 @@ int camera_common_get_mbus_config(struct v4l2_subdev *sd,
 	 *  then return an error
 	 */
 	cfg->type = V4L2_MBUS_CSI2_DPHY;
-#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 18, 0)
+#if defined(NV_V4L2_FWNODE_ENDPOINT_STRUCT_HAS_V4L2_MBUS_CONFIG_MIPI_CSI2) /* Linux v5.18 */
+	cfg->bus.mipi_csi2.num_data_lanes = 4;
+#else
 	cfg->flags = V4L2_MBUS_CSI2_4_LANE |
 		V4L2_MBUS_CSI2_CHANNEL_0 |
 		V4L2_MBUS_CSI2_CONTINUOUS_CLOCK;
-#else
-	cfg->bus.mipi_csi2.num_data_lanes = 4;
 #endif
 
 	return 0;

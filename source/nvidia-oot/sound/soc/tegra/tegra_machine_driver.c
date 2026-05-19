@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
- * Copyright (c) 2017-2023 NVIDIA CORPORATION. All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2017-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  *
  * Tegra ASoC Machine driver
  */
@@ -403,6 +403,18 @@ static const struct dev_pm_ops tegra_asoc_machine_pm_ops = {
 	.poweroff = snd_soc_poweroff,
 };
 
+#if defined(NV_PLATFORM_DRIVER_STRUCT_REMOVE_RETURNS_VOID) /* Linux v6.11 */
+static inline void tegra_machine_driver_remove_wrapper(struct platform_device *pdev)
+{
+	tegra_machine_driver_remove(pdev);
+}
+#else
+static inline int tegra_machine_driver_remove_wrapper(struct platform_device *pdev)
+{
+	return tegra_machine_driver_remove(pdev);
+}
+#endif
+
 static struct platform_driver tegra_asoc_machine_driver = {
 	.driver = {
 		.name = DRV_NAME,
@@ -411,7 +423,7 @@ static struct platform_driver tegra_asoc_machine_driver = {
 		.of_match_table = tegra_machine_of_match,
 	},
 	.probe = tegra_machine_driver_probe,
-	.remove = tegra_machine_driver_remove,
+	.remove = tegra_machine_driver_remove_wrapper,
 };
 module_platform_driver(tegra_asoc_machine_driver);
 

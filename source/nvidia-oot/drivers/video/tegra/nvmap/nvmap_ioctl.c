@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
- * Copyright (c) 2011-2023, NVIDIA CORPORATION. All rights reserved.
+ * Copyright (c) 2011-2024, NVIDIA CORPORATION. All rights reserved.
  *
  * User-space interface to nvmap
  */
@@ -1323,6 +1323,7 @@ int nvmap_ioctl_handle_from_sci_ipc_id(struct file *filp, void __user *arg)
 /*
  * This function calculates allocatable free memory using following formula:
  * free_mem = avail mem - cma free - (avail mem - cma free) / 16
+ * free_mem = free_mem - (free_mem / 1000);
  * The CMA memory is not allocatable by NvMap for regular allocations and it
  * is part of Available memory reported, so subtract it from available memory.
  * NvMap allocates 1/16 extra memory in page coloring, so subtract it as well.
@@ -1352,6 +1353,10 @@ int system_heap_free_mem(unsigned long *mem_val)
 #ifdef NVMAP_CONFIG_COLOR_PAGES
 	free_mem = free_mem - (free_mem >> 4);
 #endif /* NVMAP_CONFIG_COLOR_PAGES */
+
+	/* reduce free_mem by ~ 0.1% */
+	free_mem = free_mem - (free_mem / 1000);
+
 	*mem_val = free_mem;
 	return 0;
 }
@@ -1422,6 +1427,12 @@ int nvmap_ioctl_query_heap_params(struct file *filp, void __user *arg)
 		op.granule_size = PAGE_SIZE;
 	}
 
+	/*
+	 * Align free size reported to the previous page.
+	 * This avoids any AllocAttr failures due to using PAGE_ALIGN
+	 * for allocating exactly the free memory reported.
+	 */
+	op.free = op.free & PAGE_MASK;
 	if (copy_to_user(arg, &op, sizeof(op)))
 		ret = -EFAULT;
 exit:

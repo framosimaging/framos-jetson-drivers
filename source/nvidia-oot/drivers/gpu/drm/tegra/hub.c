@@ -1,13 +1,16 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
- * Copyright (C) 2017 NVIDIA CORPORATION.  All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2017-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
+
+#include <nvidia/conftest.h>
 
 #include <linux/clk.h>
 #include <linux/delay.h>
 #include <linux/dma-mapping.h>
 #include <linux/host1x-next.h>
 #include <linux/module.h>
+#include <linux/of.h>
 #include <linux/of_device.h>
 #include <linux/of_graph.h>
 #include <linux/of_platform.h>
@@ -1215,11 +1218,23 @@ static const struct of_device_id tegra_display_hub_of_match[] = {
 };
 MODULE_DEVICE_TABLE(of, tegra_display_hub_of_match);
 
+#if defined(NV_PLATFORM_DRIVER_STRUCT_REMOVE_RETURNS_VOID) /* Linux v6.11 */
+static void tegra_display_hub_remove_wrapper(struct platform_device *pdev)
+{
+	tegra_display_hub_remove(pdev);
+}
+#else
+static int tegra_display_hub_remove_wrapper(struct platform_device *pdev)
+{
+	return tegra_display_hub_remove(pdev);
+}
+#endif
+
 struct platform_driver tegra_display_hub_driver = {
 	.driver = {
 		.name = "tegra-display-hub",
 		.of_match_table = tegra_display_hub_of_match,
 	},
 	.probe = tegra_display_hub_probe,
-	.remove = tegra_display_hub_remove,
+	.remove = tegra_display_hub_remove_wrapper,
 };
