@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
- * Copyright (C) 2013 NVIDIA Corporation
+ * SPDX-FileCopyrightText: Copyright (c) 2013-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include <nvidia/conftest.h>
@@ -1806,8 +1806,13 @@ static int tegra_sor_connector_get_modes(struct drm_connector *connector)
 }
 
 static enum drm_mode_status
+#if defined(NV_DRM_CONNECTOR_HELPER_FUNCS_STRUCT_MODE_VALID_HAS_CONST_ARG) /* Linux v6.15 */
+tegra_sor_connector_mode_valid(struct drm_connector *connector,
+			       const struct drm_display_mode *mode)
+#else
 tegra_sor_connector_mode_valid(struct drm_connector *connector,
 			       struct drm_display_mode *mode)
+#endif
 {
 	return MODE_OK;
 }
@@ -4082,6 +4087,18 @@ static const struct dev_pm_ops tegra_sor_pm_ops = {
 	SET_SYSTEM_SLEEP_PM_OPS(tegra_sor_suspend, tegra_sor_resume)
 };
 
+#if defined(NV_PLATFORM_DRIVER_STRUCT_REMOVE_RETURNS_VOID) /* Linux v6.11 */
+static void tegra_sor_remove_wrapper(struct platform_device *pdev)
+{
+	tegra_sor_remove(pdev);
+}
+#else
+static int tegra_sor_remove_wrapper(struct platform_device *pdev)
+{
+	return tegra_sor_remove(pdev);
+}
+#endif
+
 struct platform_driver tegra_sor_driver = {
 	.driver = {
 		.name = "tegra-sor",
@@ -4089,5 +4106,5 @@ struct platform_driver tegra_sor_driver = {
 		.pm = &tegra_sor_pm_ops,
 	},
 	.probe = tegra_sor_probe,
-	.remove = tegra_sor_remove,
+	.remove = tegra_sor_remove_wrapper,
 };

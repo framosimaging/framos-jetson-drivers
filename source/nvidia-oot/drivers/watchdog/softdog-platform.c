@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0-only
+// SPDX-FileCopyrightText: Copyright (c) 2014-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 /*
  * A platform based Software Watchdog Device
- *
- * Copyright (c) 2014-2022, NVIDIA CORPORATION.  All rights reserved.
  */
+
+#include <nvidia/conftest.h>
 
 #include <linux/module.h>
 #include <linux/types.h>
@@ -184,7 +185,11 @@ static int softdog_platform_probe(struct platform_device *pdev)
 reboot_unreg:
 	unregister_reboot_notifier(&swdt->nb);
 timer_del:
+#if defined(NV_TIMER_DELETE_PRESENT) /* Linux v6.15 */
+	timer_delete_sync(&swdt->watchdog_ticktock);
+#else
 	del_timer_sync(&swdt->watchdog_ticktock);
+#endif
 	return ret;
 }
 
@@ -192,7 +197,11 @@ static int softdog_platform_remove(struct platform_device *pdev)
 {
 	struct softdog_platform_wdt *swdt = platform_get_drvdata(pdev);
 
+#if defined(NV_TIMER_DELETE_PRESENT) /* Linux v6.15 */
+	timer_delete_sync(&swdt->watchdog_ticktock);
+#else
 	del_timer_sync(&swdt->watchdog_ticktock);
+#endif
 	watchdog_unregister_device(&swdt->wdt_dev);
 	unregister_reboot_notifier(&swdt->nb);
 	return 0;
@@ -202,7 +211,11 @@ static void softdog_platform_shutdown(struct platform_device *pdev)
 {
 	struct softdog_platform_wdt *swdt = platform_get_drvdata(pdev);
 
+#if defined(NV_TIMER_DELETE_PRESENT) /* Linux v6.15 */
+	timer_delete_sync(&swdt->watchdog_ticktock);
+#else
 	del_timer_sync(&swdt->watchdog_ticktock);
+#endif
 }
 
 #ifdef CONFIG_PM_SLEEP
@@ -240,6 +253,18 @@ static struct of_device_id softdog_platform_of_match[] = {
 };
 MODULE_DEVICE_TABLE(of, softdog_platform_of_match);
 
+#if defined(NV_PLATFORM_DRIVER_STRUCT_REMOVE_RETURNS_VOID) /* Linux v6.11 */
+static void softdog_platform_remove_wrapper(struct platform_device *pdev)
+{
+	softdog_platform_remove(pdev);
+}
+#else
+static int softdog_platform_remove_wrapper(struct platform_device *pdev)
+{
+	return softdog_platform_remove(pdev);
+}
+#endif
+
 static struct platform_driver softdog_platform_driver = {
 	.driver = {
 		.name = "softdog-platform",
@@ -248,7 +273,7 @@ static struct platform_driver softdog_platform_driver = {
 		.pm = &softdog_platform_pm_ops,
 	},
 	.probe = softdog_platform_probe,
-	.remove = softdog_platform_remove,
+	.remove = softdog_platform_remove_wrapper,
 	.shutdown = softdog_platform_shutdown,
 };
 

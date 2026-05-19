@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-only
-// SPDX-FileCopyrightText: Copyright (c) 2022-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+// SPDX-FileCopyrightText: Copyright (c) 2022-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 
 #include <nvidia/conftest.h>
 
@@ -145,7 +145,11 @@ static void vblk_put_req(struct vsc_request *req)
 			(vblkdev->queue_state == VBLK_QUEUE_SUSPENDED)) {
 			complete(&vblkdev->req_queue_empty);
 		}
+#if defined(NV_TIMER_DELETE_PRESENT) /* Linux v6.15 */
+		timer_delete(&req->timer);
+#else
 		del_timer(&req->timer);
+#endif
 	}
 }
 
@@ -534,8 +538,12 @@ static bool submit_bio_req(struct vblk_dev *vblkdev)
 		}
 		sg_init_table(vsc_req->sg_lst,
 			bio_req->nr_phys_segments);
+#if defined(NV_BLK_RQ_MAP_SG_HAS_NO_QUEUE_ARG) /* Linux v6.15 */
+		sg_cnt = blk_rq_map_sg(bio_req, vsc_req->sg_lst);
+#else
 		sg_cnt = blk_rq_map_sg(vblkdev->queue, bio_req,
 				vsc_req->sg_lst);
+#endif
 		vsc_req->sg_num_ents = sg_nents(vsc_req->sg_lst);
 		if (dma_map_sg(vblkdev->device, vsc_req->sg_lst,
 			vsc_req->sg_num_ents, DMA_BIDIRECTIONAL) == 0) {
@@ -1563,9 +1571,21 @@ static struct of_device_id tegra_hv_vblk_match[] = {
 MODULE_DEVICE_TABLE(of, tegra_hv_vblk_match);
 #endif /* CONFIG_OF */
 
+#if defined(NV_PLATFORM_DRIVER_STRUCT_REMOVE_RETURNS_VOID) /* Linux v6.11 */
+static void tegra_hv_vblk_remove_wrapper(struct platform_device *pdev)
+{
+	tegra_hv_vblk_remove(pdev);
+}
+#else
+static int tegra_hv_vblk_remove_wrapper(struct platform_device *pdev)
+{
+	return tegra_hv_vblk_remove(pdev);
+}
+#endif
+
 static struct platform_driver tegra_hv_vblk_driver = {
 	.probe	= tegra_hv_vblk_probe,
-	.remove	= tegra_hv_vblk_remove,
+	.remove	= tegra_hv_vblk_remove_wrapper,
 	.driver	= {
 		.name = DRV_NAME,
 		.owner = THIS_MODULE,

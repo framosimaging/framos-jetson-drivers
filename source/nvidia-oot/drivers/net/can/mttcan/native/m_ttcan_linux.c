@@ -1,7 +1,5 @@
-/* SPDX-License-Identifier: GPL-2.0-only */
-/*
- * Copyright (c) 2022-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
- */
+// SPDX-License-Identifier: GPL-2.0-only
+// SPDX-FileCopyrightText: Copyright (c) 2022-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 
 #include <nvidia/conftest.h>
 
@@ -12,7 +10,7 @@
 #define CAN_MSG_FLUSH_TIMEOUT	100
 static void mttcan_start(struct net_device *dev);
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 16, 0)
+#if defined(CONFIG_TEGRA_PROD_NEXT_GEN)
 #define MTTCAN_PROD_FIELD(name, rindex, roffset, fname)  \
 {							\
 	.field_name = name,				\
@@ -1879,7 +1877,7 @@ static int mttcan_probe(struct platform_device *pdev)
 	if (ret)
 		goto exit_free_device;
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 16, 0)
+#if !defined(CONFIG_TEGRA_PROD_NEXT_GEN)
 	priv->ttcan->prod_list = devm_tegra_prod_get(&pdev->dev);
 #else
 	priv->ttcan->prod_list = devm_tegra_prod_get_list(&pdev->dev, &mttcan_prod_dev_info);
@@ -1935,7 +1933,11 @@ static int mttcan_remove(struct platform_device *pdev)
 
 	dev_info(&dev->dev, "%s\n", __func__);
 
+#if defined(NV_TIMER_DELETE_PRESENT) /* Linux v6.15 */
+	timer_delete_sync(&priv->timer);
+#else
 	del_timer_sync(&priv->timer);
+#endif
 	mttcan_delete_sys_files(&dev->dev);
 	unregister_mttcan_dev(dev);
 	mttcan_unprepare_clock(priv);
@@ -2009,6 +2011,18 @@ static int mttcan_resume(struct platform_device *pdev)
 }
 #endif
 
+#if defined(NV_PLATFORM_DRIVER_STRUCT_REMOVE_RETURNS_VOID) /* Linux v6.11 */
+static void mttcan_remove_wrapper(struct platform_device *pdev)
+{
+	mttcan_remove(pdev);
+}
+#else
+static int mttcan_remove_wrapper(struct platform_device *pdev)
+{
+	return mttcan_remove(pdev);
+}
+#endif
+
 static struct platform_driver mttcan_plat_driver = {
 	.driver = {
 		   .name = KBUILD_MODNAME,
@@ -2016,7 +2030,7 @@ static struct platform_driver mttcan_plat_driver = {
 		   .of_match_table = of_match_ptr(mttcan_of_table),
 		   },
 	.probe = mttcan_probe,
-	.remove = mttcan_remove,
+	.remove = mttcan_remove_wrapper,
 #ifdef CONFIG_PM
 	.suspend = mttcan_suspend,
 	.resume = mttcan_resume,

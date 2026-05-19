@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-only
-/* Copyright (c) 2019-2022, NVIDIA CORPORATION & AFFILIATES. All rights reserved */
+// SPDX-FileCopyrightText: Copyright (c) 2019-2025, NVIDIA CORPORATION & AFFILIATES. All rights reserved
 
 #ifndef OSI_STRIPPED_LIB
 #include "ether_linux.h"
@@ -290,7 +290,11 @@ static int ether_test_phy_loopback(struct ether_priv_data *pdata)
 	if (!pdata->phydev)
 		return -ENODEV;
 
+#if defined(NV_PHY_LOOPBACK_HAS_SPEED_ARG) /* Linux v6.15 */
+	ret = phy_loopback(pdata->phydev, true, 0);
+#else
 	ret = phy_loopback(pdata->phydev, true);
+#endif
 	if (ret != 0 && ret != -EBUSY)
 		return ret;
 
@@ -406,7 +410,11 @@ void ether_selftest_run(struct net_device *dev,
 		case ETHER_LOOPBACK_PHY:
 			ret = -EOPNOTSUPP;
 			if (dev->phydev)
+#if defined(NV_PHY_LOOPBACK_HAS_SPEED_ARG) /* Linux v6.15 */
+				ret = phy_loopback(dev->phydev, true, 0);
+#else
 				ret = phy_loopback(dev->phydev, true);
+#endif
 			if (!ret)
 				break;
 		/* Fallthrough */
@@ -439,7 +447,11 @@ void ether_selftest_run(struct net_device *dev,
 		case ETHER_LOOPBACK_PHY:
 			ret = -EOPNOTSUPP;
 			if (dev->phydev)
+#if defined(NV_PHY_LOOPBACK_HAS_SPEED_ARG) /* Linux v6.15 */
+				ret = phy_loopback(dev->phydev, false, 0);
+#else
 				ret = phy_loopback(dev->phydev, false);
+#endif
 			if (!ret)
 				break;
 		/* Fallthrough */

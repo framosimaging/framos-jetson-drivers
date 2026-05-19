@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2023, NVIDIA CORPORATION. All rights reserved.
+ * Copyright (c) 2018-2025, NVIDIA CORPORATION. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -848,6 +848,7 @@ static nve32_t eqos_hsi_configure(struct osi_core_priv_data *const osi_core,
 	return 0;
 }
 
+#ifdef NV_VLTEST_BUILD
 /**
  * @brief eqos_hsi_inject_err - inject error
  *
@@ -890,6 +891,7 @@ static nve32_t eqos_hsi_inject_err(struct osi_core_priv_data *const osi_core,
 
 	return ret;
 }
+#endif
 #endif
 
 /**
@@ -4171,6 +4173,8 @@ void eqos_init_core_ops(struct core_ops *ops)
 #endif /* !OSI_STRIPPED_LIB */
 #ifdef HSI_SUPPORT
 	ops->core_hsi_configure = eqos_hsi_configure;
+#ifdef NV_VLTEST_BUILD
 	ops->core_hsi_inject_err = eqos_hsi_inject_err;
+#endif
 #endif
 }

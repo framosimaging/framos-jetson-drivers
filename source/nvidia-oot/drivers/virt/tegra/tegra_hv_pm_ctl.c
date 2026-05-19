@@ -1,7 +1,5 @@
-/* SPDX-License-Identifier: GPL-2.0-only */
-/*
- * Copyright (c) 2022-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
- */
+// SPDX-License-Identifier: GPL-2.0-only
+// SPDX-FileCopyrightText: Copyright (c) 2022-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 
 #include <nvidia/conftest.h>
 
@@ -391,7 +389,9 @@ static int tegra_hv_pm_ctl_release(struct inode *inode, struct file *filp)
 
 static const struct file_operations tegra_hv_pm_ctl_fops = {
 	.owner		= THIS_MODULE,
+#if defined(NV_NO_LLSEEK_PRESENT)
 	.llseek		= no_llseek,
+#endif
 	.read		= tegra_hv_pm_ctl_read,
 	.write		= tegra_hv_pm_ctl_write,
 	.poll		= tegra_hv_pm_ctl_poll,
@@ -1144,6 +1144,18 @@ static const struct of_device_id tegra_hv_pm_ctl_match[] = {
 };
 MODULE_DEVICE_TABLE(of, tegra_hv_pm_ctl_match);
 
+#if defined(NV_PLATFORM_DRIVER_STRUCT_REMOVE_RETURNS_VOID) /* Linux v6.11 */
+static void tegra_hv_pm_ctl_remove_wrapper(struct platform_device *pdev)
+{
+	tegra_hv_pm_ctl_remove(pdev);
+}
+#else
+static int tegra_hv_pm_ctl_remove_wrapper(struct platform_device *pdev)
+{
+	return tegra_hv_pm_ctl_remove(pdev);
+}
+#endif
+
 static struct platform_driver tegra_hv_pm_ctl_driver = {
 	.driver = {
 		.name = DRV_NAME,
@@ -1151,7 +1163,7 @@ static struct platform_driver tegra_hv_pm_ctl_driver = {
 		.of_match_table = of_match_ptr(tegra_hv_pm_ctl_match),
 	},
 	.probe = tegra_hv_pm_ctl_probe,
-	.remove = tegra_hv_pm_ctl_remove,
+	.remove = tegra_hv_pm_ctl_remove_wrapper,
 };
 module_platform_driver(tegra_hv_pm_ctl_driver);
 

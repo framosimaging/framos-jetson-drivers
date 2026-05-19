@@ -1,5 +1,5 @@
-/* SPDX-License-Identifier: GPL-2.0 */
-/* Copyright (c) 2023-2024, NVIDIA CORPORATION & AFFILIATES. All Rights Reserved. */
+// SPDX-License-Identifier: GPL-2.0-only
+// SPDX-FileCopyrightText: Copyright (c) 2023-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 /*
  * cam_cdi_tsc.c - tsc driver.
  */
@@ -645,6 +645,18 @@ MODULE_DEVICE_TABLE(of, cdi_tsc_of_match);
 
 static SIMPLE_DEV_PM_OPS(cdi_tsc_pm, cdi_tsc_suspend, cdi_tsc_resume);
 
+#if defined(NV_PLATFORM_DRIVER_STRUCT_REMOVE_RETURNS_VOID) /* Linux v6.11 */
+static void cdi_tsc_remove_wrapper(struct platform_device *pdev)
+{
+	cdi_tsc_remove(pdev);
+}
+#else
+static int cdi_tsc_remove_wrapper(struct platform_device *pdev)
+{
+	return cdi_tsc_remove(pdev);
+}
+#endif
+
 static struct platform_driver cdi_tsc_driver = {
 	.driver = {
 		.name = "cdi_tsc",
@@ -653,7 +665,7 @@ static struct platform_driver cdi_tsc_driver = {
 		.pm = &cdi_tsc_pm,
 	},
 	.probe = cdi_tsc_probe,
-	.remove = cdi_tsc_remove,
+	.remove = cdi_tsc_remove_wrapper,
 };
 module_platform_driver(cdi_tsc_driver);
 

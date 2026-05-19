@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
-/**
- * Copyright (c) 2014-2023, NVIDIA CORPORATION. All rights reserved.
- */
+// SPDX-FileCopyrightText: Copyright (c) 2014-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+
+#include <nvidia/conftest.h>
 
 #include <linux/platform_device.h>
 #include <linux/fs.h>
@@ -25,7 +25,6 @@
 #include "dev.h"
 #include "os.h"
 #include "amc.h"
-#include "ape_actmon.h"
 #include "aram_manager.h"
 
 #include "dev-t18x.h"
@@ -583,6 +582,18 @@ static const struct of_device_id nvadsp_of_match[] = {
 MODULE_DEVICE_TABLE(of, nvadsp_of_match);
 #endif
 
+#if defined(NV_PLATFORM_DRIVER_STRUCT_REMOVE_RETURNS_VOID) /* Linux v6.11 */
+static void nvadsp_remove_wrapper(struct platform_device *pdev)
+{
+	nvadsp_remove(pdev);
+}
+#else
+static int nvadsp_remove_wrapper(struct platform_device *pdev)
+{
+	return nvadsp_remove(pdev);
+}
+#endif
+
 static struct platform_driver nvadsp_driver __refdata = {
 	.driver	= {
 		.name	= "nvadsp",
@@ -591,7 +602,7 @@ static struct platform_driver nvadsp_driver __refdata = {
 		.of_match_table = of_match_ptr(nvadsp_of_match),
 	},
 	.probe		= nvadsp_probe,
-	.remove		= nvadsp_remove,
+	.remove		= nvadsp_remove_wrapper,
 };
 module_platform_driver(nvadsp_driver);
 

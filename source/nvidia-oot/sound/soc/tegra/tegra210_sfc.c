@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-only
-//
-// tegra210_sfc.c - Tegra210 SFC driver
-//
-// Copyright (c) 2014-2023 NVIDIA CORPORATION.  All rights reserved.
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2014-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *
+ * tegra210_sfc.c - Tegra210 SFC driver
+ */
 
 #include <nvidia/conftest.h>
 
@@ -3504,6 +3505,18 @@ static const struct dev_pm_ops tegra210_sfc_pm_ops = {
 				     pm_runtime_force_resume)
 };
 
+#if defined(NV_PLATFORM_DRIVER_STRUCT_REMOVE_RETURNS_VOID) /* Linux v6.11 */
+static inline void tegra210_sfc_platform_remove_wrapper(struct platform_device *pdev)
+{
+	tegra210_sfc_platform_remove(pdev);
+}
+#else
+static inline int tegra210_sfc_platform_remove_wrapper(struct platform_device *pdev)
+{
+	return tegra210_sfc_platform_remove(pdev);
+}
+#endif
+
 static struct platform_driver tegra210_sfc_driver = {
 	.driver = {
 		.name = "tegra210-sfc",
@@ -3511,7 +3524,7 @@ static struct platform_driver tegra210_sfc_driver = {
 		.pm = &tegra210_sfc_pm_ops,
 	},
 	.probe = tegra210_sfc_platform_probe,
-	.remove = tegra210_sfc_platform_remove,
+	.remove = tegra210_sfc_platform_remove_wrapper,
 };
 module_platform_driver(tegra210_sfc_driver)
 

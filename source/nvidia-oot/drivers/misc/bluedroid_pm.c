@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-only
-// SPDX-FileCopyrightText: Copyright (C) 2019-2023 NVIDIA CORPORATION.  All rights reserved.
-
-#include <nvidia/conftest.h>
+// SPDX-FileCopyrightText: Copyright (c) 2019-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 
 #include <nvidia/conftest.h>
 
@@ -267,7 +265,11 @@ static ssize_t lpm_write_proc(struct file *file, const char __user *buffer,
 			bluedroid_pm_gpio_set_value(
 				bluedroid_pm->ext_wake, 1);
 			__pm_stay_awake(&bluedroid_pm->wake_lock);
+#if defined(NV_TIMER_DELETE_PRESENT) /* Linux v6.15 */
+			timer_delete(&bluedroid_pm_timer);
+#else
 			del_timer(&bluedroid_pm_timer);
+#endif
 			set_bit(BT_WAKE, &bluedroid_pm->flags);
 		} else {
 			kfree(buf);
@@ -539,7 +541,11 @@ static int bluedroid_pm_remove(struct platform_device *pdev)
 		wakeup_source_destroy(&bluedroid_pm->wake_lock);
 		gpio_free(bluedroid_pm->ext_wake);
 		remove_bt_proc_interface();
+#if defined(NV_TIMER_DELETE_PRESENT) /* Linux v6.15 */
+		timer_delete(&bluedroid_pm_timer);
+#else
 		del_timer(&bluedroid_pm_timer);
+#endif
 	}
 	if ((gpio_is_valid(bluedroid_pm->gpio_reset)) ||
 		(gpio_is_valid(bluedroid_pm->gpio_shutdown)) ||
@@ -627,9 +633,21 @@ static struct of_device_id bdroid_of_match[] = {
 };
 MODULE_DEVICE_TABLE(of, bdroid_of_match);
 
+#if defined(NV_PLATFORM_DRIVER_STRUCT_REMOVE_RETURNS_VOID) /* Linux v6.11 */
+static void bluedroid_pm_remove_wrapper(struct platform_device *pdev)
+{
+	bluedroid_pm_remove(pdev);
+}
+#else
+static int bluedroid_pm_remove_wrapper(struct platform_device *pdev)
+{
+	return bluedroid_pm_remove(pdev);
+}
+#endif
+
 static struct platform_driver bluedroid_pm_driver = {
 	.probe = bluedroid_pm_probe,
-	.remove = bluedroid_pm_remove,
+	.remove = bluedroid_pm_remove_wrapper,
 	.suspend = bluedroid_pm_suspend,
 	.resume = bluedroid_pm_resume,
 	.shutdown = bluedroid_pm_shutdown,

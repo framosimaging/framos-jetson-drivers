@@ -1,7 +1,5 @@
-/* SPDX-License-Identifier: GPL-2.0-only */
-/*
- * SPDX-FileCopyrightText: Copyright (c) 2019-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
- */
+// SPDX-License-Identifier: GPL-2.0-only
+// SPDX-FileCopyrightText: Copyright (c) 2019-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 
 /*
  * This is NvSciIpc kernel driver. At present its only use is to support
@@ -84,11 +82,20 @@ NvSciError NvSciIpcEndpointValidateAuthTokenLinuxCurrent(
 	}
 
 	f = fdget((int)authToken);
+#if defined(NV_FD_EMPTY_PRESENT) /* Linux v6.12 */
+	if (fd_empty(f)) {
+#else
 	if (!f.file) {
+#endif
 		ERR("invalid auth token\n");
 		return NvSciError_BadParameter;
 	}
+
+#if defined(NV_FD_FILE_PRESENT) /* Linux v6.12 */
+	filp = fd_file(f);
+#else
 	filp = f.file;
+#endif
 
 	devlen = strlen(filp->f_path.dentry->d_name.name);
 #if DEBUG_VALIDATE_TOKEN
@@ -678,7 +685,9 @@ static const struct file_operations nvsciipc_fops = {
 	.open		= nvsciipc_dev_open,
 	.release		= nvsciipc_dev_release,
 	.unlocked_ioctl	= nvsciipc_dev_ioctl,
+#if defined(NV_NO_LLSEEK_PRESENT)
 	.llseek		= no_llseek,
+#endif
 	.read		= nvsciipc_dbg_read,
 };
 
@@ -822,9 +831,21 @@ exit:
 	return 0;
 }
 
+#if defined(NV_PLATFORM_DRIVER_STRUCT_REMOVE_RETURNS_VOID) /* Linux v6.11 */
+static void nvsciipc_remove_wrapper(struct platform_device *pdev)
+{
+	nvsciipc_remove(pdev);
+}
+#else
+static int nvsciipc_remove_wrapper(struct platform_device *pdev)
+{
+	return nvsciipc_remove(pdev);
+}
+#endif
+
 static struct platform_driver nvsciipc_driver = {
 	.probe  = nvsciipc_probe,
-	.remove = nvsciipc_remove,
+	.remove = nvsciipc_remove_wrapper,
 	.driver = {
 		.name = MODULE_NAME,
 	},

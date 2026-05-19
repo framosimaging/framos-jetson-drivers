@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023, NVIDIA CORPORATION. All rights reserved.
+ * Copyright (c) 2020-2025, NVIDIA CORPORATION. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -1678,6 +1678,7 @@ fail:
 	return ret;
 }
 
+#ifdef NV_VLTEST_BUILD
 /**
  * @brief mgbe_hsi_inject_err - Inject error
  *
@@ -1726,6 +1727,7 @@ static nve32_t mgbe_hsi_inject_err(struct osi_core_priv_data *const osi_core,
 
 	return ret;
 }
+#endif
 #endif
 
 /**
@@ -4061,6 +4063,8 @@ void mgbe_init_core_ops(struct core_ops *ops)
 #endif /* !OSI_STRIPPED_LIB */
 #ifdef HSI_SUPPORT
 	ops->core_hsi_configure = mgbe_hsi_configure;
+#ifdef NV_VLTEST_BUILD
 	ops->core_hsi_inject_err = mgbe_hsi_inject_err;
+#endif
 #endif
 };

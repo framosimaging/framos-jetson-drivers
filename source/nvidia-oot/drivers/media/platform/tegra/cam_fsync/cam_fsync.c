@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-only
-/*
- * Copyright (c) 2022-2023, NVIDIA CORPORATION. All rights reserved.
- */
+// SPDX-FileCopyrightText: Copyright (c) 2022-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 
 #include <nvidia/conftest.h>
 
@@ -1125,6 +1123,18 @@ MODULE_DEVICE_TABLE(of, cam_fsync_of_match);
 
 static SIMPLE_DEV_PM_OPS(cam_fsync_pm, cam_fsync_suspend, cam_fsync_resume);
 
+#if defined(NV_PLATFORM_DRIVER_STRUCT_REMOVE_RETURNS_VOID) /* Linux v6.11 */
+static void cam_fsync_remove_wrapper(struct platform_device *pdev)
+{
+	cam_fsync_remove(pdev);
+}
+#else
+static int cam_fsync_remove_wrapper(struct platform_device *pdev)
+{
+	return cam_fsync_remove(pdev);
+}
+#endif
+
 static struct platform_driver cam_fsync_driver = {
 	.driver = {
 		.name = "cam_fsync",
@@ -1133,7 +1143,7 @@ static struct platform_driver cam_fsync_driver = {
 		.pm = &cam_fsync_pm,
 	},
 	.probe = cam_fsync_probe,
-	.remove = cam_fsync_remove,
+	.remove = cam_fsync_remove_wrapper,
 };
 module_platform_driver(cam_fsync_driver);
 

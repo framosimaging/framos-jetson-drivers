@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
  * Copyright (C) 2012 Avionic Design GmbH
- * Copyright (C) 2012 NVIDIA CORPORATION.  All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2012-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
 
 #include <nvidia/conftest.h>
@@ -436,7 +436,7 @@ tegra_hdmi_get_audio_config(unsigned int audio_freq, unsigned int pix_clock,
 
 static void tegra_hdmi_setup_audio_fs_tables(struct tegra_hdmi *hdmi)
 {
-	const unsigned int freqs[] = {
+	static const unsigned int freqs[] = {
 		32000, 44100, 48000, 88200, 96000, 176400, 192000
 	};
 	unsigned int i;
@@ -1149,8 +1149,13 @@ static const struct drm_connector_funcs tegra_hdmi_connector_funcs = {
 };
 
 static enum drm_mode_status
+#if defined(NV_DRM_CONNECTOR_HELPER_FUNCS_STRUCT_MODE_VALID_HAS_CONST_ARG) /* Linux v6.15 */
+tegra_hdmi_connector_mode_valid(struct drm_connector *connector,
+				const struct drm_display_mode *mode)
+#else
 tegra_hdmi_connector_mode_valid(struct drm_connector *connector,
 				struct drm_display_mode *mode)
+#endif
 {
 	struct tegra_output *output = connector_to_output(connector);
 	struct tegra_hdmi *hdmi = to_hdmi(output);
@@ -1909,11 +1914,23 @@ static int tegra_hdmi_remove(struct platform_device *pdev)
 	return 0;
 }
 
+#if defined(NV_PLATFORM_DRIVER_STRUCT_REMOVE_RETURNS_VOID) /* Linux v6.11 */
+static void tegra_hdmi_remove_wrapper(struct platform_device *pdev)
+{
+	tegra_hdmi_remove(pdev);
+}
+#else
+static int tegra_hdmi_remove_wrapper(struct platform_device *pdev)
+{
+	return tegra_hdmi_remove(pdev);
+}
+#endif
+
 struct platform_driver tegra_hdmi_driver = {
 	.driver = {
 		.name = "tegra-hdmi",
 		.of_match_table = tegra_hdmi_of_match,
 	},
 	.probe = tegra_hdmi_probe,
-	.remove = tegra_hdmi_remove,
+	.remove = tegra_hdmi_remove_wrapper,
 };
