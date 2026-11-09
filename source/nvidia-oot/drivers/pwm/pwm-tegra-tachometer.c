@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-only
-// SPDX-FileCopyrightText: Copyright (c) 2022-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+// SPDX-FileCopyrightText: Copyright (c) 2022-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 
 #include <nvidia/conftest.h>
 
@@ -107,37 +107,6 @@ static struct pwm_tegra_tach *to_tegra_pwm_chip(struct pwm_chip *chip)
 	return container_of(chip, struct pwm_tegra_tach, chip);
 #endif
 }
-
-static ssize_t rpm_show(struct device *dev, struct device_attribute *attr,
-			char *buf)
-{
-	struct pwm_chip *chip = dev_get_drvdata(dev);
-	struct pwm_device *pwm = &chip->pwms[0];
-	struct pwm_capture result;
-	unsigned int rpm = 0;
-	int ret;
-
-	ret = pwm_capture(pwm, &result, 0);
-	if (ret < 0) {
-		dev_err(dev, "Failed to capture PWM: %d\n", ret);
-		return ret;
-	}
-
-	if (result.period)
-		rpm = DIV_ROUND_CLOSEST_ULL(60ULL * NSEC_PER_SEC,
-					    result.period);
-
-	return sprintf(buf, "%u\n", rpm);
-}
-
-static DEVICE_ATTR_RO(rpm);
-
-static struct attribute *pwm_tach_attrs[] = {
-	&dev_attr_rpm.attr,
-	NULL,
-};
-
-ATTRIBUTE_GROUPS(pwm_tach);
 
 static u32 tachometer_readl(struct pwm_tegra_tach *ptt, unsigned long reg)
 {
@@ -314,6 +283,37 @@ static irqreturn_t tegra_pwm_tach_irq(int irq, void *dev)
 
 	return IRQ_HANDLED;
 }
+
+static ssize_t rpm_show(struct device *dev, struct device_attribute *attr,
+			char *buf)
+{
+	struct pwm_chip *chip = dev_get_drvdata(dev);
+	struct pwm_device *pwm = &chip->pwms[0];
+	struct pwm_capture result;
+	unsigned int rpm = 0;
+	int ret;
+
+	ret = pwm_tegra_tacho_capture(chip, pwm, &result, 0);
+	if (ret < 0) {
+		dev_err(dev, "Failed to capture PWM: %d\n", ret);
+		return ret;
+	}
+
+	if (result.period)
+		rpm = DIV_ROUND_CLOSEST_ULL(60ULL * NSEC_PER_SEC,
+					    result.period);
+
+	return sprintf(buf, "%u\n", rpm);
+}
+
+static DEVICE_ATTR_RO(rpm);
+
+static struct attribute *pwm_tach_attrs[] = {
+	&dev_attr_rpm.attr,
+	NULL,
+};
+
+ATTRIBUTE_GROUPS(pwm_tach);
 
 static const struct pwm_ops pwm_tegra_tach_ops = {
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(6, 0, 0))
@@ -567,6 +567,18 @@ static const struct of_device_id pwm_tegra_tach_of_match[] = {
 };
 MODULE_DEVICE_TABLE(of, pwm_tegra_tach_of_match);
 
+#if defined(NV_PLATFORM_DRIVER_STRUCT_REMOVE_RETURNS_VOID) /* Linux v6.11 */
+static void pwm_tegra_tach_remove_wrapper(struct platform_device *pdev)
+{
+	pwm_tegra_tach_remove(pdev);
+}
+#else
+static int pwm_tegra_tach_remove_wrapper(struct platform_device *pdev)
+{
+	return pwm_tegra_tach_remove(pdev);
+}
+#endif
+
 static struct platform_driver tegra_tach_driver = {
 	.driver = {
 		.name = "pwm-tegra-tachometer",
@@ -574,7 +586,7 @@ static struct platform_driver tegra_tach_driver = {
 		.pm = &pwm_tegra_tach_pm_ops,
 	},
 	.probe = pwm_tegra_tach_probe,
-	.remove = pwm_tegra_tach_remove,
+	.remove = pwm_tegra_tach_remove_wrapper,
 };
 
 module_platform_driver(tegra_tach_driver);

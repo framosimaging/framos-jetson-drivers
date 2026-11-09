@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
+// SPDX-FileCopyrightText: Copyright (c) 2011-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 /*
- * Copyright (c) 2011-2023, NVIDIA CORPORATION. All rights reserved.
- *
  * Handle allocation and freeing routines for nvmap
  */
 
@@ -28,6 +27,8 @@
 #include <linux/libnvdimm.h>
 #endif /* NVMAP_UPSTREAM_KERNEL */
 #include "nvmap_priv.h"
+#include <linux/mm.h>
+#include <linux/sched/mm.h>
 
 bool nvmap_convert_carveout_to_iovmm;
 bool nvmap_convert_iovmm_to_carveout;
@@ -494,6 +495,8 @@ static int handle_page_alloc(struct nvmap_client *client,
 #else
 	static u8 chipid;
 #endif
+	struct mm_struct *mm = current->mm;
+	struct nvmap_handle_ref *ref;
 
 	if (!chipid) {
 #ifdef NVMAP_CONFIG_COLOR_PAGES
@@ -510,6 +513,25 @@ static int handle_page_alloc(struct nvmap_client *client,
 	pages = nvmap_altalloc(nr_page * sizeof(*pages));
 	if (!pages)
 		return -ENOMEM;
+
+	/*
+	 * Get refcount on mm_struct, so that it won't be freed until
+	 * nvmap reduces refcount after it reduces the RSS counter.
+	 */
+	if (!mmget_not_zero(mm))
+		goto page_free;
+
+	/*
+	 * Increment the RSS counter of the allocating process by number of pages requested.
+	 * This is done at the beginning as we have bulk allocation calls like __alloc_pages_bulk
+	 * during which the RSS counter is not incremented, so it may result in a huge allocation
+	 * without any RSS counter increment. This can lead to OOM killer killing other processes
+	 * while huge amount of memory is allocated by current process.
+	 * Con: The current process may be chosen by OOM killer if the input number of pages is
+	 * large and allocation is not even completed.
+	 */
+	h->anon_count = nr_page;
+	nvmap_add_mm_counter(mm, MM_ANONPAGES, nr_page);
 
 	if (contiguous) {
 		struct page *page;
@@ -563,8 +585,13 @@ static int handle_page_alloc(struct nvmap_client *client,
 			if (page_index < nr_page) {
 				int nid = h->numa_id == NUMA_NO_NODE ? numa_mem_id() : h->numa_id;
 
+#if defined(NV__ALLOC_PAGES_BULK_HAS_NO_PAGE_LIST_ARG)
+				allocated = __alloc_pages_bulk(gfp, nid, NULL,
+						nr_page, pages);
+#else
 				allocated = __alloc_pages_bulk(gfp, nid, NULL,
 						nr_page, NULL, pages);
+#endif
 			}
 #endif
 			for (i = allocated; i < nr_page; i++) {
@@ -572,7 +599,17 @@ static int handle_page_alloc(struct nvmap_client *client,
 								   true, h->numa_id);
 
 				if (!pages[i])
-					goto fail;
+					break;
+			}
+			if (i < nr_page) {
+				gfp = gfp & ~__GFP_NORETRY;
+				while (i < nr_page) {
+					pages[i] = nvmap_alloc_pages_exact(gfp, PAGE_SIZE,
+									 true, h->numa_id);
+					if (!pages[i])
+						goto fail;
+					i++;
+				}
 			}
 		} else if (page_index < nr_page) {
 			if (alloc_colored(nr_page - page_index, &pages[page_index], chipid))
@@ -595,11 +632,30 @@ static int handle_page_alloc(struct nvmap_client *client,
 	h->pgalloc.pages = pages;
 	h->pgalloc.contig = contiguous;
 	atomic_set(&h->pgalloc.ndirty, 0);
+
+	nvmap_ref_lock(client);
+	ref = __nvmap_validate_locked(client, h, false);
+	if (ref) {
+		ref->mm = mm;
+		ref->anon_count = h->anon_count;
+	} else {
+		nvmap_add_mm_counter(mm, MM_ANONPAGES, -nr_page);
+		mmput(mm);
+	}
+
+	nvmap_ref_unlock(client);
 	return 0;
 
 fail:
-	while (i--)
-		__free_page(pages[i]);
+	while (i > 0)
+		__free_page(pages[--i]);
+
+	/* Incase of failure, decrement the RSS counter and release the reference on mm_struct. */
+	h->anon_count = 0;
+	nvmap_add_mm_counter(mm, MM_ANONPAGES, -nr_page);
+	mmput(mm);
+
+page_free:
 	nvmap_altfree(pages, nr_page * sizeof(*pages));
 	wmb();
 	return -ENOMEM;
@@ -1072,9 +1128,18 @@ void _nvmap_handle_free(struct nvmap_handle *h)
 		h->pgalloc.pages[i] = nvmap_to_page(h->pgalloc.pages[i]);
 
 #ifdef NVMAP_CONFIG_PAGE_POOLS
-	if (!h->from_va && !h->is_subhandle)
-		page_index = nvmap_page_pool_fill_lots(&nvmap_dev->pool,
-					h->pgalloc.pages, nr_page);
+	if (!h->from_va && !h->is_subhandle) {
+		/*
+		 * When the process is exiting with kill signal pending, don't release the memory
+		 * back into page pool. So that memory would be released back to the kernel and OOM
+		 * killer would be able to actually free the memory.
+		 */
+		if (fatal_signal_pending(current) == 0 &&
+			sigismember(&current->signal->shared_pending.signal, SIGKILL) == 0) {
+			page_index = nvmap_page_pool_fill_lots(&nvmap_dev->pool,
+						h->pgalloc.pages, nr_page);
+		}
+	}
 #endif
 
 	for (i = page_index; i < nr_page; i++) {
@@ -1128,6 +1193,17 @@ void nvmap_free_handle(struct nvmap_client *client,
 
 	if (h->owner == client)
 		h->owner = NULL;
+
+	/*
+	 * When a reference is freed, decrement rss counter of the process corresponding
+	 * to this ref and do mmput so that mm_struct can be freed, if required.
+	 */
+	if (ref->mm != NULL && ref->anon_count != 0) {
+		nvmap_add_mm_counter(ref->mm, MM_ANONPAGES, -ref->anon_count);
+		mmput(ref->mm);
+		ref->mm = NULL;
+		ref->anon_count = 0;
+	}
 
 	if (is_ro)
 		dma_buf_put(ref->handle->dmabuf_ro);

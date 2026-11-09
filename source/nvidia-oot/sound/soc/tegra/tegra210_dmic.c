@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-only
-//
-// tegra210_dmic.c - Tegra210 DMIC driver
-//
-// Copyright (c) 2020-2023 NVIDIA CORPORATION.  All rights reserved.
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2020-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *
+ * tegra210_dmic.c - Tegra210 DMIC driver
+ */
 
 #include <nvidia/conftest.h>
 
@@ -701,6 +702,18 @@ static const struct of_device_id tegra210_dmic_of_match[] = {
 };
 MODULE_DEVICE_TABLE(of, tegra210_dmic_of_match);
 
+#if defined(NV_PLATFORM_DRIVER_STRUCT_REMOVE_RETURNS_VOID) /* Linux v6.11 */
+static inline void tegra210_dmic_remove_wrapper(struct platform_device *pdev)
+{
+	tegra210_dmic_remove(pdev);
+}
+#else
+static inline int tegra210_dmic_remove_wrapper(struct platform_device *pdev)
+{
+	return tegra210_dmic_remove(pdev);
+}
+#endif
+
 static struct platform_driver tegra210_dmic_driver = {
 	.driver = {
 		.name = "tegra210-dmic",
@@ -708,7 +721,7 @@ static struct platform_driver tegra210_dmic_driver = {
 		.pm = &tegra210_dmic_pm_ops,
 	},
 	.probe = tegra210_dmic_probe,
-	.remove = tegra210_dmic_remove,
+	.remove = tegra210_dmic_remove_wrapper,
 };
 module_platform_driver(tegra210_dmic_driver)
 

@@ -1,5 +1,7 @@
-// SPDX-FileCopyrightText: Copyright (c) 2019-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+// SPDX-FileCopyrightText: Copyright (c) 2019-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: GPL-2.0-only
+
+#include <nvidia/conftest.h>
 
 #include <dce.h>
 #include <linux/module.h>
@@ -304,6 +306,18 @@ static const struct dev_pm_ops dce_pm_ops = {
 };
 #endif
 
+#if defined(NV_PLATFORM_DRIVER_STRUCT_REMOVE_RETURNS_VOID) /* Linux v6.11 */
+static void tegra_dce_remove_wrapper(struct platform_device *pdev)
+{
+	tegra_dce_remove(pdev);
+}
+#else
+static int tegra_dce_remove_wrapper(struct platform_device *pdev)
+{
+	return tegra_dce_remove(pdev);
+}
+#endif
+
 static struct platform_driver tegra_dce_driver = {
 	.driver = {
 		.name   = "tegra-dce",
@@ -314,7 +328,7 @@ static struct platform_driver tegra_dce_driver = {
 #endif
 	},
 	.probe = tegra_dce_probe,
-	.remove = tegra_dce_remove,
+	.remove = tegra_dce_remove_wrapper,
 };
 module_platform_driver(tegra_dce_driver);
 

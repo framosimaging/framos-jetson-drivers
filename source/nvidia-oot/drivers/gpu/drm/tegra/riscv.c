@@ -1,9 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-only
-/*
- * Copyright (c) 2022, NVIDIA Corporation.
- */
-
-#include <asm/unaligned.h>
+// SPDX-FileCopyrightText: Copyright (c) 2022-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 
 #include <linux/dev_printk.h>
 #include <linux/device.h>

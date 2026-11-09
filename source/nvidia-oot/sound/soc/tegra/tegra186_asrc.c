@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-only
-//
-// tegra186_asrc.c - Tegra186 ASRC driver
-//
-// Copyright (c) 2015-2023, NVIDIA CORPORATION.  All rights reserved.
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2015-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *
+ * tegra186_asrc.c - Tegra186 ASRC driver
+ */
 
 #include <nvidia/conftest.h>
 
@@ -1163,6 +1164,18 @@ static const struct dev_pm_ops tegra186_asrc_pm_ops = {
 				     pm_runtime_force_resume)
 };
 
+#if defined(NV_PLATFORM_DRIVER_STRUCT_REMOVE_RETURNS_VOID) /* Linux v6.11 */
+static inline void tegra186_asrc_platform_remove_wrapper(struct platform_device *pdev)
+{
+	tegra186_asrc_platform_remove(pdev);
+}
+#else
+static inline int tegra186_asrc_platform_remove_wrapper(struct platform_device *pdev)
+{
+	return tegra186_asrc_platform_remove(pdev);
+}
+#endif
+
 static struct platform_driver tegra186_asrc_driver = {
 	.driver = {
 		.name = "tegra186-asrc",
@@ -1170,7 +1183,7 @@ static struct platform_driver tegra186_asrc_driver = {
 		.pm = &tegra186_asrc_pm_ops,
 	},
 	.probe = tegra186_asrc_platform_probe,
-	.remove = tegra186_asrc_platform_remove,
+	.remove = tegra186_asrc_platform_remove_wrapper,
 };
 module_platform_driver(tegra186_asrc_driver)
 

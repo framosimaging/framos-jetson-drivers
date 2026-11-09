@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022-2024 NVIDIA CORPORATION & AFFILIATES.  All rights reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2022-2026 NVIDIA CORPORATION & AFFILIATES.  All rights reserved.
  *
  * Tegra TSEC Module Support
  */
@@ -17,9 +17,6 @@
 #if CMD_INTERFACE_TEST
 #define NUM_OF_CMDS_TO_TEST (5)
 #endif
-
-#define TSEC_RISCV_INIT_SUCCESS		(0xa5a5a5a5)
-#define TSEC_RISCV_SMMU_STREAMID1	BIT_ULL(40)
 
 /* Set this to 1 to force backdoor boot */
 #define TSEC_FORCE_BACKDOOR_BOOT	(0)
@@ -699,7 +696,7 @@ int tsec_kickoff_boot(struct platform_device *pdev)
 	pdata->private_data = tsec_priv_data;
 
 	spin_lock_init(&pdata->mirq_lock);
-	ret = request_threaded_irq(pdata->irq, tsec_irq_top_half,
+	ret = devm_request_threaded_irq(&pdev->dev, pdata->irq, tsec_irq_top_half,
 		tsec_irq_bottom_half, 0, "tsec_riscv_irq", pdev);
 	if (ret) {
 		dev_err(&pdev->dev, "CMD: failed to request irq %d\n", ret);

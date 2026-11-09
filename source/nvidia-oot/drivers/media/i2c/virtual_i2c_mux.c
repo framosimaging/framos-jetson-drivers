@@ -15,7 +15,10 @@
 #include <linux/version.h>
 
 #define DESER_A				(0)
-#define ENABLE_IMU			(0xFE)
+#define ENABLE_CC1			(0xFE)
+#define ENABLE_CC2			(0xFB)
+#define ENABLE_CC3			(0xEF)
+#define ENABLE_CC4			(0xBF)
 #define ENABLE_ALL_CC			(0xAA)
 #define DESER_ADDR			(0x52)
 #define DESER_CC_REG			(0x0003)
@@ -27,10 +30,31 @@ static int virtual_i2c_mux_select(struct i2c_mux_core *muxc, u32 chan)
 	int ret = 0;
 
 	/* Do select 1st channel, to access IMUs from 1st Hawk */
-	if (!chan) {
-		ret = max96712_write_reg_Dser(DESER_ADDR, DESER_A, DESER_CC_REG, ENABLE_IMU);
-		if (ret)
-			pr_err("%s: Failed to do i2c address trans for IMUs\n",__func__);
+	switch (chan) {
+		case 0:
+			ret = max96712_write_reg_Dser(DESER_ADDR, DESER_A, DESER_CC_REG, ENABLE_CC1);
+			if (ret)
+				pr_err("%s: Failed to do i2c address trans for CC1\n", __func__);
+			break;
+		case 1:
+			ret = max96712_write_reg_Dser(DESER_ADDR, DESER_A, DESER_CC_REG, ENABLE_CC2);
+			if (ret)
+				pr_err("%s: Failed to do i2c address trans for CC2\n", __func__);
+			break;
+		case 2:
+			ret = max96712_write_reg_Dser(DESER_ADDR, DESER_A, DESER_CC_REG, ENABLE_CC3);
+			if (ret)
+				pr_err("%s: Failed to do i2c address trans for CC3\n", __func__);
+			break;
+		case 3:
+			ret = max96712_write_reg_Dser(DESER_ADDR, DESER_A, DESER_CC_REG, ENABLE_CC4);
+			if (ret)
+				pr_err("%s: Failed to do i2c address trans for CC4\n", __func__);
+			break;
+		default:
+			pr_err("%s: No channels matched chan = %d\n", __func__, chan);
+			ret = -EINVAL;
+			break;
 
 	}
 	return ret;
@@ -41,11 +65,10 @@ static int virtual_i2c_mux_deselect(struct i2c_mux_core *muxc, u32 chan)
 	int ret = 0;
 
 	/* Enable all control channels */
-	if (!chan) {
-		ret = max96712_write_reg_Dser(DESER_ADDR, DESER_A, DESER_CC_REG, ENABLE_ALL_CC);
-		if (ret)
-			pr_err("%s: Failed to do i2c address trans for IMUs\n",__func__);
-	}
+	ret = max96712_write_reg_Dser(DESER_ADDR, DESER_A, DESER_CC_REG, ENABLE_ALL_CC);
+	if (ret)
+		pr_err("%s: Failed to do i2c address trans for IMUs\n",__func__);
+
 	return ret;
 }
 

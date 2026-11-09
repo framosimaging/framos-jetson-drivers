@@ -1,7 +1,5 @@
-/* SPDX-License-Identifier: GPL-2.0-only */
-/*
- * Copyright (c) 2022-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
- */
+// SPDX-License-Identifier: GPL-2.0-only
+// SPDX-FileCopyrightText: Copyright (c) 2022-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 
 #include <nvidia/conftest.h>
 
@@ -1009,6 +1007,18 @@ static const struct of_device_id tegra_hv_match[] = {
 	{},
 };
 
+#if defined(NV_PLATFORM_DRIVER_STRUCT_REMOVE_RETURNS_VOID) /* Linux v6.11 */
+static void tegra_hv_remove_wrapper(struct platform_device *pdev)
+{
+	tegra_hv_remove(pdev);
+}
+#else
+static int tegra_hv_remove_wrapper(struct platform_device *pdev)
+{
+	return tegra_hv_remove(pdev);
+}
+#endif
+
 static struct platform_driver tegra_hv_driver = {
 	.driver = {
 		.name = DRV_NAME,
@@ -1016,7 +1026,7 @@ static struct platform_driver tegra_hv_driver = {
 		.of_match_table = of_match_ptr(tegra_hv_match),
 	},
 	.probe = tegra_hv_probe,
-	.remove = tegra_hv_remove,
+	.remove = tegra_hv_remove_wrapper,
 };
 
 static int __init tegra_hv_init(void)

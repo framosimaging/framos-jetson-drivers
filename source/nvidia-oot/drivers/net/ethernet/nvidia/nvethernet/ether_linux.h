@@ -668,6 +668,10 @@ struct ether_priv_data {
 	struct tasklet_struct lane_restart_task;
 	/** xtra sw error counters */
 	struct ether_xtra_stat_counters xstats;
+	/** wol configs */
+	struct ethtool_wolinfo wol;
+	/** MDIO lock for OSI function calls **/
+	struct mutex osi_mdio_lock;
 };
 
 /**
@@ -678,6 +682,21 @@ struct ether_priv_data {
  * @note Network device needs to created.
  */
 void ether_set_ethtool_ops(struct net_device *ndev);
+
+/**
+ * @brief Configure WOL settings in PHY subsystem
+ *
+ * @param[in] ndev – pointer to net device structure.
+ * @param[in] wol – pointer to ethtool_wolinfo structure.
+ *
+ * @note MAC and PHY need to be initialized.
+ *
+ * @retval zero on success and -ve number on failure.
+ */
+
+int ether_set_wol_impl(struct net_device *ndev, struct ethtool_wolinfo *wol);
+
+
 /**
  * @brief Creates Ethernet sysfs group
  *

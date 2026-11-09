@@ -1,0 +1,17 @@
+# Build artifacts
+*.o
+*.ko
+*.cmd
+*.mod
+*.mod.c
+*.order
+*.symvers
+*.tmp_*
+source/out/
+*.d
+*.dtb
+*.dtb.S
+*.dtb.d.dtc.tmp
+*.dtb.d.pre.tmp
+*.dtb.dts.tmp
+source/kernel-devicetree/generic-dts/dtbs/

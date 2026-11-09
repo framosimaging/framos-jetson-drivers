@@ -15,7 +15,6 @@
 #include <drm/drm_bridge.h>
 #include <drm/drm_edid.h>
 #include <drm/drm_encoder.h>
-#include <drm/drm_fb_helper.h>
 #include <drm/drm_fixed.h>
 #include <drm/drm_probe_helper.h>
 #include <uapi/drm/tegra_drm_next.h>
@@ -27,14 +26,10 @@
 /* XXX move to include/uapi/drm/drm_fourcc.h? */
 #define DRM_FORMAT_MOD_NVIDIA_SECTOR_LAYOUT BIT_ULL(22)
 
-struct reset_control;
+struct drm_fb_helper;
+struct drm_fb_helper_surface_size;
 
-#ifdef CONFIG_DRM_FBDEV_EMULATION
-struct tegra_fbdev {
-	struct drm_fb_helper base;
-	struct drm_framebuffer *fb;
-};
-#endif
+struct reset_control;
 
 struct tegra_drm {
 	struct drm_device *drm;
@@ -52,10 +47,6 @@ struct tegra_drm {
 
 	struct mutex clients_lock;
 	struct list_head clients;
-
-#ifdef CONFIG_DRM_FBDEV_EMULATION
-	struct tegra_fbdev *fbdev;
-#endif
 
 	unsigned int hmask, vmask;
 	unsigned int pitch_align;
@@ -130,7 +121,7 @@ static inline struct device *
 tegra_drm_context_get_memory_device(struct tegra_drm_context *context)
 {
 	if (context->memory_context)
-		return &context->memory_context->dev;
+		return context->memory_context->context_dev;
 	else
 		return context->client->base.dev;
 }
@@ -206,13 +197,32 @@ struct tegra_bo *tegra_fb_get_plane(struct drm_framebuffer *framebuffer,
 bool tegra_fb_is_bottom_up(struct drm_framebuffer *framebuffer);
 int tegra_fb_get_tiling(struct drm_framebuffer *framebuffer,
 			struct tegra_bo_tiling *tiling);
+struct drm_framebuffer *tegra_fb_alloc(struct drm_device *drm,
+				       const struct drm_mode_fb_cmd2 *mode_cmd,
+				       struct tegra_bo **planes,
+				       unsigned int num_planes);
 struct drm_framebuffer *tegra_fb_create(struct drm_device *drm,
 					struct drm_file *file,
 					const struct drm_mode_fb_cmd2 *cmd);
-int tegra_drm_fb_prepare(struct drm_device *drm);
-void tegra_drm_fb_free(struct drm_device *drm);
-int tegra_drm_fb_init(struct drm_device *drm);
-void tegra_drm_fb_exit(struct drm_device *drm);
+
+#if defined(NV_DRM_DRIVER_HAS_FBDEV_PROBE) /* Linux v6.13 */
+#ifdef CONFIG_DRM_FBDEV_EMULATION
+int tegra_fbdev_driver_fbdev_probe(struct drm_fb_helper *helper,
+				   struct drm_fb_helper_surface_size *sizes);
+#define TEGRA_FBDEV_DRIVER_OPS \
+	.fbdev_probe = tegra_fbdev_driver_fbdev_probe
+#else
+#define TEGRA_FBDEV_DRIVER_OPS \
+	.fbdev_probe = NULL
+#endif
+#else
+#ifdef CONFIG_DRM_FBDEV_EMULATION
+void tegra_fbdev_setup(struct drm_device *drm);
+#else
+static inline void tegra_fbdev_setup(struct drm_device *drm)
+{ }
+#endif
+#endif /* NV_DRM_DRIVER_HAS_FBDEV_PROBE */
 
 extern struct platform_driver tegra_display_hub_driver;
 extern struct platform_driver tegra_dc_driver;

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-2.0-only
-# SPDX-FileCopyrightText: Copyright (c) 2022-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2022-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 
 LINUXINCLUDE += -I$(srctree.nvidia-oot)/include
 LINUXINCLUDE += -I$(srctree.nvidia-oot)/drivers/gpu/host1x/hw/
@@ -12,7 +12,9 @@ ifdef CONFIG_PSTORE
 obj-m += block/tegra_oops_virt_storage/
 endif
 ifdef CONFIG_BT
+ifneq ($(NV_OOT_BLUETOOTH_REALTEK_SKIP_BUILD),y)
 obj-m += bluetooth/realtek/
+endif
 endif
 obj-m += c2c/
 obj-m += clink/

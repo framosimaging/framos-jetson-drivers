@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023, NVIDIA CORPORATION. All rights reserved.
+ * Copyright (c) 2022-2025, NVIDIA CORPORATION. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -1481,6 +1481,7 @@ void hw_tsn_init(struct osi_core_priv_data *osi_core,
 }
 
 #ifdef HSI_SUPPORT
+#ifdef NV_VLTEST_BUILD
 /**
  * @brief hsi_common_error_inject
  *
@@ -1571,6 +1572,7 @@ nve32_t hsi_common_error_inject(struct osi_core_priv_data *osi_core,
 
 	return ret;
 }
+#endif
 
 /**
  * @brief hsi_update_mmc_val - function to read register and return value to callee

@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2021-2023, NVIDIA Corporation.
+ * SPDX-FileCopyrightText: Copyright (c) 2021-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
+
+#include <nvidia/conftest.h>
 
 #include <linux/clk.h>
 #include <linux/delay.h>
@@ -632,6 +634,18 @@ static const struct dev_pm_ops ofa_pm_ops = {
 				pm_runtime_force_resume)
 };
 
+#if defined(NV_PLATFORM_DRIVER_STRUCT_REMOVE_RETURNS_VOID) /* Linux v6.11 */
+static void ofa_remove_wrapper(struct platform_device *pdev)
+{
+	ofa_remove(pdev);
+}
+#else
+static int ofa_remove_wrapper(struct platform_device *pdev)
+{
+	return ofa_remove(pdev);
+}
+#endif
+
 struct platform_driver tegra_ofa_driver = {
 	.driver = {
 		.name = "tegra-ofa",
@@ -639,7 +653,7 @@ struct platform_driver tegra_ofa_driver = {
 		.pm = &ofa_pm_ops
 	},
 	.probe = ofa_probe,
-	.remove = ofa_remove,
+	.remove = ofa_remove_wrapper,
 };
 
 #if IS_ENABLED(CONFIG_ARCH_TEGRA_234_SOC)

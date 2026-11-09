@@ -1,22 +1,15 @@
-# SPDX-License-Identifier: GPL-2.0
+ifneq ($(KERNELRELEASE),)
+	obj-m := rtk_btusb.o
+	rtk_btusb-y = rtk_coex.o rtk_misc.o rtk_bt.o
+else
+	PWD := $(shell pwd)
+	KVER := $(shell uname -r)
+	KDIR := /lib/modules/$(KVER)/build
 
-CONFIG_BTUSB_AUTOSUSPEND = n
-CONFIG_BTUSB_WAKEUP_HOST = n
-CONFIG_BTCOEX = y
+all:
+	$(MAKE) -C $(KDIR) M=$(PWD) modules
 
-ifeq ($(CONFIG_BTUSB_AUTOSUSPEND), y)
-	EXTRA_CFLAGS += -DCONFIG_BTUSB_AUTOSUSPEND
+clean:
+	rm -rf *.o *.mod.c *.mod.o *.ko *.symvers *.order *.a
+
 endif
-
-ifeq ($(CONFIG_BTUSB_WAKEUP_HOST), y)
-	EXTRA_CFLAGS += -DCONFIG_BTUSB_WAKEUP_HOST
-endif
-
-ifeq ($(CONFIG_BTCOEX), y)
-	EXTRA_CFLAGS += -DCONFIG_BTCOEX
-endif
-
-obj-m := rtk_btusb.o
-rtk_btusb-objs := rtk_coex.o \
-		rtk_misc.o \
-		rtk_bt.o

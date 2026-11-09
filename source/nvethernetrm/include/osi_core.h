@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2023, NVIDIA CORPORATION. All rights reserved.
+ * Copyright (c) 2018-2025, NVIDIA CORPORATION. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -269,7 +269,10 @@ typedef my_lint_64		nvel64_t;
 #endif
 #define OSI_CMD_SUSPEND			53U
 #define OSI_CMD_RESUME			54U
-#ifdef HSI_SUPPORT
+#if defined HSI_SUPPORT && defined(NV_VLTEST_BUILD)
+/**
+ * @brief Command to inject HSI error
+ */
 #define OSI_CMD_HSI_INJECT_ERR		55U
 #endif /* HSI_SUPPORT */
 #define OSI_CMD_READ_STATS		56U

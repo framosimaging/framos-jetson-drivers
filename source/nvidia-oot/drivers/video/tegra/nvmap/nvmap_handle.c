@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
+// SPDX-FileCopyrightText: Copyright (c) 2009-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 /*
- * Copyright (c) 2009-2023, NVIDIA CORPORATION. All rights reserved.
- *
  * Handle allocation and freeing routines for nvmap
  */
 
@@ -14,6 +13,7 @@
 #include <linux/kernel.h>
 #include <linux/list.h>
 #include <linux/mm.h>
+#include <linux/sched/mm.h>
 #include <linux/rbtree.h>
 #include <linux/dma-buf.h>
 #include <linux/moduleparam.h>
@@ -401,17 +401,31 @@ struct nvmap_handle_ref *nvmap_duplicate_handle(struct nvmap_client *client,
 
 	atomic_set(&ref->dupes, 1);
 	ref->handle = h;
+
+	/*
+	 * When a new reference is created to the handle, save mm, anon_count in ref and
+	 * increment ref count of mm.
+	 */
+	ref->mm = current->mm;
+	ref->anon_count = h->anon_count;
 	add_handle_ref(client, ref);
+
+	if (ref->anon_count != 0 && ref->mm != NULL) {
+		if (!mmget_not_zero(ref->mm))
+			goto exit;
+
+		nvmap_add_mm_counter(ref->mm, MM_ANONPAGES, ref->anon_count);
+	}
 
 	if (is_ro) {
 		ref->is_ro = true;
 		if (!h->dmabuf_ro)
-			goto exit;
+			goto exit_mm;
 		get_dma_buf(h->dmabuf_ro);
 	} else {
 		ref->is_ro = false;
 		if (!h->dmabuf)
-			goto exit;
+			goto exit_mm;
 		get_dma_buf(h->dmabuf);
 	}
 
@@ -419,6 +433,14 @@ out:
 	NVMAP_TAG_TRACE(trace_nvmap_duplicate_handle,
 		NVMAP_TP_ARGS_CHR(client, h, ref));
 	return ref;
+
+exit_mm:
+	if (ref->anon_count != 0 && ref->mm != NULL) {
+		nvmap_add_mm_counter(ref->mm, MM_ANONPAGES, -ref->anon_count);
+		mmput(ref->mm);
+		ref->mm = NULL;
+		ref->anon_count = 0;
+	}
 
 exit:
 	pr_err("dmabuf is NULL\n");

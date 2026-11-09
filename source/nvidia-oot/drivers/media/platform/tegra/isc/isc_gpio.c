@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-only
-// SPDX-FileCopyrightText: Copyright (c) 2017-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+// SPDX-FileCopyrightText: Copyright (c) 2017-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 
 #include <nvidia/conftest.h>
 
@@ -330,9 +330,21 @@ static const struct of_device_id isc_gpio_dt_ids[] = {
 };
 MODULE_DEVICE_TABLE(of, isc_gpio_dt_ids);
 
+#if defined(NV_PLATFORM_DRIVER_STRUCT_REMOVE_RETURNS_VOID) /* Linux v6.11 */
+static void isc_gpio_remove_wrapper(struct platform_device *pdev)
+{
+	isc_gpio_remove(pdev);
+}
+#else
+static int isc_gpio_remove_wrapper(struct platform_device *pdev)
+{
+	return isc_gpio_remove(pdev);
+}
+#endif
+
 static struct platform_driver isc_gpio_driver = {
 	.probe = isc_gpio_probe,
-	.remove = isc_gpio_remove,
+	.remove = isc_gpio_remove_wrapper,
 	.driver = {
 		.name = "isc-gpio",
 		.of_match_table = isc_gpio_dt_ids,

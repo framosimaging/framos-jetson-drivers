@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-only
-// SPDX-FileCopyrightText: Copyright (c) 2019-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+// SPDX-FileCopyrightText: Copyright (c) 2019-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 
 #include <nvidia/conftest.h>
 
@@ -339,8 +339,9 @@ static inline void ether_hsi_work_func(struct work_struct *work)
 		mutex_unlock(&pdata->hsi_lock);
 	}
 
-	if (osi_core->hsi.report_err == OSI_ENABLE ||
-	    osi_core->hsi.macsec_report_err == OSI_ENABLE)
+	if (osi_core->hsi.enabled == OSI_ENABLE &&
+	    (osi_core->hsi.report_err == OSI_ENABLE ||
+	     osi_core->hsi.macsec_report_err == OSI_ENABLE))
 		ether_common_isr_thread(0, (void *)pdata);
 
 	schedule_delayed_work(&pdata->ether_hsi_work,
@@ -2448,15 +2449,18 @@ static int ether_mdio_write(struct mii_bus *bus, int phyaddr, int phyreg,
 {
 	struct net_device *ndev = bus->priv;
 	struct ether_priv_data *pdata = netdev_priv(ndev);
+	int ret = 0;
 
 	if (!pdata->clks_enable) {
 		dev_err(pdata->dev,
 			"%s:No clks available, skipping PHY write\n", __func__);
 		return -ENODEV;
 	}
+	mutex_lock(&pdata->osi_mdio_lock);
+	ret = osi_write_phy_reg(pdata->osi_core, (unsigned int)phyaddr, (unsigned int)phyreg, phydata);
+	mutex_unlock(&pdata->osi_mdio_lock);
 
-	return osi_write_phy_reg(pdata->osi_core, (unsigned int)phyaddr,
-				 (unsigned int)phyreg, phydata);
+	return ret;
 }
 
 /**
@@ -2478,15 +2482,18 @@ static int ether_mdio_read(struct mii_bus *bus, int phyaddr, int phyreg)
 {
 	struct net_device *ndev = bus->priv;
 	struct ether_priv_data *pdata = netdev_priv(ndev);
+	int ret = 0;
 
 	if (!pdata->clks_enable) {
 		dev_err(pdata->dev,
 			"%s:No clks available, skipping PHY read\n", __func__);
 		return -ENODEV;
 	}
+	mutex_lock(&pdata->osi_mdio_lock);
+	ret = osi_read_phy_reg(pdata->osi_core, (unsigned int)phyaddr, (unsigned int)phyreg);
+	mutex_unlock(&pdata->osi_mdio_lock);
 
-	return osi_read_phy_reg(pdata->osi_core, (unsigned int)phyaddr,
-				(unsigned int)phyreg);
+	return ret;
 }
 
 #if defined(NV_MII_BUS_STRUCT_HAS_WRITE_C45) /* Linux v6.3 */
@@ -2949,7 +2956,11 @@ static int ether_close(struct net_device *ndev)
 	int i;
 
 #ifdef ETHER_NVGRO
+#if defined(NV_TIMER_DELETE_PRESENT) /* Linux v6.15 */
+	timer_delete_sync(&pdata->nvgro_timer);
+#else
 	del_timer_sync(&pdata->nvgro_timer);
+#endif
 	/* TODO: purge the queues */
 #endif
 
@@ -3797,7 +3808,9 @@ static int ether_handle_priv_rmdio_ioctl(struct ether_priv_data *pdata,
 	dev_dbg(pdata->dev, "%s: phy_id:%d regadd: %d devaddr:%d\n",
 		__func__, mii_data->phy_id, prtad, devad);
 
+	mutex_lock(&pdata->osi_mdio_lock);
 	ret = osi_read_phy_reg(pdata->osi_core, prtad, devad);
+	mutex_unlock(&pdata->osi_mdio_lock);
 	if (ret < 0) {
 		dev_err(pdata->dev, "%s: Data read failed\n", __func__);
 		return -EFAULT;
@@ -3825,6 +3838,7 @@ static int ether_handle_priv_wmdio_ioctl(struct ether_priv_data *pdata,
 {
 	struct mii_ioctl_data *mii_data = if_mii(ifr);
 	unsigned int prtad, devad;
+	int ret = 0;
 
 	if (mdio_phy_id_is_c45(mii_data->phy_id)) {
 		prtad = mdio_phy_id_prtad(mii_data->phy_id);
@@ -3838,8 +3852,11 @@ static int ether_handle_priv_wmdio_ioctl(struct ether_priv_data *pdata,
 	dev_dbg(pdata->dev, "%s: phy_id:%d regadd: %d devaddr:%d val:%d\n",
 		__func__, mii_data->phy_id, prtad, devad, mii_data->val_in);
 
-	return osi_write_phy_reg(pdata->osi_core, prtad, devad,
-				 mii_data->val_in);
+	mutex_lock(&pdata->osi_mdio_lock);
+	ret = osi_write_phy_reg(pdata->osi_core, prtad, devad, mii_data->val_in);
+	mutex_unlock(&pdata->osi_mdio_lock);
+
+	return ret;
 }
 
 /**
@@ -5790,6 +5807,13 @@ static int ether_parse_dt(struct ether_priv_data *pdata)
 		}
 	}
 
+	/* Read MAC instance id */
+	ret = of_property_read_u32(np, "nvidia,instance_id", &osi_core->instance_id);
+	if (ret != 0) {
+		dev_info(dev, "DT instance_id missing\n");
+		return -EINVAL;
+	}
+
 	if (osi_dma->num_dma_chans != osi_core->num_mtl_queues) {
 		dev_err(dev, "mismatch in numbers of DMA channel and MTL Q\n");
 		return -EINVAL;
@@ -6540,6 +6564,8 @@ static int ether_probe(struct platform_device *pdev)
 	osi_core->osd = pdata;
 	osi_dma->osd = pdata;
 
+	mutex_init(&pdata->osi_mdio_lock);
+
 	osi_core->num_mtl_queues = num_mtl_queues;
 	osi_dma->num_dma_chans = num_dma_chans;
 
@@ -6647,10 +6673,16 @@ static int ether_probe(struct platform_device *pdev)
 		chan = osi_dma->dma_chans[i];
 		atomic_set(&pdata->tx_napi[chan]->tx_usecs_timer_armed,
 			   OSI_DISABLE);
+#if defined(NV_HRTIMER_SETUP_PRESENT) /* Linux v6.13 */
+		hrtimer_setup(&pdata->tx_napi[chan]->tx_usecs_timer,
+			      ether_tx_usecs_hrtimer, CLOCK_MONOTONIC,
+			      HRTIMER_MODE_REL);
+#else
 		hrtimer_init(&pdata->tx_napi[chan]->tx_usecs_timer,
 			     CLOCK_MONOTONIC, HRTIMER_MODE_REL);
 		pdata->tx_napi[chan]->tx_usecs_timer.function =
 			ether_tx_usecs_hrtimer;
+#endif
 	}
 
 	ret = register_netdev(ndev);
@@ -6823,6 +6855,107 @@ static void ether_shutdown(struct platform_device *pdev)
 }
 
 #ifdef CONFIG_PM
+#ifndef OSI_STRIPPED_LIB
+/**
+ * @brief Revert the WOL settings
+ *
+ * Alogorithm: Create a struct ethtool_wolinfo to disable WOL settings
+ *
+ * @param[in] dev: Platform device associated with platform driver.
+ *
+ * @retval 0 on success
+ * @retval "negative value" on failure.
+ */
+static inline int ether_revert_wol(struct device *dev)
+{
+	int ret = 0;
+	u32 wolopts = 0;
+	struct net_device *ndev = dev_get_drvdata(dev);
+	struct ether_priv_data *pdata = netdev_priv(ndev);
+
+	swap(pdata->wol.wolopts, wolopts);
+	ret = ether_set_wol_impl(ndev, &pdata->wol);
+	pdata->wol.wolopts = wolopts;
+	if (ret)
+		dev_err(pdata->dev, "Fail to enable PHY network functionality %d\n", ret);
+
+	return ret;
+}
+
+/**
+ * @brief Ethernet platform driver prepare callback.
+ *
+ * Alogorithm: Configure the defer WOL settings if enabled by user
+ *
+ * @param[in] dev: Platform device associated with platform driver.
+ *
+ * @retval 0 on success
+ * @retval "negative value" on failure.
+ */
+static int ether_prepare(struct device *dev)
+{
+	int ret = 0;
+	struct net_device *ndev = dev_get_drvdata(dev);
+	struct ether_priv_data *pdata = netdev_priv(ndev);
+	struct phy_device *phydev = pdata->phydev;
+
+	if (pdata->wol.wolopts) {
+		ret = ether_set_wol_impl(ndev, &pdata->wol);
+		if (ret)
+			goto ether_prepare_fail;
+
+		ret = enable_irq_wake(phydev->irq);
+		if (ret) {
+			dev_err(pdata->dev, "PHY enable irq wake failed, %d\n",
+				ret);
+			goto ether_prepare_fail;
+		}
+		/* enable device wake on WoL set */
+		device_init_wakeup(&ndev->dev, true);
+	}
+
+ether_prepare_fail:
+	if (unlikely(ret))
+		ether_revert_wol(dev);
+
+	return ret;
+}
+
+/**
+ * @brief Ethernet platform driver complete callback.
+ *
+ * Alogorithm: Revert the defer WOL settings if enabled by user
+ *
+ * @param[in] dev: Platform device associated with platform driver.
+ */
+static void ether_complete(struct device *dev)
+{
+	int ret;
+	struct net_device *ndev = dev_get_drvdata(dev);
+	struct ether_priv_data *pdata = netdev_priv(ndev);
+	struct phy_device *phydev = pdata->phydev;
+
+	if (pdata->wol.wolopts) {
+		ret = ether_revert_wol(dev);
+		if (ret) {
+			dev_err(pdata->dev, "Fail to enable PHY network functionality %d\n", ret);
+			return;
+		}
+
+		ret = disable_irq_wake(phydev->irq);
+		if (ret) {
+			dev_info(pdata->dev,
+				 "PHY disable irq wake failed, %d\n",
+				 ret);
+		}
+		/* disable device wake on WoL reset */
+		device_init_wakeup(&ndev->dev, false);
+	}
+
+	return;
+}
+#endif /* !(OSI_STRIPPED_LIB) */
+
 /**
  * @brief Ethernet platform driver resume call.
  *
@@ -7027,10 +7160,14 @@ static int ether_resume_noirq(struct device *dev)
 		return ret;
 	}
 
-	return 0;
+	return ret;
 }
 
 static const struct dev_pm_ops ether_pm_ops = {
+#ifndef OSI_STRIPPED_LIB
+	.prepare = ether_prepare,
+	.complete = ether_complete,
+#endif /* !OSI_STRIPPED_LIB */
 	.suspend = ether_suspend_noirq,
 	.resume = ether_resume_noirq,
 };
@@ -7048,12 +7185,24 @@ static const struct of_device_id ether_of_match[] = {
 };
 MODULE_DEVICE_TABLE(of, ether_of_match);
 
+#if defined(NV_PLATFORM_DRIVER_STRUCT_REMOVE_RETURNS_VOID) /* Linux v6.11 */
+static void ether_remove_wrapper(struct platform_device *pdev)
+{
+	ether_remove(pdev);
+}
+#else
+static int ether_remove_wrapper(struct platform_device *pdev)
+{
+	return ether_remove(pdev);
+}
+#endif
+
 /**
  * @brief Ethernet platform driver instance
  */
 static struct platform_driver ether_driver = {
 	.probe = ether_probe,
-	.remove = ether_remove,
+	.remove = ether_remove_wrapper,
 	.shutdown = ether_shutdown,
 	.driver = {
 		.name = "nvethernet",

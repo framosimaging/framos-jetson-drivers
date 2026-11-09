@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-only
-// SPDX-FileCopyrightText: Copyright (c) 2014-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+// SPDX-FileCopyrightText: Copyright (c) 2014-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 
 #include <nvidia/conftest.h>
 
@@ -32,7 +32,6 @@
 #include <linux/uaccess.h>
 
 #include "amisc.h"
-#include "ape_actmon.h"
 #include "os.h"
 #include "dev.h"
 #include "dram_app_mem_manager.h"

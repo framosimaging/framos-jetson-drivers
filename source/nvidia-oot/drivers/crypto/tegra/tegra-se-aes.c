@@ -25,7 +25,7 @@
 #include "tegra-se.h"
 
 struct tegra_aes_ctx {
-#ifndef NV_CONFTEST_REMOVE_STRUCT_CRYPTO_ENGINE_CTX
+#ifndef NV_CRYPTO_ENGINE_OPS_PRESENT
 	struct crypto_engine_ctx enginectx;
 #endif
 	struct tegra_se *se;
@@ -50,7 +50,7 @@ struct tegra_aes_reqctx {
 };
 
 struct tegra_aead_ctx {
-#ifndef NV_CONFTEST_REMOVE_STRUCT_CRYPTO_ENGINE_CTX
+#ifndef NV_CRYPTO_ENGINE_OPS_PRESENT
 	struct crypto_engine_ctx enginectx;
 #endif
 	struct tegra_se *se;
@@ -78,7 +78,7 @@ struct tegra_aead_reqctx {
 };
 
 struct tegra_cmac_ctx {
-#ifndef NV_CONFTEST_REMOVE_STRUCT_CRYPTO_ENGINE_CTX
+#ifndef NV_CRYPTO_ENGINE_OPS_PRESENT
 	struct crypto_engine_ctx enginectx;
 #endif
 	struct tegra_se *se;
@@ -357,7 +357,7 @@ static int tegra_aes_cra_init(struct crypto_skcipher *tfm)
 	const char *algname;
 	int ret;
 
-#ifdef NV_CONFTEST_REMOVE_STRUCT_CRYPTO_ENGINE_CTX
+#ifdef NV_CRYPTO_ENGINE_OPS_PRESENT
 	se_alg = container_of(alg, struct tegra_se_alg, alg.skcipher.base);
 #else
 	se_alg = container_of(alg, struct tegra_se_alg, alg.skcipher);
@@ -380,7 +380,7 @@ static int tegra_aes_cra_init(struct crypto_skcipher *tfm)
 
 	ctx->alg = ret;
 
-#ifndef NV_CONFTEST_REMOVE_STRUCT_CRYPTO_ENGINE_CTX
+#ifndef NV_CRYPTO_ENGINE_OPS_PRESENT
 	ctx->enginectx.op.prepare_request = NULL;
 	ctx->enginectx.op.unprepare_request = NULL;
 	ctx->enginectx.op.do_one_request = tegra_aes_do_one_req;
@@ -533,7 +533,7 @@ static int tegra_aes_decrypt(struct skcipher_request *req)
 static struct tegra_se_alg tegra_aes_algs[] = {
 	{
 		.alg.skcipher = {
-#ifdef NV_CONFTEST_REMOVE_STRUCT_CRYPTO_ENGINE_CTX
+#ifdef NV_CRYPTO_ENGINE_OPS_PRESENT
 			.base = {
 #endif
 			.init = tegra_aes_cra_init,
@@ -554,14 +554,14 @@ static struct tegra_se_alg tegra_aes_algs[] = {
 				.cra_alignmask = 0xf,
 				.cra_module = THIS_MODULE,
 			},
-#ifdef NV_CONFTEST_REMOVE_STRUCT_CRYPTO_ENGINE_CTX
+#ifdef NV_CRYPTO_ENGINE_OPS_PRESENT
 			},
 			.op.do_one_request = tegra_aes_do_one_req,
 #endif
 		}
 	}, {
 		.alg.skcipher = {
-#ifdef NV_CONFTEST_REMOVE_STRUCT_CRYPTO_ENGINE_CTX
+#ifdef NV_CRYPTO_ENGINE_OPS_PRESENT
 			.base = {
 #endif
 			.init = tegra_aes_cra_init,
@@ -581,14 +581,14 @@ static struct tegra_se_alg tegra_aes_algs[] = {
 				.cra_alignmask = 0xf,
 				.cra_module = THIS_MODULE,
 			},
-#ifdef NV_CONFTEST_REMOVE_STRUCT_CRYPTO_ENGINE_CTX
+#ifdef NV_CRYPTO_ENGINE_OPS_PRESENT
 			},
 			.op.do_one_request = tegra_aes_do_one_req,
 #endif
 		}
 	}, {
 		.alg.skcipher = {
-#ifdef NV_CONFTEST_REMOVE_STRUCT_CRYPTO_ENGINE_CTX
+#ifdef NV_CRYPTO_ENGINE_OPS_PRESENT
 			.base = {
 #endif
 			.init = tegra_aes_cra_init,
@@ -609,14 +609,14 @@ static struct tegra_se_alg tegra_aes_algs[] = {
 				.cra_alignmask = 0xf,
 				.cra_module = THIS_MODULE,
 			},
-#ifdef NV_CONFTEST_REMOVE_STRUCT_CRYPTO_ENGINE_CTX
+#ifdef NV_CRYPTO_ENGINE_OPS_PRESENT
 			},
 			.op.do_one_request = tegra_aes_do_one_req,
 #endif
 		}
 	}, {
 		.alg.skcipher = {
-#ifdef NV_CONFTEST_REMOVE_STRUCT_CRYPTO_ENGINE_CTX
+#ifdef NV_CRYPTO_ENGINE_OPS_PRESENT
 			.base = {
 #endif
 			.init = tegra_aes_cra_init,
@@ -636,7 +636,7 @@ static struct tegra_se_alg tegra_aes_algs[] = {
 				.cra_alignmask	   = (__alignof__(u64) - 1),
 				.cra_module	   = THIS_MODULE,
 			},
-#ifdef NV_CONFTEST_REMOVE_STRUCT_CRYPTO_ENGINE_CTX
+#ifdef NV_CRYPTO_ENGINE_OPS_PRESENT
 			},
 			.op.do_one_request = tegra_aes_do_one_req,
 #endif
@@ -1390,7 +1390,7 @@ static int tegra_ccm_cra_init(struct crypto_aead *tfm)
 
 	algname = crypto_tfm_alg_name(&tfm->base);
 
-#ifdef NV_CONFTEST_REMOVE_STRUCT_CRYPTO_ENGINE_CTX
+#ifdef NV_CRYPTO_ENGINE_OPS_PRESENT
 	se_alg = container_of(alg, struct tegra_se_alg, alg.aead.base);
 #else
 	se_alg = container_of(alg, struct tegra_se_alg, alg.aead);
@@ -1410,7 +1410,7 @@ static int tegra_ccm_cra_init(struct crypto_aead *tfm)
 
 	ctx->alg = ret;
 
-#ifndef NV_CONFTEST_REMOVE_STRUCT_CRYPTO_ENGINE_CTX
+#ifndef NV_CRYPTO_ENGINE_OPS_PRESENT
 	ctx->enginectx.op.prepare_request = NULL;
 	ctx->enginectx.op.unprepare_request = NULL;
 	ctx->enginectx.op.do_one_request = tegra_ccm_do_one_req;
@@ -1429,7 +1429,7 @@ static int tegra_gcm_cra_init(struct crypto_aead *tfm)
 
 	algname = crypto_tfm_alg_name(&tfm->base);
 
-#ifdef NV_CONFTEST_REMOVE_STRUCT_CRYPTO_ENGINE_CTX
+#ifdef NV_CRYPTO_ENGINE_OPS_PRESENT
 	se_alg = container_of(alg, struct tegra_se_alg, alg.aead.base);
 #else
 	se_alg = container_of(alg, struct tegra_se_alg, alg.aead);
@@ -1449,7 +1449,7 @@ static int tegra_gcm_cra_init(struct crypto_aead *tfm)
 
 	ctx->alg = ret;
 
-#ifndef NV_CONFTEST_REMOVE_STRUCT_CRYPTO_ENGINE_CTX
+#ifndef NV_CRYPTO_ENGINE_OPS_PRESENT
 	ctx->enginectx.op.prepare_request = NULL;
 	ctx->enginectx.op.unprepare_request = NULL;
 	ctx->enginectx.op.do_one_request = tegra_gcm_do_one_req;
@@ -1809,7 +1809,7 @@ static int tegra_cmac_cra_init(struct crypto_tfm *tfm)
 	int ret;
 
 	algname = crypto_tfm_alg_name(tfm);
-#ifdef NV_CONFTEST_REMOVE_STRUCT_CRYPTO_ENGINE_CTX
+#ifdef NV_CRYPTO_ENGINE_OPS_PRESENT
 	se_alg = container_of(alg, struct tegra_se_alg, alg.ahash.base);
 #else
 	se_alg = container_of(alg, struct tegra_se_alg, alg.ahash);
@@ -1829,7 +1829,7 @@ static int tegra_cmac_cra_init(struct crypto_tfm *tfm)
 
 	ctx->alg = ret;
 
-#ifndef NV_CONFTEST_REMOVE_STRUCT_CRYPTO_ENGINE_CTX
+#ifndef NV_CRYPTO_ENGINE_OPS_PRESENT
 	ctx->enginectx.op.prepare_request = NULL;
 	ctx->enginectx.op.unprepare_request = NULL;
 	ctx->enginectx.op.do_one_request = tegra_cmac_do_one_req;
@@ -1969,7 +1969,7 @@ static int tegra_cmac_import(struct ahash_request *req, const void *in)
 static struct tegra_se_alg tegra_aead_algs[] = {
 	{
 		.alg.aead = {
-#ifdef NV_CONFTEST_REMOVE_STRUCT_CRYPTO_ENGINE_CTX
+#ifdef NV_CRYPTO_ENGINE_OPS_PRESENT
 			.base = {
 #endif
 			.init = tegra_gcm_cra_init,
@@ -1989,14 +1989,14 @@ static struct tegra_se_alg tegra_aead_algs[] = {
 				.cra_alignmask = 0xf,
 				.cra_module = THIS_MODULE,
 			},
-#ifdef NV_CONFTEST_REMOVE_STRUCT_CRYPTO_ENGINE_CTX
+#ifdef NV_CRYPTO_ENGINE_OPS_PRESENT
 			},
 			.op.do_one_request = tegra_gcm_do_one_req,
 #endif
 		}
 	}, {
 		.alg.aead = {
-#ifdef NV_CONFTEST_REMOVE_STRUCT_CRYPTO_ENGINE_CTX
+#ifdef NV_CRYPTO_ENGINE_OPS_PRESENT
 			.base = {
 #endif
 			.init = tegra_ccm_cra_init,
@@ -2017,7 +2017,7 @@ static struct tegra_se_alg tegra_aead_algs[] = {
 				.cra_alignmask = 0xf,
 				.cra_module = THIS_MODULE,
 			},
-#ifdef NV_CONFTEST_REMOVE_STRUCT_CRYPTO_ENGINE_CTX
+#ifdef NV_CRYPTO_ENGINE_OPS_PRESENT
 			},
 			.op.do_one_request = tegra_ccm_do_one_req,
 #endif
@@ -2028,7 +2028,7 @@ static struct tegra_se_alg tegra_aead_algs[] = {
 static struct tegra_se_alg tegra_cmac_algs[] = {
 	{
 		.alg.ahash = {
-#ifdef NV_CONFTEST_REMOVE_STRUCT_CRYPTO_ENGINE_CTX
+#ifdef NV_CRYPTO_ENGINE_OPS_PRESENT
 			.base = {
 #endif
 			.init = tegra_cmac_init,
@@ -2053,7 +2053,7 @@ static struct tegra_se_alg tegra_cmac_algs[] = {
 				.cra_init = tegra_cmac_cra_init,
 				.cra_exit = tegra_cmac_cra_exit,
 			},
-#ifdef NV_CONFTEST_REMOVE_STRUCT_CRYPTO_ENGINE_CTX
+#ifdef NV_CRYPTO_ENGINE_OPS_PRESENT
 			},
 			.op.do_one_request = tegra_cmac_do_one_req,
 #endif
@@ -2061,7 +2061,7 @@ static struct tegra_se_alg tegra_cmac_algs[] = {
 	}
 };
 
-#ifdef NV_CONFTEST_REMOVE_STRUCT_CRYPTO_ENGINE_CTX
+#ifdef NV_CRYPTO_ENGINE_OPS_PRESENT
 int tegra_init_aes(struct tegra_se *se)
 {
 	struct aead_engine_alg *aead_alg;

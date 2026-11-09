@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
-/*
- * Copyright (c) 2016-2023, NVIDIA CORPORATION.  All rights reserved.
- */
+// SPDX-FileCopyrightText: Copyright (c) 2016-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+
+#include <nvidia/conftest.h>
 
 #include "pva_mailbox.h"
 #include <linux/workqueue.h>
@@ -1708,9 +1708,21 @@ const struct dev_pm_ops nvpva_module_pm_ops = {
 };
 #endif /* CONFIG_PM */
 
+#if defined(NV_PLATFORM_DRIVER_STRUCT_REMOVE_RETURNS_VOID) /* Linux v6.11 */
+static void __exit pva_remove_wrapper(struct platform_device *pdev)
+{
+	pva_remove(pdev);
+}
+#else
+static int __exit pva_remove_wrapper(struct platform_device *pdev)
+{
+	return pva_remove(pdev);
+}
+#endif
+
 static struct platform_driver pva_driver = {
 	.probe = pva_probe,
-	.remove = __exit_p(pva_remove),
+	.remove = __exit_p(pva_remove_wrapper),
 	.driver = {
 		.owner = THIS_MODULE,
 		.name = "pva",
@@ -1788,5 +1800,9 @@ static void __exit nvpva_exit(void)
 module_exit(nvpva_exit);
 #endif
 
+#if defined(NV_MODULE_IMPORT_NS_CALLS_STRINGIFY)
 MODULE_IMPORT_NS(DMA_BUF);
+#else
+MODULE_IMPORT_NS("DMA_BUF");
+#endif
 MODULE_LICENSE("GPL v2");

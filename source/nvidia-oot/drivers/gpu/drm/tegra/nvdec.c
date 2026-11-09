@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2015-2024, NVIDIA CORPORATION & AFFILIATES. All Rights Reserved.
+ * SPDX-FileCopyrightText: Copyright (c) 2015-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
  */
+
+#include <nvidia/conftest.h>
 
 #include <linux/bitops.h>
 #include <linux/clk.h>
@@ -964,6 +966,18 @@ static const struct dev_pm_ops nvdec_pm_ops = {
 				pm_runtime_force_resume)
 };
 
+#if defined(NV_PLATFORM_DRIVER_STRUCT_REMOVE_RETURNS_VOID) /* Linux v6.11 */
+static void nvdec_remove_wrapper(struct platform_device *pdev)
+{
+	nvdec_remove(pdev);
+}
+#else
+static int nvdec_remove_wrapper(struct platform_device *pdev)
+{
+	return nvdec_remove(pdev);
+}
+#endif
+
 struct platform_driver tegra_nvdec_driver = {
 	.driver = {
 		.name = "tegra-nvdec",
@@ -971,7 +985,7 @@ struct platform_driver tegra_nvdec_driver = {
 		.pm = &nvdec_pm_ops
 	},
 	.probe = nvdec_probe,
-	.remove = nvdec_remove,
+	.remove = nvdec_remove_wrapper,
 };
 
 #if IS_ENABLED(CONFIG_ARCH_TEGRA_210_SOC)

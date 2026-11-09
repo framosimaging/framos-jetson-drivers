@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-only
-// SPDX-FileCopyrightText: Copyright (c) 2011-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+// SPDX-FileCopyrightText: Copyright (c) 2011-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 /*
  * User-space interface to nvmap
  */
@@ -285,6 +285,17 @@ static void destroy_client(struct nvmap_client *client)
 		smp_rmb();
 		if (ref->handle->owner == client)
 			ref->handle->owner = NULL;
+
+		/*
+		 * When a reference is freed, decrement rss counter of the process corresponding
+		 * to this ref and do mmput so that mm_struct can be freed, if required.
+		 */
+		if (ref->mm != NULL && ref->anon_count != 0) {
+			nvmap_add_mm_counter(ref->mm, MM_ANONPAGES, -ref->anon_count);
+			mmput(ref->mm);
+			ref->mm = NULL;
+			ref->anon_count = 0;
+		}
 
 		if (ref->is_ro)
 			dma_buf_put(ref->handle->dmabuf_ro);
@@ -597,12 +608,12 @@ next_page:
 
 bool is_nvmap_memory_available(size_t size, uint32_t heap)
 {
-	unsigned long total_num_pages;
 	unsigned int carveout_mask = NVMAP_HEAP_CARVEOUT_MASK;
 	unsigned int iovmm_mask = NVMAP_HEAP_IOVMM;
 	struct nvmap_device *dev = nvmap_dev;
 	bool heap_present = false;
 	int i;
+	unsigned long free_mem = 0;
 
 	if (!heap)
 		return false;
@@ -618,15 +629,15 @@ bool is_nvmap_memory_available(size_t size, uint32_t heap)
 	}
 
 	if (heap & iovmm_mask) {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 0, 0)
-		total_num_pages = totalram_pages();
-#else
-		total_num_pages = totalram_pages;
-#endif
-		if ((size >> PAGE_SHIFT) > total_num_pages) {
+		if (system_heap_free_mem(&free_mem)) {
+			pr_debug("Call to system_heap_free_mem failed\n");
+			return false;
+		}
+
+		if (size > (free_mem & PAGE_MASK)) {
 			pr_debug("Requested size is more than available memory\n");
 			pr_debug("Requested size : %lu B, Available memory : %lu B\n", size,
-					total_num_pages << PAGE_SHIFT);
+					free_mem & PAGE_MASK);
 			return false;
 		}
 		return true;
@@ -642,10 +653,10 @@ bool is_nvmap_memory_available(size_t size, uint32_t heap)
 
 		heap_present = true;
 		h = co_heap->carveout;
-		if (size > h->free_size) {
+		if (size > (h->free_size & PAGE_MASK)) {
 			pr_debug("Requested size is more than available memory");
 			pr_debug("Requested size : %lu B, Available memory : %lu B\n", size,
-					h->free_size);
+					(h->free_size & PAGE_MASK));
                         return false;
                 }
 		break;
@@ -776,7 +787,7 @@ static int nvmap_page_mapcount(struct page *page)
 	int mapcount = atomic_read(&page->_mapcount) + 1;
 
 	/* Handle page_has_type() pages */
-	if (mapcount < PAGE_MAPCOUNT_RESERVE + 1)
+	if (page_has_type(page))
 		mapcount = 0;
 	if (unlikely(PageCompound(page)))
 #if defined(NV_FOLIO_ENTIRE_MAPCOUNT_PRESENT) /* Linux v5.18 */
@@ -1368,25 +1379,6 @@ static void nvmap_iovmm_debugfs_init(void)
 	}
 }
 
-static bool nvmap_is_iommu_present(void)
-{
-	struct device_node *np;
-	struct property *prop;
-
-	np = of_find_node_by_name(NULL, "iommu");
-	while (np) {
-		prop = of_find_property(np, "status", NULL);
-		if (prop && !strcmp(prop->value, "okay")) {
-			of_node_put(np);
-			return true;
-		}
-		of_node_put(np);
-		np = of_find_node_by_name(np, "iommu");
-	}
-
-	return false;
-}
-
 int __init nvmap_probe(struct platform_device *pdev)
 {
 	struct nvmap_platform_data *plat;
@@ -1493,11 +1485,8 @@ int __init nvmap_probe(struct platform_device *pdev)
 			generic_carveout_present = 1;
 
 	if (generic_carveout_present) {
-		if (!iommu_present(&platform_bus_type) &&
-			!nvmap_is_iommu_present())
-			nvmap_convert_iovmm_to_carveout = 1;
-		else if (!of_property_read_bool(pdev->dev.of_node,
-				"dont-convert-iovmm-to-carveout"))
+		if (!of_property_read_bool(pdev->dev.of_node,
+			"dont-convert-iovmm-to-carveout"))
 			nvmap_convert_iovmm_to_carveout = 1;
 	} else {
 		nvmap_convert_carveout_to_iovmm = 1;

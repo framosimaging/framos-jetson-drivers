@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-only
-//
-// tegra210_ahub.c - Tegra210 AHUB driver
-//
-// Copyright (c) 2020-2023 NVIDIA CORPORATION.  All rights reserved.
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2014-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *
+ * tegra210_ahub.c - Tegra210 AHUB driver
+ */
 
 #include <nvidia/conftest.h>
 
@@ -1679,9 +1680,21 @@ static const struct dev_pm_ops tegra_ahub_pm_ops = {
 				pm_runtime_force_resume)
 };
 
+#if defined(NV_PLATFORM_DRIVER_STRUCT_REMOVE_RETURNS_VOID) /* Linux v6.11 */
+static inline void tegra_ahub_remove_wrapper(struct platform_device *pdev)
+{
+	tegra_ahub_remove(pdev);
+}
+#else
+static inline int tegra_ahub_remove_wrapper(struct platform_device *pdev)
+{
+	return tegra_ahub_remove(pdev);
+}
+#endif
+
 static struct platform_driver tegra_ahub_driver = {
 	.probe = tegra_ahub_probe,
-	.remove = tegra_ahub_remove,
+	.remove = tegra_ahub_remove_wrapper,
 	.driver = {
 		.name = "tegra210-ahub",
 		.of_match_table = tegra_ahub_of_match,

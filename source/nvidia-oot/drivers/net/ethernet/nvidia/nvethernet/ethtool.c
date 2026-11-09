@@ -1337,6 +1337,38 @@ static int ether_set_eee(struct net_device *ndev,
 }
 
 /**
+ * @brief Configure WOL settings in PHY subsystem
+ *
+ * Algorithm: Call phy subsystem to enable or disable
+ * Wake On Lan settings based on wol param
+ *
+ * @param[in] ndev – pointer to net device structure.
+ * @param[in] wol – pointer to ethtool_wolinfo structure.
+ *
+ * @note MAC and PHY need to be initialized.
+ *
+ * @retval zero on success and -ve number on failure.
+ */
+
+int ether_set_wol_impl(struct net_device *ndev, struct ethtool_wolinfo *wol)
+{
+	struct ether_priv_data *pdata = netdev_priv(ndev);
+	struct phy_device *phydev = pdata->phydev;
+
+	if (!phydev) {
+		netdev_err(pdata->ndev,
+			   "%s: phydev is null check iface up status\n",
+			   __func__);
+		return -ENOTSUPP;
+	}
+
+	if (!phy_interrupt_is_valid(phydev))
+		return -ENOTSUPP;
+
+	return phy_ethtool_set_wol(pdata->phydev, wol);
+}
+
+/**
  * @brief This function is invoked by kernel when user request to set
  * pmt parameters for remote wakeup or magic wakeup
  *
@@ -1351,46 +1383,24 @@ static int ether_set_eee(struct net_device *ndev,
  */
 static int ether_set_wol(struct net_device *ndev, struct ethtool_wolinfo *wol)
 {
+	int ret = 0;
 	struct ether_priv_data *pdata = netdev_priv(ndev);
-	int ret;
-
 	if (!wol)
 		return -EINVAL;
 
-	if (!pdata->phydev) {
-		netdev_err(pdata->ndev,
-			   "%s: phydev is null check iface up status\n",
-			   __func__);
-		return -ENOTSUPP;
-	}
-
-	if (!phy_interrupt_is_valid(pdata->phydev))
-		return -ENOTSUPP;
-
-	ret = phy_ethtool_set_wol(pdata->phydev, wol);
-	if (ret < 0)
-		return ret;
-
+	/* Disable WOL on demand.
+	 * Enabling WOL will to deferred to before system suspend.
+	 */
 	if (wol->wolopts) {
-		ret = enable_irq_wake(pdata->phydev->irq);
-		if (ret) {
-			dev_err(pdata->dev, "PHY enable irq wake failed, %d\n",
-				ret);
-			return ret;
-		}
-		/* enable device wake on WoL set */
-		device_init_wakeup(&ndev->dev, true);
-	} else {
-		ret = disable_irq_wake(pdata->phydev->irq);
-		if (ret) {
-			dev_info(pdata->dev,
-				 "PHY disable irq wake failed, %d\n",
-				 ret);
-		}
-		/* disable device wake on WoL reset */
-		device_init_wakeup(&ndev->dev, false);
-	}
+		/* The WOL request to the PHY layer is defered, and will apply on
+		 * it only when the system is going to suspend. */
+		memcpy(&pdata->wol, wol, sizeof(struct ethtool_wolinfo));
 
+	} else {
+		/* Set wolopts to 0 to implicitly say that WOL is disabled */
+		pdata->wol.wolopts = 0;
+		ret = ether_set_wol_impl(ndev, wol);
+	}
 	return ret;
 }
 
@@ -1411,6 +1421,7 @@ static int ether_set_wol(struct net_device *ndev, struct ethtool_wolinfo *wol)
 static void ether_get_wol(struct net_device *ndev, struct ethtool_wolinfo *wol)
 {
 	struct ether_priv_data *pdata = netdev_priv(ndev);
+	u32 wolopts;
 
 	if (!wol)
 		return;
@@ -1422,13 +1433,20 @@ static void ether_get_wol(struct net_device *ndev, struct ethtool_wolinfo *wol)
 		return;
 	}
 
-	wol->supported = 0;
-	wol->wolopts = 0;
-
 	if (!phy_interrupt_is_valid(pdata->phydev))
 		return;
 
-	phy_ethtool_get_wol(pdata->phydev, wol);
+	wolopts = pdata->wol.wolopts;
+
+	pdata->wol.supported = 0;
+	pdata->wol.wolopts = 0;
+
+	phy_ethtool_get_wol(pdata->phydev, &pdata->wol);
+
+	if (wolopts & WAKE_MAGIC) {
+		pdata->wol.wolopts |= WAKE_MAGIC;
+	}
+	memcpy(wol, &pdata->wol, sizeof(struct ethtool_wolinfo));
 }
 
 /**

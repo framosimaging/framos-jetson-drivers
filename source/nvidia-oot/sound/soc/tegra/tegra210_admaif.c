@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-only
-//
-// tegra210_admaif.c - Tegra ADMAIF driver
-//
-// Copyright (c) 2020-2024 NVIDIA CORPORATION.  All rights reserved.
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2020-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *
+ * tegra210_admaif.c - Tegra ADMAIF driver
+ */
 
 #include <nvidia/conftest.h>
 
@@ -1394,9 +1395,21 @@ static const struct dev_pm_ops tegra_admaif_pm_ops = {
 				pm_runtime_force_resume)
 };
 
+#if defined(NV_PLATFORM_DRIVER_STRUCT_REMOVE_RETURNS_VOID) /* Linux v6.11 */
+static inline void tegra_admaif_remove_wrapper(struct platform_device *pdev)
+{
+	tegra_admaif_remove(pdev);
+}
+#else
+static inline int tegra_admaif_remove_wrapper(struct platform_device *pdev)
+{
+	return tegra_admaif_remove(pdev);
+}
+#endif
+
 static struct platform_driver tegra_admaif_driver = {
 	.probe = tegra_admaif_probe,
-	.remove = tegra_admaif_remove,
+	.remove = tegra_admaif_remove_wrapper,
 	.driver = {
 		.name = "tegra210-admaif",
 		.of_match_table = tegra_admaif_of_match,

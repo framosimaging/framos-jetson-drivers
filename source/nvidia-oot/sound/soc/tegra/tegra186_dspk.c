@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-only
-//
-// tegra186_dspk.c - Tegra186 DSPK driver
-//
-// Copyright (c) 2020-2023 NVIDIA CORPORATION. All rights reserved.
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2020-2024, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *
+ * tegra186_dspk.c - Tegra186 DSPK driver
+ */
 
 #include <nvidia/conftest.h>
 
@@ -694,6 +695,18 @@ static const struct dev_pm_ops tegra186_dspk_pm_ops = {
 				pm_runtime_force_resume)
 };
 
+#if defined(NV_PLATFORM_DRIVER_STRUCT_REMOVE_RETURNS_VOID) /* Linux v6.11 */
+static inline void tegra186_dspk_platform_remove_wrapper(struct platform_device *pdev)
+{
+	tegra186_dspk_platform_remove(pdev);
+}
+#else
+static inline int tegra186_dspk_platform_remove_wrapper(struct platform_device *pdev)
+{
+	return tegra186_dspk_platform_remove(pdev);
+}
+#endif
+
 static struct platform_driver tegra186_dspk_driver = {
 	.driver = {
 		.name = "tegra186-dspk",
@@ -701,7 +714,7 @@ static struct platform_driver tegra186_dspk_driver = {
 		.pm = &tegra186_dspk_pm_ops,
 	},
 	.probe = tegra186_dspk_platform_probe,
-	.remove = tegra186_dspk_platform_remove,
+	.remove = tegra186_dspk_platform_remove_wrapper,
 };
 module_platform_driver(tegra186_dspk_driver);
 

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-only
-// SPDX-FileCopyrightText: Copyright (c) 2015-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+// SPDX-FileCopyrightText: Copyright (c) 2015-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 /*
  * NVIDIA Tegra Video Input Device
  */
@@ -471,6 +471,7 @@ void tegra_channel_init_ring_buffer(struct tegra_channel *chan)
 	chan->capture_descr_index = 0;
 	chan->capture_descr_sequence = 0;
 	chan->queue_error = false;
+	chan->capture_reqs_enqueued = 0;
 }
 EXPORT_SYMBOL(tegra_channel_init_ring_buffer);
 
@@ -702,11 +703,12 @@ tegra_channel_queue_setup(struct vb2_queue *vq,
 	 * of the requested image size. Although this did not harm the
 	 * flow, according to "v4l2-compliance", we need to check if
 	 * the requested size is invalid.
+	 * Printing this error as info, to avoid kernel error/warning failure.
 	 */
 	if (*nplanes) {
 		if (sizes[0] < chan->format.sizeimage) {
-			pr_err("%s: sizes[0] = %d chan->format.sizeimage = %d ...\n"
-					,__func__,sizes[0],chan->format.sizeimage);
+			pr_info("%s: sizes[0] = %d, chan->format.sizeimage = %d, for num_planes = %d ...\n"
+					, __func__, sizes[0], chan->format.sizeimage, *nplanes);
 			return -EINVAL;
 		}
 	} else {
@@ -1019,6 +1021,7 @@ static void tegra_channel_stop_streaming(struct vb2_queue *vq)
 
 	if (vi->fops) {
 		vi->fops->vi_stop_streaming(vq);
+		atomic_set(&chan->is_streaming, DISABLE);
 		vi->fops->vi_power_off(chan);
 	}
 
@@ -1947,7 +1950,7 @@ int tegra_channel_init_subdevices(struct tegra_channel *chan)
 	int len = 0;
 
 	/* set_stream of CSI */
-#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 0, 0)
+#if defined(NV_MEDIA_ENTITY_REMOTE_PAD_PRESENT) /* Linux 6.0 */
 	pad = media_entity_remote_pad(&chan->pad);
 #else
 	pad = media_pad_remote_pad_first(&chan->pad);
@@ -1977,7 +1980,7 @@ int tegra_channel_init_subdevices(struct tegra_channel *chan)
 		if (!(pad->flags & MEDIA_PAD_FL_SINK))
 			break;
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 0, 0)
+#if defined(NV_MEDIA_ENTITY_REMOTE_PAD_PRESENT) /* Linux 6.0 */
 		pad = media_entity_remote_pad(pad);
 #else
 		pad = media_pad_remote_pad_first(pad);

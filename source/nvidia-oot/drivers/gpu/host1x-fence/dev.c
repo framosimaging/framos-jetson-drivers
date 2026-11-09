@@ -172,6 +172,8 @@ static int dev_file_ioctl_fence_extract(struct host1x *host1x, void __user *data
 		goto put_fence;
 	}
 
+	dma_fence_put(fence);
+
 	return 0;
 
 put_fence:
