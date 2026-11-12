@@ -1,0 +1,106 @@
+# Char-lite Calibration
+# version:     2.3.0d
+# created on: 30-Oct-2023 14:18
+
+#* =============================================================
+#* ISP Configuration Override File
+#* Copyright (c) 2012-2022, NVIDIA CORPORATION.  All rights reserved.
+#* Model: Jetson AGX Xavier / Jetson Xavier NX
+#* Integrator: FRAMOS GmbH
+#* Part#: FSM:GO IMX900C-L76A
+#* Sensor: Sony IMX900C
+#* Size:
+#* Version: version
+#* FileName & Location:/data/nvcam/settings/camera_overrides.isp
+#* Updated:Fri Feb 25 15:37:50 2019 PST
+#* =============================================================
+
+
+lensShading.module_cal_enable = 0;
+lensShading.falloff_PointsCount = 6;
+lensShading.falloff.Preview[0] = {1.0, 20.0};
+lensShading.falloff.Preview[1] = {2.0, 20.0};
+lensShading.falloff.Preview[2] = {4.0, 20.0};
+lensShading.falloff.Preview[3] = {8.0, 20.0};
+lensShading.falloff.Preview[4] = {16.0, 30.0};
+lensShading.falloff.Preview[5] = {32.0, 30.0};
+lensShading.falloff.Still[0] = {1.0, 20.0};
+lensShading.falloff.Still[1] = {2.0, 20.0};
+lensShading.falloff.Still[2] = {4.0, 20.0};
+lensShading.falloff.Still[3] = {8.0, 20.0};
+lensShading.falloff.Still[4] = {16.0, 30.0};
+lensShading.falloff.Still[5] = {32.0, 30.0};
+lensShading.falloff.Video[0] = {1.0, 20.0};
+lensShading.falloff.Video[1] = {2.0, 20.0};
+lensShading.falloff.Video[2] = {4.0, 20.0};
+lensShading.falloff.Video[3] = {8.0, 20.0};
+lensShading.falloff.Video[4] = {16.0, 30.0};
+lensShading.falloff.Video[5] = {32.0, 30.0};
+#-----------------------------------------------------
+# AWB Parameters 
+#-----------------------------------------------------
+
+# AWB
+awb.v4.NumGrayLineSoftClampPoints	 = 2;
+awb.v4.GrayLineSoftClamp[0]	 = {0.7787,  0.7787}; 
+awb.v4.GrayLineSoftClamp[1]	 = {1.0120,  1.0120}; 
+awb.v4.GrayLineSoftClamp[2]	 = {0.0000,  0.0000}; 
+awb.v4.GrayLineSoftClamp[3]	 = {0.0000,  0.0000}; 
+awb.v4.GrayLineSoftClamp[4]	 = {0.0000,  0.0000}; 
+awb.v4.GrayLineSoftClamp[5]	 = {0.0000,  0.0000}; 
+awb.v4.GrayLineSoftClamp[6]	 = {0.0000,  0.0000}; 
+awb.v4.GrayLineSoftClamp[7]	 = {0.0000,  0.0000}; 
+awb.v4.GrayLineSoftClamp[8]	 = {0.0000,  0.0000}; 
+awb.v4.GrayLineSoftClamp[9]	 = {0.0000,  0.0000}; 
+awb.v4.GrayLineSoftClamp[10]	 = {0.0000,  0.0000}; 
+awb.v4.GrayLineSoftClamp[11]	 = {0.0000,  0.0000}; 
+awb.v4.GrayLineSoftClamp[12]	 = {0.0000,  0.0000}; 
+awb.v4.GrayLineSoftClamp[13]	 = {0.0000,  0.0000}; 
+awb.v4.GrayLineSoftClamp[14]	 = {0.0000,  0.0000}; 
+awb.v4.GrayLineSoftClamp[15]	 = {0.0000,  0.0000}; 
+awb.v4.GrayLineSoftClampSlopeBeforeFirstPoint	 = 0.0000; 
+awb.v4.GrayLineSoftClampSlopeAfterLastPoint	 = 0.0000; 
+awb.v4.GrayLineThickness  	 = 0.2987; 
+awb.v4.HighU              	 = 1.0120;
+awb.v4.LowU               	 = 0.7787;
+
+# AWB
+awb.GrayLineSlope         	 = -1.1494; 
+awb.GrayLineIntercept     	 = 2.5886; 
+awb.UtoMIRED              	 = {-400.146190784621, 623.634423735906}; 
+awb.MIREDtoU              	 = {-0.002499086641, 1.558516457480}; 
+awb.UtoCCT                	 = {6465.380251518240,-1139.209612341468}; 
+awb.CCTtoU                	 = {0.000154669944,0.176201486691}; 
+awb.NumDiscreteLights     	 = 0; 
+awb.v4.GrayLineSlope      	 = -1.1494; 
+awb.v4.GrayLineIntercept  	 = 2.5886; 
+awb.v4.UtoMIRED           	 = {-400.146190784621, 623.634423735906}; 
+awb.v4.MIREDtoU           	 = {-0.002499086641, 1.558516457480}; 
+awb.v4.UtoCCT             	 = {6858.114090516585,-1540.087407975549}; 
+awb.v4.CCTtoU             	 = {0.000145812681,0.224564273450}; 
+awb.v4.FusionNumLights    	 = 5; 
+awb.v4.FusionLights[0]    	 = {745,773,773,188}; 
+awb.v4.FusionLights[1]    	 = {633,767,767,219}; 
+awb.v4.FusionLights[2]    	 = {511,768,768,250}; 
+awb.v4.FusionLights[3]    	 = {430,768,768,238}; 
+awb.v4.FusionLights[4]    	 = {395,770,770,389}; 
+awb.v4.FusionInitLight    	 = 4; 
+# CCM
+colorCorrection.srgbMatrix[0]	 = {1.87230000,-0.51561000, 0.24609000}; 
+colorCorrection.srgbMatrix[1]	 = {-0.69334000, 1.81787000,-1.32090000}; 
+colorCorrection.srgbMatrix[2]	 = {-0.17895000,-0.30227000, 2.07481000}; 
+
+# Optical Black
+opticalBlack.manualBiasR  	 = 59; 
+opticalBlack.manualBiasGR 	 = 59; 
+opticalBlack.manualBiasGB 	 = 59; 
+opticalBlack.manualBiasB  	 = 59; 
+opticalBlack.float.manualBiasR	 = 0.05860806; 
+opticalBlack.float.manualBiasGR	 = 0.05860806; 
+opticalBlack.float.manualBiasGB	 = 0.05860806; 
+opticalBlack.float.manualBiasB	 = 0.05860806; 
+
+#Lens shading 
+ap15Function.lensShading = TRUE;
+lensShading.correction_type.enableWPC = TRUE;
+lensShading.correction_type.enableLSC = FALSE;

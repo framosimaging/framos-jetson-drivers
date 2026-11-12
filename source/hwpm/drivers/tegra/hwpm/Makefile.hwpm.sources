@@ -1,0 +1,98 @@
+# -*- mode: makefile -*-
+#
+# Copyright (c) 2023-2024, NVIDIA CORPORATION & AFFILIATES.  All rights reserved.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+#
+# Tegra SOC HWPM Sources
+#
+
+# Based on build config, set HWPM flags
+# Flag indicates internal build config
+ifeq ($(NV_BUILD_CONFIGURATION_IS_EXTERNAL), 0)
+CONFIG_HWPM_BUILD_INTERNAL := y
+endif
+
+# T234 supported on all valid platforms
+CONFIG_TEGRA_HWPM_T234 := y
+
+# TH500 supported only on OOT config
+ifeq ($(CONFIG_TEGRA_HWPM_OOT),y)
+ifeq ($(NV_BUILD_CONFIGURATION_EXPOSING_TH50X), 1)
+CONFIG_TEGRA_HWPM_TH500 := y
+endif
+endif
+
+# Set HWPM next path and include sources as per build config
+ifeq ($(CONFIG_TEGRA_HWPM_OOT),y)
+
+srctree.hwpm-next := ${srctree.hwpm}
+# Include next sources only if Makefile.hwpm-next.sources exists
+ifneq ($(wildcard ${srctree.hwpm-next}/drivers/tegra/hwpm/Makefile.hwpm-next.sources),)
+include ${srctree.hwpm-next}/drivers/tegra/hwpm/Makefile.hwpm-next.sources
+nvhwpm-objs += ${nvhwpm-next-objs}
+endif
+
+else # Non-OOT kernel
+
+ifeq ($(origin NV_SOURCE), undefined)
+ifeq ($(origin TEGRA_TOP), undefined)
+# No reference to hwpm-next repo
+else
+srctree.hwpm-next := ${TEGRA_TOP}/kernel/hwpm-next
+endif
+else
+srctree.hwpm-next := ${NV_SOURCE}/kernel/hwpm-next
+endif
+ifneq ($(origin srctree.hwpm-next), undefined)
+ifneq ($(wildcard ${srctree.hwpm-next}/drivers/tegra/hwpm/Makefile.hwpm-next.sources),)
+include ${srctree.hwpm-next}/drivers/tegra/hwpm/Makefile.hwpm-next.sources
+nvhwpm-objs += ${nvhwpm-next-objs}
+endif
+endif
+
+endif # CONFIG_TEGRA_HWPM_OOT
+
+# Include common files
+include ${srctree.hwpm}/drivers/tegra/hwpm/Makefile.common.sources
+nvhwpm-objs += ${nvhwpm-common-objs}
+
+# Include linux files
+include ${srctree.hwpm}/drivers/tegra/hwpm/Makefile.linux.sources
+nvhwpm-objs += ${nvhwpm-linux-objs}
+
+ifeq ($(CONFIG_TEGRA_HWPM_T234),y)
+ccflags-y += -DCONFIG_TEGRA_HWPM_T234
+# Include T234 files
+include ${srctree.hwpm}/drivers/tegra/hwpm/Makefile.t234.sources
+nvhwpm-objs += ${nvhwpm-t234-objs}
+endif
+
+ifeq ($(CONFIG_TEGRA_HWPM_TH500),y)
+ccflags-y += -DCONFIG_TEGRA_HWPM_TH500
+# Include TH500 files
+include ${srctree.hwpm}/drivers/tegra/hwpm/Makefile.th500.sources
+nvhwpm-objs += ${nvhwpm-th500-objs}
+endif
+
+# Include T264 files
+CONFIG_TEGRA_T264_HWPM := y
+ccflags-y += -DCONFIG_TEGRA_T264_HWPM
+include ${srctree.hwpm}/drivers/tegra/hwpm/Makefile.t264.sources
+nvhwpm-objs += ${nvhwpm-t264-objs}

@@ -1,0 +1,71 @@
+################################### tell Emacs this is a -*- makefile-gmake -*-
+#
+# SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: GPL-2.0-only
+#
+# This program is free software; you can redistribute it and/or modify it
+# under the terms and conditions of the GNU General Public License,
+# version 2, as published by the Free Software Foundation.
+#
+# This program is distributed in the hope it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+# more details.
+#
+# tmake for SW Mobile component makefile
+#
+# libnvsochwpm: shared and static library
+#
+###############################################################################
+
+# Common part of shared and static library build
+define nvsochwpm_common_make
+
+NV_COMPONENT_OWN_INTERFACE_DIR := .
+
+_top_hwpm_dir = ../../../
+
+_soc_hwpm_dir = ../../
+
+NV_COMPONENT_SOURCES := \
+	$$(_soc_hwpm_dir)/common/log.c \
+	$$(_soc_hwpm_dir)/os/lnx/nv_soc_hwpm_lnx.c \
+	$$(_soc_hwpm_dir)/nv_soc_hwpm.c
+
+NV_COMPONENT_INCLUDES += \
+	$$(_soc_hwpm_dir) \
+	$$(_soc_hwpm_dir)/include \
+	$$(_top_hwpm_dir)/include \
+
+# clear variables
+_soc_hwpm_dir :=
+
+endef
+
+# Build shared library
+ifdef NV_COMPONENT_FLAG_SHARED_LIBRARY_SECTION
+include $(NV_BUILD_START_COMPONENT)
+
+NV_COMPONENT_NAME := nvsochwpm
+
+$(eval $(nvsochwpm_common_make))
+
+include $(NV_BUILD_SHARED_LIBRARY)
+endif
+
+# Build static library for test
+ifdef NV_COMPONENT_FLAG_STATIC_LIBRARY_SECTION
+include $(NV_BUILD_START_COMPONENT)
+
+NV_COMPONENT_NAME := nvsochwpm_static
+
+$(eval $(nvsochwpm_common_make))
+
+include $(NV_BUILD_STATIC_LIBRARY)
+endif
+
+# Local Variables:
+# indent-tabs-mode: t
+# tab-width: 8
+# End:
+# vi: set tabstop=8 noexpandtab:

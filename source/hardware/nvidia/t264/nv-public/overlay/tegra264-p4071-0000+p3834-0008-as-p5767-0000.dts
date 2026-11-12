@@ -1,0 +1,21 @@
+// SPDX-License-Identifier: GPL-2.0-only
+// SPDX-FileCopyrightText: Copyright (c) 2026, NVIDIA CORPORATION & AFFILIATES.  All rights reserved.
+
+/dts-v1/;
+/plugin/;
+
+/ {
+	overlay-name = "Tegra264 p3834-0008-as-p5767-0000 Emulation Overlay";
+
+	fragment-t264-p3834-0008-as-p5767-0000@0 {
+		target-path = "/";
+		board_config {
+			ids = "3834-0008-*";
+		};
+		__overlay__ {
+			compatible = "nvidia,p4071-0000+p3834-0008-as-p5767-0000",
+				     "nvidia,tegra264";
+			model = "NVIDIA Jetson T5000 as T3000 (p3834-0008 as p5767-0000)";
+		};
+	};
+};

@@ -1,0 +1,38 @@
+/* SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ * SPDX-License-Identifier: GPL-2.0-only
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms and conditions of the GNU General Public License,
+ * version 2, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ *
+ */
+
+LIBNVSOCHWPM {
+	global:
+		nv_soc_hwpm_init;
+		nv_soc_hwpm_exit;
+		nv_soc_hwpm_system_get_info;
+		nv_soc_hwpm_get_devices;
+		nv_soc_hwpm_device_get_info;
+		nv_soc_hwpm_ip_get_info;
+		nv_soc_hwpm_resource_get_info;
+		nv_soc_hwpm_session_alloc;
+		nv_soc_hwpm_session_free;
+		nv_soc_hwpm_session_get_info;
+		nv_soc_hwpm_session_reserve_resources;
+		nv_soc_hwpm_session_reserve_all_resources;
+		nv_soc_hwpm_session_alloc_pma;
+		nv_soc_hwpm_session_set_get_pma_state;
+		nv_soc_hwpm_session_get_hs_credits;
+		nv_soc_hwpm_session_config_hs_credits;
+		nv_soc_hwpm_session_start;
+		nv_soc_hwpm_session_regops;
+		nv_soc_hwpm_session_setup_trigger;
+	local:
+		*;
+};

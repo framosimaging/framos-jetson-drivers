@@ -1,0 +1,7 @@
+append_menu "Device Drivers"
+
+if ARCH_TEGRA
+source "drivers/tegra/hwpm/Kconfig"
+endif
+
+endmenu
