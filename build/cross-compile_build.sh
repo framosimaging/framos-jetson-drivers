@@ -48,6 +48,7 @@ fi
 export CROSS_COMPILE=${TOOLCHAIN_DIR}/bin/aarch64-none-linux-gnu-
 export KERNEL_HEADERS=${L4T_SOURCE}/kernel/kernel-noble
 export INSTALL_MOD_PATH=${L4T_DIR}/rootfs/
+export kernel_name=noble
 
 
 # build DTBs
@@ -68,7 +69,7 @@ function install_dtree() {(
     fi
     pushd ${L4T_SOURCE} &> /dev/null
     echo ; echo; echo -e "${yel}device tree install ... ${normal}"
-    sudo -E cp kernel-devicetree/generic-dts/dtbs/*fr_*.dtbo ${L4T_DIR}/rootfs/boot/framos/dtbo/.
+    sudo -E cp build/nvidia-public/devicetree/generic-dtbs/*fr_*.dtbo ${L4T_DIR}/rootfs/boot/framos/dtbo/.
     popd &> /dev/null
 )}
 
