@@ -1,7 +1,7 @@
 &nbsp;
 [Release Notes l4t‐r39.2.1](https://github.com/framosimaging/framos-jetson-drivers/wiki/Release-Notes-l4t%E2%80%90r39.2.1)
 
-**Support for IMX06A, VB1943, and VB5943 on JetPack 7.2.1 is coming soon. In the meantime, please use JetPack 6.2.1 / L4T 36.4.4 with the l4t-r36.4.4 branch
+**Support for IMX06A, VB1943, and VB5943 on JetPack 7.2.1 is coming soon. In the meantime, please use JetPack 6.2.1 / L4T 36.4.4 with the [l4t-r36.4.4 branch](https://github.com/framosimaging/framos-jetson-drivers/tree/l4t-r36.4.4)
 
 
 # Short procedure
